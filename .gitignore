@@ -60,3 +60,4 @@ replay_pid*
 /backend/config/
 /config/
 /backend/src/main/resources/application.properties
+/backend/docker-compose.yaml
