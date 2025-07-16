@@ -8,6 +8,8 @@ import org.example.backend.constant.Status;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -54,6 +56,21 @@ public class Member extends BaseTimeEntity{
     @Column(name = "join_type", nullable = false)
     @Enumerated(EnumType.STRING)
     private JoinType joinType;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Content> contents = new ArrayList<>();
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Matching> matchingList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Report> reportsSent = new ArrayList<>();
+
+    @OneToMany(mappedBy = "reported", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Report> reportsReceived = new ArrayList<>();
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MemberSkill> memberSkills = new ArrayList<>();
 
     // 정적 팩토리 메서드
     public static Member create(String email, String encodedPassword, String nickname, String phone, JoinType joinType) {
