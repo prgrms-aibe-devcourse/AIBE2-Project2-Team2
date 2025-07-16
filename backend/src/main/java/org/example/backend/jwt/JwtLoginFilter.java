@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.constant.JoinType;
-import org.example.backend.entity.User;
+import org.example.backend.entity.Member;
 import org.example.backend.login.service.LoginService;
 import org.example.backend.redis.RedisService;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -47,14 +47,14 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
             String password = loginData.get("password");
 
             // 1. 유저 조회
-            User user = loginService.findByEmail(email);
+            Member member = loginService.findByEmail(email);
 
-            if (user == null) {
+            if (member == null) {
                 throw new BadCredentialsException("사용자를 찾을 수 없습니다.");
             }
 
             // 2. 소셜 로그인 유저라면 일반 로그인 불가 처리
-            if (user.getJoinType() == JoinType.KAKAO) {
+            if (member.getJoinType() == JoinType.KAKAO) {
                 throw new BadCredentialsException("소셜 로그인 사용자는 일반 로그인을 할 수 없습니다.");
             }
 

@@ -11,13 +11,13 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Table(name = "users")
-public class User extends BaseTimeEntity{
+@Table(name = "members")
+public class Member extends BaseTimeEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    private Long userId;
+    private Long memberId;
 
     @Column(name = "email", nullable = false)
     private String email;
@@ -56,16 +56,16 @@ public class User extends BaseTimeEntity{
     private JoinType joinType;
 
     // 정적 팩토리 메서드
-    public static User create(String email, String encodedPassword, String nickname, String phone, JoinType joinType) {
-        User user = new User();
-        user.email = email;
-        user.password = encodedPassword;
-        user.nickname = nickname;
-        user.phone = phone;
-        user.role = Role.USER;         // 기본 역할 설정
-        user.status = Status.ACTIVE;        // 기본 상태 설정
-        user.joinType = joinType;           // 가입 유형 설정
-        return user;
+    public static Member create(String email, String encodedPassword, String nickname, String phone, JoinType joinType) {
+        Member member = new Member();
+        member.email = email;
+        member.password = encodedPassword;
+        member.nickname = nickname;
+        member.phone = phone;
+        member.role = Role.USER;         // 기본 역할 설정
+        member.status = Status.ACTIVE;        // 기본 상태 설정
+        member.joinType = joinType;           // 가입 유형 설정
+        return member;
     }
 
     public void updateLastLoginAt(LocalDateTime time) {
