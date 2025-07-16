@@ -7,10 +7,7 @@ import org.example.backend.constant.JoinType;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 
 @Data
 @AllArgsConstructor
@@ -42,9 +39,8 @@ public class SignupRequestDto {
     @Schema(description = "이메일", example = "example@naver.com")
     private String email;       // 이메일
 
-    @NotBlank
+    @NotNull
     @Schema(description = "회원가입 타입 (예: KAKAO, NOMAL)", example = "KAKAO")
-    @Enumerated(EnumType.STRING)
     private JoinType joinType;    // 회원가입 타입 (예: KAKAO, NORMAL 등)
 
 }
