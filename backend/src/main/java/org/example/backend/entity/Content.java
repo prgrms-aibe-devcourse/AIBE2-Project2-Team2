@@ -1,8 +1,10 @@
 package org.example.backend.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.example.backend.constant.Status;
-import org.threeten.bp.LocalDateTime;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -10,6 +12,9 @@ import java.util.List;
 
 @Entity
 @Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "content")
 public class Content extends BaseEntity {
     @Id
@@ -35,4 +40,17 @@ public class Content extends BaseEntity {
 
     @OneToMany(mappedBy = "content", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Matching> matchingList = new ArrayList<>();
+
+    // Status 설정 메서드
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    // Content 수정 메서드
+    public void updateContent(String title, String description, Long budget, String category) {
+        this.title = title;
+        this.description = description;
+        this.budget = budget;
+        this.category = category;
+    }
 }
