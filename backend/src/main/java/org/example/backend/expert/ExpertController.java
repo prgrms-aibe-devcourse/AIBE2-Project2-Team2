@@ -10,11 +10,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.expert.dto.ExpertRequestDto;
+import org.example.backend.expert.dto.ExpertSignupMetaDto;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.security.Principal;
@@ -75,5 +73,14 @@ public class ExpertController {
         log.info("전문가 전환 요청: {}", expertRequestDto);
         expertService.upgradeToExpert(email, expertRequestDto);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 전문가 전환을 위해서 고를 수 있는 전문분야, 상세분야, 기술스킬 목록을 반환하는 API
+     */
+    @GetMapping("/meta")
+    public ResponseEntity<?> getExpertSignupMeta() {
+        ExpertSignupMetaDto meta = expertService.getExpertSignupMeta();
+        return ResponseEntity.ok(meta);
     }
 }

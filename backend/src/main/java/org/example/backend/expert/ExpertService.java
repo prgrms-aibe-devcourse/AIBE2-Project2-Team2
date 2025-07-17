@@ -8,12 +8,12 @@ import org.example.backend.exception.customException.AlreadyExpertException;
 import org.example.backend.exception.customException.DetailFieldNotFoundException;
 import org.example.backend.exception.customException.MemberNotFoundException;
 import org.example.backend.exception.customException.SpecialtyNotFoundException;
-import org.example.backend.expert.dto.ExpertRequestDto;
-import org.example.backend.expert.dto.SpecialtyDetailRequestDto;
+import org.example.backend.expert.dto.*;
 import org.example.backend.repository.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -28,6 +28,7 @@ public class ExpertService {
     private final ExpertProfileSpecialtyDetailRepository expertProfileSpecialtyDetailRepository;
     private final SkillRepository skillRepository;
     private final CareerRepository careerRepository;
+    private final SkillCategoryRepository skillCategoryRepository;
 
     // 전문가로 전환하는 메소드 - 포트폴리오는 제외하고 나머지 정보들 등록
     public void upgradeToExpert(String email, ExpertRequestDto dto) {
@@ -92,7 +93,7 @@ public class ExpertService {
 
         for (String skillName : skillNames) {
             Skill skill = skillRepository.findByName(skillName)
-                    .orElseGet(() -> skillRepository.save(new Skill(skillName)));
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 기술 스킬: " + skillName));
             profile.getSkills().add(skill);
         }
     }
@@ -119,4 +120,37 @@ public class ExpertService {
         return member;
     }
 
+    // 전문가 가입 메타 정보 조회
+    public ExpertSignupMetaDto getExpertSignupMeta() {
+        // 1. Specialty + DetailFields 조회 및 DTO 변환
+        List<DetailFieldDto> detailFields = specialtyRepository.findAll()
+                .stream()
+                .map(specialty -> new DetailFieldDto(
+                        specialty.getName(),
+                        specialty.getDetailFields()
+                                .stream()
+                                .map(DetailField::getName)
+                                .collect(Collectors.toList())
+                ))
+                .collect(Collectors.toList());
+
+        // 2. SkillCategory + Skill 조회 및 DTO 변환
+        List<SkillCategoryDto> skills = skillCategoryRepository.findAll()
+                .stream()
+                .map(category -> new SkillCategoryDto(
+                        category.getName(),
+                        category.getSkills()
+                                .stream()
+                                .map(Skill::getName)
+                                .collect(Collectors.toList())
+                ))
+                .collect(Collectors.toList());
+
+        // 3. 지역 리스트 (임시 하드코딩)
+        List<String> regions = List.of("서울", "경기 북부", "경기 남부", "부산",
+                "대구","인천", "광주", "대전", "울산", "세종", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주","해외");
+
+        return new ExpertSignupMetaDto(detailFields, skills, regions);
+    }
 }
+
