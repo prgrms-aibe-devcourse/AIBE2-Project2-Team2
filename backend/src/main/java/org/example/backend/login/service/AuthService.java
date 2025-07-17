@@ -8,6 +8,7 @@ import org.example.backend.exception.customException.UserNotFoundException;
 import org.example.backend.jwt.JwtUtil;
 import org.example.backend.jwt.TokenBlacklistService;
 import org.example.backend.jwt.TokenInfo;
+import org.example.backend.login.dto.KakaoLoginResponseDto;
 import org.example.backend.login.dto.SignupRequestDto;
 import org.example.backend.openFeign.KakaoApiClient;
 import org.example.backend.openFeign.KakaoAuthClient;
@@ -22,6 +23,8 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -106,7 +109,10 @@ public class AuthService {
     }
 
     // 카카오 로그인 처리 메소드
-    public void kakaoLogin(String code, HttpServletResponse response) {
+    public KakaoLoginResponseDto kakaoLogin(String code, HttpServletResponse response) {
+        // 0. 결과 변수 초기화
+        KakaoLoginResponseDto result = new KakaoLoginResponseDto();
+
         // 1. access_token 요청
         KakaoTokenResponse tokenResponse = kakaoAuthClient.getToken(
                 "authorization_code",
@@ -129,7 +135,8 @@ public class AuthService {
 
         if (userOpt.isPresent()) {
             // 로그인 처리
-            loginAndSetCookie(userOpt.get(), response);
+            loginAndSetCookie(userOpt.get(), response, result);
+            return result;
         } else {
             // 자동 회원가입
             Member newMember = Member.create(
@@ -140,11 +147,12 @@ public class AuthService {
                     JoinType.KAKAO
             );
             memberRepository.save(newMember);
-            loginAndSetCookie(newMember, response);
+            loginAndSetCookie(newMember, response, result);
+            return result;
         }
     }
 
-    private void loginAndSetCookie(Member member, HttpServletResponse response) {
+    private void loginAndSetCookie(Member member, HttpServletResponse response, KakaoLoginResponseDto dto) {
         TokenInfo tokenInfo = jwtUtil.createToken(member.getEmail(), String.valueOf(member.getRole()));
         redisService.storeActiveToken(tokenInfo.getJti(), member.getEmail(), tokenInfo.getExpirationMs());
         loginService.updateLastLogin(member.getEmail());
@@ -155,5 +163,9 @@ public class AuthService {
         cookie.setPath("/");
         cookie.setMaxAge((int)(tokenInfo.getExpirationMs() / 1000));
         response.addCookie(cookie);
+
+        dto.setMessage("로그인 성공");
+        dto.setNickname(member.getNickname());
+        dto.setRole(member.getRole().toString());
     }
 }
