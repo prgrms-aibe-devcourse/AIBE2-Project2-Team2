@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
+import javax.servlet.ServletException;
 
 @Component
 @RequiredArgsConstructor
@@ -27,7 +28,16 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)
-            throws IOException {
+            throws IOException, ServletException {
+
+        // ✅ 예외 처리 경로: Swagger, API Docs, Matching API는 인증 생략
+        String path = request.getRequestURI();
+        if (path.startsWith("/api/matchings")
+                || path.startsWith("/swagger")
+                || path.startsWith("/v3/api-docs")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         try {
             String token = resolveToken(request);

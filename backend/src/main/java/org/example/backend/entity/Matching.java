@@ -38,4 +38,27 @@ public class Matching extends BaseTimeEntity {
 
     @OneToOne(mappedBy = "matching", cascade = CascadeType.ALL, orphanRemoval = true)
     private Review review;
+
+    /**
+     * 생성자: 매칭 요청 생성 시 필요한 필드만 설정
+     */
+    public Matching(Member member, Content content, String estimateUrl, MatchingStatus status) {
+        this.member = member;
+        this.content = content;
+        this.estimateUrl = estimateUrl;
+        this.status = status;
+    }
+
+    /**
+     * 상태 변경 메서드: setter 없이 변경할 수 있도록
+     */
+    public void changeStatus(MatchingStatus newStatus) {
+        this.status = newStatus;
+    }
+
+    /**
+     * JPA 기본 생성자 (protected로 설정)
+     */
+    protected Matching() {
+    }
 }
