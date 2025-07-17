@@ -64,6 +64,12 @@ public class ExpertProfile {
     @Column(name = "instagram_url")
     private String instagramUrl;
 
+    @Column(name = "review_count")
+    private Long reviewCount;          // 리뷰 수
+
+    @Column(name = "rating")
+    private Double rating;       // 평균 평점
+
 
     public ExpertProfile(Member member, String introduction, String region,
                          Integer totalCareerYears, String education, Integer employeeCount) {
