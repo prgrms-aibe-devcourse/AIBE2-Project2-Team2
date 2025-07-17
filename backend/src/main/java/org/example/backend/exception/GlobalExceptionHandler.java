@@ -102,5 +102,26 @@ public class GlobalExceptionHandler {
                 null
         );
     }
-
+    // 유저 정보 조회시 유저 정보가 없을 때 핸들링
+    @ExceptionHandler(MemberNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleMemberNotFound(MemberNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "MEMBER_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 유저가 이미 전문가일 때 핸들링
+    @ExceptionHandler(AlreadyExpertException.class)
+    public ResponseEntity<Map<String, Object>> handleAlreadyExpert(AlreadyExpertException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "ALREADY_EXPERT",
+                ex.getMessage(),
+                null
+        );
+    }
 }
