@@ -5,7 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.backend.constant.Role;
 import org.example.backend.entity.*;
 import org.example.backend.exception.customException.AlreadyExpertException;
+import org.example.backend.exception.customException.DetailFieldNotFoundException;
 import org.example.backend.exception.customException.MemberNotFoundException;
+import org.example.backend.exception.customException.SpecialtyNotFoundException;
 import org.example.backend.expert.dto.ExpertRequestDto;
 import org.example.backend.expert.dto.SpecialtyDetailRequestDto;
 import org.example.backend.repository.*;
@@ -73,11 +75,11 @@ public class ExpertService {
     private void saveSpecialtyDetails(ExpertProfile profile, List<SpecialtyDetailRequestDto> specialtyDetailDtos) {
         for (SpecialtyDetailRequestDto dto : specialtyDetailDtos) {
             Specialty specialty = specialtyRepository.findByName(dto.getSpecialty())
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 전문 분야: " + dto.getSpecialty()));
+                    .orElseThrow(() -> new SpecialtyNotFoundException("존재하지 않는 전문 분야: " + dto.getSpecialty()));
 
             for (String detailName : dto.getDetailFields()) {
                 DetailField detailField = detailFieldRepository.findByName(detailName)
-                        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상세 분야: " + detailName));
+                        .orElseThrow(() -> new DetailFieldNotFoundException("존재하지 않는 상세 분야: " + detailName));
 
                 ExpertProfileSpecialtyDetail detail = new ExpertProfileSpecialtyDetail(profile, specialty, detailField);
                 expertProfileSpecialtyDetailRepository.save(detail);
