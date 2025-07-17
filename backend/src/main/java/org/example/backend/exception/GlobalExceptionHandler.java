@@ -124,4 +124,26 @@ public class GlobalExceptionHandler {
                 null
         );
     }
+    // 없는 전문 분야를 요청했을 때 핸들링
+    @ExceptionHandler(SpecialtyNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleSpecialtyNotFound(SpecialtyNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "SPECIALTY_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 없는 상세 분야를 요청했을 때 핸들링
+    @ExceptionHandler(DetailFieldNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleDetailFieldNotFound(DetailFieldNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "DETAIL_FIELD_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
 }
