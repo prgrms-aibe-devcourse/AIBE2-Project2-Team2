@@ -45,7 +45,7 @@ public class AuthService {
     @Value("${oauth.kakao.redirect-uri}")
     private String kakaoRedirectUri;
 
-
+    // 일반 가입
     public boolean signup(SignupRequestDto signupRequestDto) {
         // 1. 이메일 중복 확인
         log.info("회원 가입 요청: {}", signupRequestDto);
@@ -145,7 +145,7 @@ public class AuthService {
     }
 
     private void loginAndSetCookie(Member member, HttpServletResponse response) {
-        TokenInfo tokenInfo = jwtUtil.createToken(member.getEmail(), "USER");
+        TokenInfo tokenInfo = jwtUtil.createToken(member.getEmail(), String.valueOf(member.getRole()));
         redisService.storeActiveToken(tokenInfo.getJti(), member.getEmail(), tokenInfo.getExpirationMs());
         loginService.updateLastLogin(member.getEmail());
 
