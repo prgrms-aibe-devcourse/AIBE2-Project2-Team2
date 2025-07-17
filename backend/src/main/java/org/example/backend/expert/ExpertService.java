@@ -99,8 +99,6 @@ public class ExpertService {
                     .orElseGet(() -> skillRepository.save(new Skill(skillName)));
             profile.getSkills().add(skill);
         }
-
-        expertProfileRepository.save(profile);
     }
 
     private void saveCareers(ExpertProfile profile, List<String> careers) {
