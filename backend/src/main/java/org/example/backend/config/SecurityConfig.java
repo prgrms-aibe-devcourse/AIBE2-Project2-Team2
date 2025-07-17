@@ -76,7 +76,9 @@ public class SecurityConfig {
                         "/api/auth/kakao/callback"
                 ).permitAll()
                 .antMatchers("/admin/**").hasRole("ADMIN")
-                .antMatchers("/api/auth/logout").hasAnyRole("USER", "ADMIN")
+                .antMatchers("/api/auth/logout").hasAnyRole("USER", "ADMIN", "EXPERT")
+                .antMatchers("/api/expert/upgrade").hasAnyRole("USER", "EXPERT")
+                .antMatchers("/api/expert/**").hasRole("EXPERT")
                 .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)

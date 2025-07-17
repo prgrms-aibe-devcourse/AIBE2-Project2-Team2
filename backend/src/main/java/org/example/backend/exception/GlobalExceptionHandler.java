@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
                 "error", status.getReasonPhrase(),
                 "errorCode", errorCode,
                 "message", message,
-                "errors", errors
+                "errors", errors != null ? errors : Map.of()
         );
         return ResponseEntity.status(status).body(body);
     }

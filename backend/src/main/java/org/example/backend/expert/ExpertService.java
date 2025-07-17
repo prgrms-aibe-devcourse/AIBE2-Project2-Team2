@@ -7,6 +7,7 @@ import org.example.backend.entity.*;
 import org.example.backend.exception.customException.AlreadyExpertException;
 import org.example.backend.exception.customException.MemberNotFoundException;
 import org.example.backend.expert.dto.ExpertRequestDto;
+import org.example.backend.expert.dto.SpecialtyDetailRequestDto;
 import org.example.backend.repository.*;
 import org.springframework.stereotype.Service;
 
@@ -58,7 +59,7 @@ public class ExpertService {
         expertProfileRepository.save(profile);
 
         // 5. 전문 분야 및 상세 분야 저장
-        saveSpecialtyDetails(profile, dto.getSpecialties(), dto.getDetailFields());
+        saveSpecialtyDetails(profile, dto.getSpecialties());
 
         // 6. 기술 스킬 저장
         saveSkills(profile, dto.getSkills());
@@ -69,20 +70,18 @@ public class ExpertService {
         log.info("사용자 {}가 전문가로 성공적으로 전환되었습니다.", email);
     }
 
-    private void saveSpecialtyDetails(ExpertProfile profile, List<String> specialties, List<String> detailFields) {
-        if (specialties.size() != detailFields.size()) {
-            throw new IllegalArgumentException("전문 분야와 상세 분야 목록 크기가 일치하지 않습니다.");
-        }
-        for (int i = 0; i < specialties.size(); i++) {
-            final int index = i;  // final 혹은 effectively final 변수로 복사
-            Specialty specialty = specialtyRepository.findByName(specialties.get(index))
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 전문 분야: " + specialties.get(index)));
+    private void saveSpecialtyDetails(ExpertProfile profile, List<SpecialtyDetailRequestDto> specialtyDetailDtos) {
+        for (SpecialtyDetailRequestDto dto : specialtyDetailDtos) {
+            Specialty specialty = specialtyRepository.findByName(dto.getSpecialty())
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 전문 분야: " + dto.getSpecialty()));
 
-            DetailField detailField = detailFieldRepository.findByName(detailFields.get(index))
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상세 분야: " + detailFields.get(index)));
+            for (String detailName : dto.getDetailFields()) {
+                DetailField detailField = detailFieldRepository.findByName(detailName)
+                        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상세 분야: " + detailName));
 
-            ExpertProfileSpecialtyDetail detail = new ExpertProfileSpecialtyDetail(profile, specialty, detailField);
-            expertProfileSpecialtyDetailRepository.save(detail);
+                ExpertProfileSpecialtyDetail detail = new ExpertProfileSpecialtyDetail(profile, specialty, detailField);
+                expertProfileSpecialtyDetailRepository.save(detail);
+            }
         }
     }
 

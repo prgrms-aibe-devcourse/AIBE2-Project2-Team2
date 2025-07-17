@@ -1,5 +1,6 @@
 package org.example.backend.expert.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,11 +18,8 @@ public class ExpertRequestDto {
 
     @NotEmpty(message = "전문 분야는 최소 1개 이상 선택해야 합니다.")
     @Size(min = 1, max = 3, message = "전문 분야는 1~3개 선택해야 합니다.")
-    private List<String> specialties;
-
-    @NotEmpty(message = "상세 분야는 최소 1개 이상 선택해야 합니다.")
-    @Size(min = 1, max = 7, message = "상세 분야는 1~7개 선택해야 합니다.")
-    private List<String> detailFields;
+    @Valid
+    private List<SpecialtyDetailRequestDto> specialties;
 
     @NotBlank
     @Schema(description = "자기소개", example = "안녕하세요, 디자인 전문가입니다.")
@@ -51,7 +49,8 @@ public class ExpertRequestDto {
     @Schema(description = "페이스북 URL", example = "https://facebook.com/username")
     private String facebookUrl;
 
-    @Schema(description = "X(구 트위터) URL", example = "https://x.com/username")
+    @Schema(name = "xUrl", description = "X(구 트위터) URL", example = "https://x.com/username")
+    @JsonProperty("xUrl")
     private String xUrl;
 
     @Schema(description = "인스타그램 URL", example = "https://instagram.com/username")
@@ -59,6 +58,7 @@ public class ExpertRequestDto {
 
     @NotEmpty(message = "기술은 최소 1개 이상 선택해야 합니다.")
     @Size(min = 1, max = 20, message = "기술은 1~20개 선택해야 합니다.")
+    @Schema(description = "기술 목록", example = "[\"Java\", \"Spring\", \"React\"]")
     private List<String> skills;
 
     @NotEmpty

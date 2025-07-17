@@ -3,6 +3,7 @@ package org.example.backend.expert;
 import org.example.backend.constant.Role;
 import org.example.backend.entity.*;
 import org.example.backend.expert.dto.ExpertRequestDto;
+import org.example.backend.expert.dto.SpecialtyDetailRequestDto;
 import org.example.backend.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,10 +48,14 @@ class ExpertServiceTest {
         roleField.setAccessible(true);
         roleField.set(testMember, Role.USER);
 
-        // 나머지 초기화
+        // 새로운 SpecialtyDetailRequestDto 리스트 생성
+        List<SpecialtyDetailRequestDto> specialtyDetailList = List.of(
+                new SpecialtyDetailRequestDto("디자인", List.of("UX/UI 디자인", "그래픽 디자인"))
+                // 필요하면 다른 전문분야 추가 가능
+        );
+
         requestDto = new ExpertRequestDto(
-                List.of("디자인"),
-                List.of("UX/UI 디자인"),
+                specialtyDetailList,    // 변경됨
                 "소개글",
                 "서울 강남구",
                 5,
@@ -74,13 +79,14 @@ class ExpertServiceTest {
 
         // 더미 Specialty 객체 생성
         Specialty dummySpecialty = new Specialty("디자인");
-
-        // Mock 동작 정의
         when(specialtyRepository.findByName("디자인"))
                 .thenReturn(Optional.of(dummySpecialty));
 
         when(detailFieldRepository.findByName("UX/UI 디자인"))
                 .thenReturn(Optional.of(new DetailField("UX/UI 디자인", dummySpecialty)));
+
+        when(detailFieldRepository.findByName("그래픽 디자인"))
+                .thenReturn(Optional.of(new DetailField("그래픽 디자인", dummySpecialty)));
 
         when(skillRepository.findByName(any())).thenReturn(Optional.empty());
         when(skillRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
