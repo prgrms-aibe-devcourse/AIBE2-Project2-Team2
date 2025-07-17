@@ -36,12 +36,6 @@ public class Member extends BaseTimeEntity{
     @Column(name = "profile_image_url")
     private String profileImageUrl;
 
-    @Column(name = "portfolio_url")
-    private String portfolioUrl;
-
-    @Column(name= "skills")
-    private String skills;
-
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
@@ -69,8 +63,9 @@ public class Member extends BaseTimeEntity{
     @OneToMany(mappedBy = "reported", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Report> reportsReceived = new ArrayList<>();
 
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<MemberSkill> memberSkills = new ArrayList<>();
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private ExpertProfile expertProfile;
+
 
     // 정적 팩토리 메서드
     public static Member create(String email, String encodedPassword, String nickname, String phone, JoinType joinType) {
@@ -87,5 +82,9 @@ public class Member extends BaseTimeEntity{
 
     public void updateLastLoginAt(LocalDateTime time) {
         this.lastLoginAt = time;
+    }
+
+    public void setExpertProfile(ExpertProfile expertProfile) {
+        this.expertProfile = expertProfile;
     }
 }
