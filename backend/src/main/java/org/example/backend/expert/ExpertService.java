@@ -59,7 +59,7 @@ public class ExpertService {
                 dto.getXUrl(),
                 dto.getInstagramUrl()
         );
-        expertProfileRepository.save(profile);
+        expertProfileRepository.save(profile); // 프로필 저장
 
         // 5. 전문 분야 및 상세 분야 저장
         saveSpecialtyDetails(profile, dto.getSpecialties());
@@ -69,6 +69,9 @@ public class ExpertService {
 
         // 7. 경력 저장
         saveCareers(profile, dto.getCareers());
+
+        // 변경된 내용 최종 저장
+        expertProfileRepository.save(profile);
 
         log.info("사용자 {}가 전문가로 성공적으로 전환되었습니다.", email);
     }
@@ -84,18 +87,25 @@ public class ExpertService {
 
                 ExpertProfileSpecialtyDetail detail = new ExpertProfileSpecialtyDetail(profile, specialty, detailField);
                 expertProfileSpecialtyDetailRepository.save(detail);
+
+                profile.getSpecialtyDetailFields().add(detail);
             }
         }
     }
 
-    private void saveSkills(ExpertProfile profile, List<String> skillNames) {
-        if (skillNames == null) return;
+    private void saveSkills(ExpertProfile profile, List<SkillDto> skillDtos) {
+        if (skillDtos == null) return;
 
-        for (String skillName : skillNames) {
-            Skill skill = skillRepository.findByName(skillName)
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 기술 스킬: " + skillName));
+        for (SkillDto skillDto : skillDtos) {
+            SkillCategory category = skillCategoryRepository.findByName(skillDto.getCategory())
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 기술 카테고리: " + skillDto.getCategory()));
+
+            Skill skill = skillRepository.findByNameAndCategory(skillDto.getName(), category)
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 기술 스킬: " + skillDto.getName() + " in category " + skillDto.getCategory()));
+
             profile.getSkills().add(skill);
         }
+        expertProfileRepository.save(profile);
     }
 
     private void saveCareers(ExpertProfile profile, List<String> careers) {
@@ -104,6 +114,7 @@ public class ExpertService {
         for (String careerDesc : careers) {
             Career career = new Career(careerDesc, profile);
             careerRepository.save(career);
+            profile.getCareers().add(career); // 연관관계 관리
         }
     }
 

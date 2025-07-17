@@ -22,6 +22,6 @@ public class SpecialtyDetailRequestDto {
 
     @NotEmpty(message = "상세 분야는 최소 1개 이상 선택해야 합니다.")
     @Size(min = 1, max = 5, message = "상세 분야는 1~5개 선택해야 합니다.")
-    @Schema(description = "상세 분야 목록", example = "[\"UI 디자인\", \"UX 설계\"]")
+    @Schema(description = "상세 분야 목록", example = "[\"웹/모바일 디자인\", \"캐릭터/일러스트\"]")
     private List<@NotBlank String> detailFields;
 }

@@ -77,7 +77,7 @@ public class SecurityConfig {
                 ).permitAll()
                 .antMatchers("/admin/**").hasRole("ADMIN")
                 .antMatchers("/api/auth/logout").hasAnyRole("USER", "ADMIN", "EXPERT")
-                .antMatchers("/api/expert/upgrade").hasAnyRole("USER", "EXPERT")
+                .antMatchers("/api/expert/upgrade","/api/expert/meta").hasAnyRole("USER", "EXPERT")
                 .antMatchers("/api/expert/**").hasRole("EXPERT")
                 .anyRequest().authenticated()
                 .and()

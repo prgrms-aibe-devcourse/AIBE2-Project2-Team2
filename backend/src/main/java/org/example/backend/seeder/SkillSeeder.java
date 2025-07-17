@@ -187,8 +187,8 @@ public class SkillSeeder implements CommandLineRunner {
         );
         saveSkills(writing, writingSkills);
 
-        // 5. IT·프로그래밍
-        SkillCategory it = new SkillCategory("IT·프로그래밍");
+        // 5. IT/프로그래밍
+        SkillCategory it = new SkillCategory("IT/프로그래밍");
         List<String> itSkills = Arrays.asList(
                 "워드프레스",
                 "JavaScript",
@@ -343,8 +343,8 @@ public class SkillSeeder implements CommandLineRunner {
         );
         saveSkills(law, lawSkills);
 
-        // 7. 창업·사업
-        SkillCategory startup = new SkillCategory("창업·사업");
+        // 7. 창업/사업
+        SkillCategory startup = new SkillCategory("창업/사업");
         List<String> startupSkills = Arrays.asList(
                 "프로젝트 컨설팅(PT, 사업계획)",
                 "비즈니스 노하우",

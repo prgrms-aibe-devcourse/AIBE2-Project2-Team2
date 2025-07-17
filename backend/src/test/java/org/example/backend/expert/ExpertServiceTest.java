@@ -3,6 +3,7 @@ package org.example.backend.expert;
 import org.example.backend.constant.Role;
 import org.example.backend.entity.*;
 import org.example.backend.expert.dto.ExpertRequestDto;
+import org.example.backend.expert.dto.SkillDto;
 import org.example.backend.expert.dto.SpecialtyDetailRequestDto;
 import org.example.backend.repository.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,8 +55,15 @@ class ExpertServiceTest {
                 // 필요하면 다른 전문분야 추가 가능
         );
 
+        // SkillDto 리스트 생성 (기존 List<String> -> List<SkillDto>)
+        List<SkillDto> skillDtoList = List.of(
+                new SkillDto("프로그래밍 언어", "Java"),
+                new SkillDto("프로그래밍 언어", "Spring")
+                // 필요하면 다른 스킬 추가 가능
+        );
+
         requestDto = new ExpertRequestDto(
-                specialtyDetailList,    // 변경됨
+                specialtyDetailList,
                 "소개글",
                 "서울 강남구",
                 5,
@@ -65,7 +73,7 @@ class ExpertServiceTest {
                 "https://facebook.com",
                 "https://x.com",
                 "https://instagram.com",
-                List.of("Java", "Spring"),
+                skillDtoList,           // 수정됨
                 List.of("3년 경력 있음")
         );
     }
