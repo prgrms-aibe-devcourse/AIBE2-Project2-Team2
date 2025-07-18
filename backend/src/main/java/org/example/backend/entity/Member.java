@@ -7,6 +7,9 @@ import org.example.backend.constant.Role;
 import org.example.backend.constant.Status;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,6 +80,7 @@ public class Member extends BaseTimeEntity{
         member.role = Role.USER;         // 기본 역할 설정
         member.status = Status.ACTIVE;        // 기본 상태 설정
         member.joinType = joinType;           // 가입 유형 설정
+        member.profileImageUrl = "https://firebasestorage.googleapis.com/v0/b/team2maldive.firebasestorage.app/o/default-profile.png?alt=media"; // 기본 프로필 이미지 URL 설정
         return member;
     }
 
@@ -86,5 +90,13 @@ public class Member extends BaseTimeEntity{
 
     public void changeRole(Role newRole) {
         this.role = newRole;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updateProfileImageUrl(String imageUrl) {
+        this.profileImageUrl = imageUrl;
     }
 }
