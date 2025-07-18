@@ -1,6 +1,7 @@
 package org.example.backend.content.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.backend.constant.Role;
 import org.example.backend.content.dto.ContentRequestDto;
 import org.example.backend.content.dto.ContentResponseDto;
 import org.example.backend.constant.Status;
@@ -20,6 +21,16 @@ import java.util.stream.Collectors;
 @Transactional
 public class ContentService {
     private final ContentRepository contentRepository;
+
+    // 작성자 확인
+    private void verifyContentPermission(Content content, Member member){
+        boolean isOwner = content.getMember().getMemberId().equals(member.getMemberId());
+        boolean isAdmin = member.getRole() == Role.ADMIN;
+
+        if(!isOwner && !isAdmin){
+            throw new NoContentPermissionException("권한이 없습니다.");
+        }
+    }
 
     // 컨텐츠 등록
     public ContentResponseDto createContent(ContentRequestDto requestDto, Member member) {
@@ -58,9 +69,7 @@ public class ContentService {
                 .orElseThrow(() -> new ContentNotFoundException("컨텐츠를 찾을 수 없습니다."));
         
         // 작성자 확인
-        if (!content.getMember().getMemberId().equals(member.getMemberId())) {
-            throw new NoContentPermissionException("컨텐츠 수정 권한이 없습니다.");
-        }
+        verifyContentPermission(content, member);
         
         content.updateContent(
                 requestDto.getTitle(),
@@ -79,10 +88,8 @@ public class ContentService {
                 .orElseThrow(() -> new ContentNotFoundException("컨텐츠를 찾을 수 없습니다."));
         
         // 작성자 확인
-        if (!content.getMember().getMemberId().equals(member.getMemberId())) {
-            throw new NoContentPermissionException("컨텐츠 삭제 권한이 없습니다.");
-        }
-        
+        verifyContentPermission(content, member);
+
         // status를 DELETED로 변경
         content.setStatus(Status.DELETED);
         contentRepository.save(content);
