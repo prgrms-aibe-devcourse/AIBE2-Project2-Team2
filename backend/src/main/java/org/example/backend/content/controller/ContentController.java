@@ -13,7 +13,6 @@ import org.example.backend.repository.MemberRepository;
 import org.springframework.http.HttpStatus;
 import java.security.Principal;
 import org.example.backend.entity.Content;
-import org.example.backend.exception.customException.NoContentPermissionException;
 
 @RestController
 @RequestMapping("/api/content")
@@ -22,14 +21,16 @@ public class ContentController {
     private final ContentService contentService;
     private final MemberRepository memberRepository;
 
+    private Member getAuthenticatedMember(Principal principal){
+        String email = principal.getName();
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+    }
     // 컨텐츠 등록
     @PostMapping
     public ResponseEntity<ContentResponseDto> createContent(@RequestBody ContentRequestDto requestDto, Principal principal) {
         // 인증 정보에서 이메일 추출
-        String email = principal.getName();
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
-
+        Member member = getAuthenticatedMember(principal);
         // Role 체크
         if (member.getRole() != Role.EXPERT) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -49,12 +50,10 @@ public class ContentController {
     // 컨텐츠 상세 조회
     @GetMapping("/{id}")
     public ResponseEntity<ContentResponseDto> getContent(@PathVariable Long id, Principal principal) {
-        String email = principal.getName();
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+        Member member = getAuthenticatedMember(principal);
         Content content = contentService.getContentEntity(id);
         if (!hasContentAccess(member, content)) {
-            throw new NoContentPermissionException("해당 컨텐츠에 대한 권한이 없습니다.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.ok(contentService.toResponseDto(content));
     }
@@ -64,12 +63,10 @@ public class ContentController {
     public ResponseEntity<ContentResponseDto> updateContent(@PathVariable Long id,
                                                             @RequestBody ContentRequestDto requestDto,
                                                             Principal principal) {
-        String email = principal.getName();
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+        Member member = getAuthenticatedMember(principal);
         Content content = contentService.getContentEntity(id);
         if (!hasContentAccess(member, content)) {
-            throw new NoContentPermissionException("해당 컨텐츠에 대한 권한이 없습니다.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         ContentResponseDto response = contentService.updateContent(id, requestDto, member);
         return ResponseEntity.ok(response);
@@ -78,12 +75,10 @@ public class ContentController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteContent(@PathVariable Long id,
                                               Principal principal) {
-        String email = principal.getName();
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("사용자 정보를 찾을 수 없습니다."));
+        Member member = getAuthenticatedMember(principal);
         Content content = contentService.getContentEntity(id);
         if (!hasContentAccess(member, content)) {
-            throw new NoContentPermissionException("해당 컨텐츠에 대한 권한이 없습니다.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         contentService.deleteContent(id, member);
         return ResponseEntity.noContent().build();
