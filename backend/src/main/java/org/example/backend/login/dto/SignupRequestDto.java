@@ -40,7 +40,7 @@ public class SignupRequestDto {
     private String email;       // 이메일
 
     @NotNull
-    @Schema(description = "회원가입 타입 (예: KAKAO, NOMAL)", example = "KAKAO")
+    @Schema(description = "회원가입 타입 (예: KAKAO, NORMAL)", example = "NORMAL")
     private JoinType joinType;    // 회원가입 타입 (예: KAKAO, NORMAL 등)
 
 }

@@ -8,7 +8,7 @@ import javax.persistence.*;
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "skills")  // specialties, detail_fields도 마찬가지
+@Table(name = "skills")
 public class Skill {
 
     @Id
@@ -16,10 +16,15 @@ public class Skill {
     @Column(name = "skill_id")
     private Long skillId;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String name;
 
-    public Skill(String name) {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "skill_category_id", nullable = false)
+    private SkillCategory category;
+
+    public Skill(String name, SkillCategory category) {
         this.name = name;
+        this.category = category;
     }
 }

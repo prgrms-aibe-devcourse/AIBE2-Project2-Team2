@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
                 "error", status.getReasonPhrase(),
                 "errorCode", errorCode,
                 "message", message,
-                "errors", errors
+                "errors", errors != null ? errors : Map.of()
         );
         return ResponseEntity.status(status).body(body);
     }
@@ -102,5 +102,48 @@ public class GlobalExceptionHandler {
                 null
         );
     }
-
+    // 유저 정보 조회시 유저 정보가 없을 때 핸들링
+    @ExceptionHandler(MemberNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleMemberNotFound(MemberNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "MEMBER_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 유저가 이미 전문가일 때 핸들링
+    @ExceptionHandler(AlreadyExpertException.class)
+    public ResponseEntity<Map<String, Object>> handleAlreadyExpert(AlreadyExpertException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "ALREADY_EXPERT",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 없는 전문 분야를 요청했을 때 핸들링
+    @ExceptionHandler(SpecialtyNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleSpecialtyNotFound(SpecialtyNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "SPECIALTY_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 없는 상세 분야를 요청했을 때 핸들링
+    @ExceptionHandler(DetailFieldNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleDetailFieldNotFound(DetailFieldNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "DETAIL_FIELD_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
 }

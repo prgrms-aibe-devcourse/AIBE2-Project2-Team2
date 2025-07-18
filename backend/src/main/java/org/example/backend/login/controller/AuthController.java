@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.backend.login.dto.KakaoLoginResponseDto;
 import org.example.backend.login.dto.SignupRequestDto;
 import org.example.backend.login.service.AuthService;
 import org.springframework.http.HttpStatus;
@@ -141,10 +142,14 @@ public class AuthController {
                     description = "로그인 또는 자동 회원가입 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = Object.class),
+                            schema = @Schema(implementation = KakaoLoginResponseDto.class),
                             examples = @ExampleObject(
                                     name = "성공 응답",
-                                    value = "{ \"message\": \"로그인 성공\" }"
+                                    value = "{\n" +
+                                            "  \"message\": \"로그인 성공\",\n" +
+                                            "  \"nickname\": \"홍길동\",\n" +
+                                            "  \"role\": \"USER\"\n" +
+                                            "}"
                             )
                     )
             ),
@@ -173,7 +178,7 @@ public class AuthController {
             HttpServletResponse response
     ) {
         log.info("카카오 로그인 콜백 요청 code: {}", code);
-        authService.kakaoLogin(code, response);
-        return ResponseEntity.ok(Map.of("message", "로그인 성공"));
+        KakaoLoginResponseDto result = authService.kakaoLogin(code, response);
+        return ResponseEntity.ok(result);
     }
 }

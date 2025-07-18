@@ -71,14 +71,35 @@ public class ExpertProfile {
     private Double rating;       // 평균 평점
 
 
-    public ExpertProfile(Member member, String introduction, String region,
-                         Integer totalCareerYears, String education, Integer employeeCount) {
-        this.member = member;
-        this.introduction = introduction;
-        this.region = region;
-        this.totalCareerYears = totalCareerYears;
-        this.education = education;
-        this.employeeCount = employeeCount;
+    // 생성 메서드 추가
+    public static ExpertProfile createExpertProfile(Member member, String introduction, String region,
+                                                    Integer totalCareerYears, String education, Integer employeeCount,
+                                                    String websiteUrl, String facebookUrl, String xUrl, String instagramUrl) {
+        ExpertProfile profile = new ExpertProfile();
+        profile.member = member;
+        profile.introduction = introduction != null ? introduction : "";
+        profile.region = region != null ? region : "";
+        profile.totalCareerYears = totalCareerYears != null ? totalCareerYears : 0;
+        profile.education = education != null ? education : "";
+        profile.employeeCount = employeeCount != null ? employeeCount : 0;
+        profile.websiteUrl = websiteUrl;
+        profile.facebookUrl = facebookUrl;
+        profile.xUrl = xUrl;
+        profile.instagramUrl = instagramUrl;
+        return profile;
     }
-
+    //업데이트 메서드 (변경용)
+    public void updateProfileInfo(String introduction, String region, Integer totalCareerYears,
+                                  String education, Integer employeeCount, String websiteUrl,
+                                  String facebookUrl, String xUrl, String instagramUrl) {
+        this.introduction = introduction != null ? introduction : this.introduction;
+        this.region = region != null ? region : this.region;
+        this.totalCareerYears = totalCareerYears != null ? totalCareerYears : this.totalCareerYears;
+        this.education = education != null ? education : this.education;
+        this.employeeCount = employeeCount != null ? employeeCount : this.employeeCount;
+        this.websiteUrl = websiteUrl;
+        this.facebookUrl = facebookUrl;
+        this.xUrl = xUrl;
+        this.instagramUrl = instagramUrl;
+    }
 }

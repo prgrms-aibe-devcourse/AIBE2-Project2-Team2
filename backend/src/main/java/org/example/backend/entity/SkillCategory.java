@@ -10,21 +10,21 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(name = "specialties")
-public class Specialty {
+@Table(name = "skill_categories")
+public class SkillCategory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "specialty_id")
-    private Long specialtyId;
+    @Column(name = "skill_category_id")
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String name;
 
-    @OneToMany(mappedBy = "specialty", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DetailField> detailFields = new ArrayList<>();
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Skill> skills = new ArrayList<>();
 
-    public Specialty(String name) {
+    public SkillCategory(String name) {
         this.name = name;
     }
 }

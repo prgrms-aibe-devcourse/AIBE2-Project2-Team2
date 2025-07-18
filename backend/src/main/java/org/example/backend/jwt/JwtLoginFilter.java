@@ -85,6 +85,10 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         // ✅ Redis에 JTI 저장
         redisService.storeActiveToken(tokenInfo.getJti(), email, tokenInfo.getExpirationMs());
 
+        // 닉네임 조회
+        Member member = loginService.findByEmail(email);
+        String nickname = member.getNickname();
+
         try {
             loginService.updateLastLogin(email);
             log.info("updateLastLogin 메서드 종료 후");
@@ -106,7 +110,10 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write("{\"message\":\"로그인 성공\"}");
+        response.getWriter().write(String.format(
+                "{\"message\": \"로그인 성공\", \"nickname\": \"%s\", \"role\": \"%s\"}",
+                nickname, role
+        ));
 
 //        String token = tokenInfo.getToken();
 //        int maxAge = (int)(tokenInfo.getExpirationMs() / 1000);

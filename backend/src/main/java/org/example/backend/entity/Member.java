@@ -84,7 +84,7 @@ public class Member extends BaseTimeEntity{
         this.lastLoginAt = time;
     }
 
-    public void setExpertProfile(ExpertProfile expertProfile) {
-        this.expertProfile = expertProfile;
+    public void changeRole(Role newRole) {
+        this.role = newRole;
     }
 }

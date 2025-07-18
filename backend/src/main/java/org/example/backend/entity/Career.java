@@ -23,8 +23,15 @@ public class Career {
     @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
 
-    public Career(String description) {
+    // 생성자에 expertProfile 포함
+    public Career(String description, ExpertProfile expertProfile) {
         this.description = description;
+        this.expertProfile = expertProfile;
+    }
+
+    // 또는 연관관계 편의 메서드
+    public void assignExpertProfile(ExpertProfile expertProfile) {
+        this.expertProfile = expertProfile;
     }
 
 }
