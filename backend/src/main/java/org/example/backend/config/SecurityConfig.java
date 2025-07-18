@@ -73,10 +73,11 @@ public class SecurityConfig {
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html",
-                        "/api/auth/kakao/callback"
+                        "/api/auth/kakao/callback",
+                        "/error"
                 ).permitAll()
                 .antMatchers("/admin/**").hasRole("ADMIN")
-                .antMatchers("/api/auth/logout").hasAnyRole("USER", "ADMIN", "EXPERT")
+                .antMatchers("/api/auth/logout","/api/me").hasAnyRole("USER", "ADMIN", "EXPERT")
                 .antMatchers("/api/expert/upgrade","/api/expert/meta").hasAnyRole("USER", "EXPERT")
                 .antMatchers("/api/expert/**").hasRole("EXPERT")
                 .anyRequest().authenticated()

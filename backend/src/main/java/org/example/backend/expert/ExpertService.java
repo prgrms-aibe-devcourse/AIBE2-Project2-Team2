@@ -4,10 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.constant.Role;
 import org.example.backend.entity.*;
-import org.example.backend.exception.customException.AlreadyExpertException;
-import org.example.backend.exception.customException.DetailFieldNotFoundException;
-import org.example.backend.exception.customException.MemberNotFoundException;
-import org.example.backend.exception.customException.SpecialtyNotFoundException;
+import org.example.backend.exception.customException.*;
 import org.example.backend.expert.dto.*;
 import org.example.backend.repository.*;
 import org.springframework.stereotype.Service;
@@ -98,10 +95,10 @@ public class ExpertService {
 
         for (SkillDto skillDto : skillDtos) {
             SkillCategory category = skillCategoryRepository.findByName(skillDto.getCategory())
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 기술 카테고리: " + skillDto.getCategory()));
+                    .orElseThrow(() -> new SkillCategoryNotFoundException("존재하지 않는 기술 카테고리: " + skillDto.getCategory()));
 
             Skill skill = skillRepository.findByNameAndCategory(skillDto.getName(), category)
-                    .orElseThrow(() -> new RuntimeException("존재하지 않는 기술 스킬: " + skillDto.getName() + " in category " + skillDto.getCategory()));
+                    .orElseThrow(() -> new SkillNotFoundException("존재하지 않는 기술 스킬: " + skillDto.getName() + " in category " + skillDto.getCategory()));
 
             profile.getSkills().add(skill);
         }
