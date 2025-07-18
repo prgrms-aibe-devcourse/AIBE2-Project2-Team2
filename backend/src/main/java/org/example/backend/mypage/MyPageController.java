@@ -1,6 +1,7 @@
 package org.example.backend.mypage;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,8 +12,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.mypage.dto.request.NicknameUpdateRequestDto;
 import org.example.backend.mypage.dto.response.MyPageResponseDto;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.security.Principal;
@@ -88,5 +92,33 @@ public class MyPageController {
         String email = principal.getName();
         myPageService.updateNickname(email, dto);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 마이페이지 프로필 이미지 업로드 또는 교체
+     * POST /api/me/profile-image
+     */
+    @Operation(summary = "마이페이지 프로필 이미지 업로드", description = "로그인한 사용자의 프로필 이미지를 업로드하거나 기존 이미지를 교체합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "프로필 이미지 업로드 또는 교체 성공", content = @Content),
+            @ApiResponse(responseCode = "400", description = "잘못된 파일 형식 또는 요청 데이터", content = @Content),
+            @ApiResponse(responseCode = "404", description = "사용자 정보 없음", content = @Content),
+            @ApiResponse(responseCode = "500", description = "서버 또는 파이어베이스 오류", content = @Content)
+    })
+    @PostMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadOrReplaceProfileImage(
+            Principal principal,
+            @Parameter(
+                    name = "file",
+                    description = "업로드할 프로필 이미지 (jpeg, png 등)",
+                    required = true,
+                    content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+            )
+            @RequestPart("file") MultipartFile file
+    ) {
+        String email = principal.getName();
+        log.info("프로필 이미지 업로드 요청 - 이메일: {}", email);
+        myPageService.updateProfileImage(email, file);
+        return ResponseEntity.status(HttpStatus.CREATED).build(); // 201 Created 반환
     }
 }
