@@ -23,6 +23,9 @@ public class QuestionOption {
     @Column(name = "option_text", nullable = false)
     private String optionText;
 
+    @Column(name = "additional_price", nullable = false)
+    private String additionalPrice;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
     @JsonBackReference
