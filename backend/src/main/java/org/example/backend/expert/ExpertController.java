@@ -256,7 +256,9 @@ public class ExpertController {
                                     "    {\"id\": 11, \"url\": \"https://image.url/2.jpg\"}\n" +
                                     "  ],\n" +
                                     "  \"reviewCount\": 25,\n" +
-                                    "  \"rating\": 4.8\n" +
+                                    "  \"rating\": 4.8,\n" +
+                                    "  \"expertNickname\": \"expertUser\",\n" +
+                                    "  \"expertProfileImageUrl\": \"https://profile.image.url\"\n" +
                                     "}")
                     )
             ),
@@ -277,5 +279,11 @@ public class ExpertController {
         PortfolioDetailResponseDto dto = expertService.getPortfolioDetail(portfolioId);
         return ResponseEntity.ok(dto);
     }
+
+    /**
+     * 전문가 프로필의 포트폴리오 목록 조회 API
+     * 전문가의 포트폴리오 목록을 조회합니다.
+     * GET /api/expert/portfolios
+     */
 
 }

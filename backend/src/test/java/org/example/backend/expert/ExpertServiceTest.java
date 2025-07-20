@@ -215,6 +215,29 @@ class ExpertServiceTest {
             fail("리플렉션 세팅 실패");
         }
 
+        // Member 객체 생성 및 닉네임, 프로필 이미지 URL 세팅
+        Member expertMember = new Member();
+        try {
+            Field nicknameField = Member.class.getDeclaredField("nickname");
+            nicknameField.setAccessible(true);
+            nicknameField.set(expertMember, "expertNick");
+
+            Field profileImageUrlField = Member.class.getDeclaredField("profileImageUrl");
+            profileImageUrlField.setAccessible(true);
+            profileImageUrlField.set(expertMember, "http://profile.image.url");
+        } catch (Exception e) {
+            fail("Member 리플렉션 세팅 실패");
+        }
+
+        // ExpertProfile에 Member 연결
+        try {
+            Field memberField = ExpertProfile.class.getDeclaredField("member");
+            memberField.setAccessible(true);
+            memberField.set(expertProfile, expertMember);
+        } catch (Exception e) {
+            fail("ExpertProfile 리플렉션 세팅 실패");
+        }
+
         // given: 테스트용 Portfolio 객체 생성 및 필드 세팅
         Portfolio portfolio = new Portfolio();
         try {
@@ -299,6 +322,10 @@ class ExpertServiceTest {
 
         assertEquals(5L, dto.getReviewCount()); // 리뷰 수
         assertEquals(4.5, dto.getRating());     // 평점
+
+        // 추가된 필드 검증
+        assertEquals("expertNick", dto.getExpertNickname());
+        assertEquals("http://profile.image.url", dto.getExpertProfileImageUrl());
     }
 
 }

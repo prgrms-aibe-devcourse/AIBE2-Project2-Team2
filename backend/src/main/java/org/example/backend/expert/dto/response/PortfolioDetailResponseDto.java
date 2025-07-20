@@ -20,6 +20,8 @@ public class PortfolioDetailResponseDto {
     private List<PortfolioImageDto> images;
 
     // 전문가 정보
+    private String expertNickname;
+    private String expertProfileImageUrl;
     private Long reviewCount;
     private Double rating;
 

@@ -231,6 +231,8 @@ public class ExpertService {
 
         ExpertProfile expertProfile = portfolio.getExpertProfile();
 
+        Member expertMember = expertProfile.getMember();
+
         // 이미지 리스트 변환
         List<PortfolioDetailResponseDto.PortfolioImageDto> imageDtos = portfolio.getImages().stream()
                 .map(img -> new PortfolioDetailResponseDto.PortfolioImageDto(
@@ -248,6 +250,8 @@ public class ExpertService {
                 .images(imageDtos)
                 .reviewCount(expertProfile.getReviewCount())
                 .rating(expertProfile.getRating())
+                .expertNickname(expertMember.getNickname())
+                .expertProfileImageUrl(expertMember.getProfileImageUrl())
                 .build();
     }
 }
