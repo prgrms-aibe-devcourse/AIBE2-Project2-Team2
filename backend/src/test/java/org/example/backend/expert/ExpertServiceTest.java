@@ -2,9 +2,9 @@ package org.example.backend.expert;
 
 import org.example.backend.constant.Role;
 import org.example.backend.entity.*;
-import org.example.backend.expert.dto.ExpertRequestDto;
-import org.example.backend.expert.dto.SkillDto;
-import org.example.backend.expert.dto.SpecialtyDetailRequestDto;
+import org.example.backend.expert.dto.request.ExpertRequestDto;
+import org.example.backend.expert.dto.request.SkillDto;
+import org.example.backend.expert.dto.request.SpecialtyDetailRequestDto;
 import org.example.backend.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +33,8 @@ class ExpertServiceTest {
     @Mock private ExpertProfileSpecialtyDetailRepository expertProfileSpecialtyDetailRepository;
     @Mock private SkillRepository skillRepository;
     @Mock private CareerRepository careerRepository;
+
+    @Mock private ExpertProfileRepositoryCustom expertProfileRepositoryCustom;
 
     private Member testMember;
     private ExpertRequestDto requestDto;

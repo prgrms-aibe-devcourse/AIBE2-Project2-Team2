@@ -5,9 +5,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.backend.constant.Role;
 import org.example.backend.entity.*;
 import org.example.backend.exception.customException.*;
-import org.example.backend.expert.dto.*;
+import org.example.backend.expert.dto.request.ExpertRequestDto;
+import org.example.backend.expert.dto.request.SkillDto;
+import org.example.backend.expert.dto.request.SpecialtyDetailRequestDto;
+import org.example.backend.expert.dto.response.DetailFieldDto;
+import org.example.backend.expert.dto.response.ExpertProfileDto;
+import org.example.backend.expert.dto.response.ExpertSignupMetaDto;
+import org.example.backend.expert.dto.response.SkillCategoryDto;
 import org.example.backend.repository.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,6 +23,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ExpertService {
 
     private final MemberRepository memberRepository;
@@ -159,6 +167,15 @@ public class ExpertService {
                 "대구","인천", "광주", "대전", "울산", "세종", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주","해외");
 
         return new ExpertSignupMetaDto(detailFields, skills, regions);
+    }
+
+    @Transactional(readOnly = true)
+    public ExpertProfileDto getExpertProfile(String email) {
+        ExpertProfileDto profileDto = expertProfileRepository.findExpertProfileByEmail(email);
+        if (profileDto == null) {
+            throw new RuntimeException("해당 이메일의 전문가 프로필이 존재하지 않습니다.");  // 필요시 커스텀 예외로 변경 가능
+        }
+        return profileDto;
     }
 }
 
