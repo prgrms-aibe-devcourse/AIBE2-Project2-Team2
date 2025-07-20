@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -30,4 +31,7 @@ public class ChatRoom {
         this.member1 = member1;
         this.member2 = member2;
     }
+
+    private LocalDate reg_date;
+    private LocalDate update_date;
 }

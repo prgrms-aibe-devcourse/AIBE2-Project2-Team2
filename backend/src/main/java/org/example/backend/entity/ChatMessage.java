@@ -21,6 +21,8 @@ public class ChatMessage extends BaseTimeEntity {
     @JoinColumn(name = "chatroom_id")
     private ChatRoom chatRoom;
 
+    private Long senderId;
+
     @Column(columnDefinition = "TEXT")
     private String message;
 
@@ -28,9 +30,10 @@ public class ChatMessage extends BaseTimeEntity {
     private LocalDateTime sendAt;
 
     @Builder
-    public ChatMessage(ChatRoom chatRoom, String message) {
+    public ChatMessage(ChatRoom chatRoom, String message, Long senderId) {
         this.chatRoom = chatRoom;
         this.message = message;
+        this.senderId = senderId;
         this.isRead = false;
         this.sendAt = LocalDateTime.now();
     }
