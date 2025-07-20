@@ -58,8 +58,8 @@ public class ExpertRequestDto {
 
     @NotEmpty(message = "기술은 최소 1개 이상 선택해야 합니다.")
     @Size(min = 1, max = 20, message = "기술은 1~20개 선택해야 합니다.")
-    @Schema(description = "기술 목록", example = "[\"Java\", \"Spring\", \"React\"]")
-    private List<String> skills;
+    @Schema(description = "기술 목록")
+    private List<@Valid SkillDto> skills;
 
     @NotEmpty
     @Schema(description = "경력 설명 목록", example = "[\"ABC 회사에서 3년 근무\", \"XYZ 디자인 프로젝트 참여\"]")

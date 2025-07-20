@@ -21,7 +21,7 @@ import java.util.UUID;
 public class FirebaseImageService {
 
     // 이미지 업로드 메소드
-    private String uploadImage(MultipartFile file, String itemName) {
+    public String uploadImage(MultipartFile file, String itemName) {
         try (InputStream inputStream = file.getInputStream()) {
             // 원본 파일명과 확장자 분리
             String originalFileName = file.getOriginalFilename();
@@ -37,10 +37,9 @@ public class FirebaseImageService {
 
             // UUID 생성 및 파일명 조합
             String uuid = UUID.randomUUID().toString();
-            String newFileName = itemName + "-" + uuid + ext;
 
             // Firebase Storage 경로 설정
-            String blobString = "items/" + newFileName;
+            String blobString = itemName + "-" + uuid + ext;
 
             log.info("StorageClient 초기화 확인: {}", StorageClient.getInstance().bucket().getName());
 
@@ -64,7 +63,7 @@ public class FirebaseImageService {
     }
 
     // 기존 이미지 삭제 메소드
-    private void deleteImage(String imageUrl) {
+    public void deleteImage(String imageUrl) {
         try {
             // 이미지 URL에서 Firebase Storage 내 경로(blobString)를 추출
             String decodedUrl = URLDecoder.decode(imageUrl, StandardCharsets.UTF_8);

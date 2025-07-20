@@ -1,6 +1,7 @@
 package org.example.backend.exception;
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.backend.exception.customException.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -142,6 +144,40 @@ public class GlobalExceptionHandler {
                 request,
                 HttpStatus.BAD_REQUEST,
                 "DETAIL_FIELD_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 일반 예외처리 추가
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex, HttpServletRequest request) {
+        log.error("예상치 못한 오류 발생", ex);
+        return buildErrorResponse(
+                request,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "INTERNAL_SERVER_ERROR",
+                "서버 내부 오류가 발생했습니다.",
+                null
+        );
+    }
+    // 해당 스킬 카테고리가 없을 때 핸들링
+    @ExceptionHandler(SkillCategoryNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleSkillCategoryNotFound(SkillCategoryNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "SKILL_CATEGORY_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 해당 스킬이 없을 때 핸들링
+    @ExceptionHandler(SkillNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleSkillNotFound(SkillNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "SKILL_NOT_FOUND",
                 ex.getMessage(),
                 null
         );
