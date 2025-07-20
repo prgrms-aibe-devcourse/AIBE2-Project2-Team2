@@ -33,6 +33,7 @@ class ExpertServiceTest {
     @Mock private ExpertProfileSpecialtyDetailRepository expertProfileSpecialtyDetailRepository;
     @Mock private SkillRepository skillRepository;
     @Mock private CareerRepository careerRepository;
+    @Mock private SkillCategoryRepository skillCategoryRepository;
 
     @Mock private ExpertProfileRepositoryCustom expertProfileRepositoryCustom;
 
@@ -53,14 +54,14 @@ class ExpertServiceTest {
 
         // 새로운 SpecialtyDetailRequestDto 리스트 생성
         List<SpecialtyDetailRequestDto> specialtyDetailList = List.of(
-                new SpecialtyDetailRequestDto("디자인", List.of("UX/UI 디자인", "그래픽 디자인"))
+                new SpecialtyDetailRequestDto("디자인", List.of("웹/모바일 디자인", "마케팅 디자인"))
                 // 필요하면 다른 전문분야 추가 가능
         );
 
         // SkillDto 리스트 생성 (기존 List<String> -> List<SkillDto>)
         List<SkillDto> skillDtoList = List.of(
-                new SkillDto("프로그래밍 언어", "Java"),
-                new SkillDto("프로그래밍 언어", "Spring")
+                new SkillDto("IT/프로그래밍", "Java"),
+                new SkillDto("IT/프로그래밍", "Spring")
                 // 필요하면 다른 스킬 추가 가능
         );
 
@@ -92,11 +93,11 @@ class ExpertServiceTest {
         when(specialtyRepository.findByName("디자인"))
                 .thenReturn(Optional.of(dummySpecialty));
 
-        when(detailFieldRepository.findByName("UX/UI 디자인"))
-                .thenReturn(Optional.of(new DetailField("UX/UI 디자인", dummySpecialty)));
+        when(detailFieldRepository.findByName("웹/모바일 디자인"))
+                .thenReturn(Optional.of(new DetailField("웹/모바일 디자인", dummySpecialty)));
 
-        when(detailFieldRepository.findByName("그래픽 디자인"))
-                .thenReturn(Optional.of(new DetailField("그래픽 디자인", dummySpecialty)));
+        when(detailFieldRepository.findByName("마케팅 디자인"))
+                .thenReturn(Optional.of(new DetailField("마케팅 디자인", dummySpecialty)));
 
         when(skillRepository.findByName(any())).thenReturn(Optional.empty());
         when(skillRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -134,5 +135,63 @@ class ExpertServiceTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> expertService.upgradeToExpert("test@example.com", requestDto));
+    }
+
+    @Test
+    @WithMockUser(username = "test@example.com", roles = {"EXPERT"})
+    void updateExpertProfile_정상작동() {
+        // given
+        testMember.changeRole(Role.EXPERT);
+
+        // 기존 전문가 프로필 생성
+        ExpertProfile existingProfile = ExpertProfile.createExpertProfile(
+                testMember,
+                "기존 소개", "기존 지역", 2, "기존 학력", 3,
+                "oldUrl", "oldFb", "oldX", "oldInsta"
+        );
+
+        when(memberRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testMember));
+        when(expertProfileRepository.findByMember(testMember)).thenReturn(Optional.of(existingProfile));
+
+        // Specialty 및 DetailField mock 설정
+        Specialty dummySpecialty = new Specialty("디자인");
+        when(specialtyRepository.findByName("디자인"))
+                .thenReturn(Optional.of(dummySpecialty));
+
+        when(detailFieldRepository.findByName("웹/모바일 디자인"))
+                .thenReturn(Optional.of(new DetailField("웹/모바일 디자인", dummySpecialty)));
+
+        when(detailFieldRepository.findByName("마케팅 디자인"))
+                .thenReturn(Optional.of(new DetailField("마케팅 디자인", dummySpecialty)));
+
+        // Skill mock 설정
+        SkillCategory dummyCategory = new SkillCategory("IT/프로그래밍");
+        Skill javaSkill = new Skill("Java", dummyCategory);
+        Skill springSkill = new Skill("Spring", dummyCategory);
+
+        when(skillRepository.findByNameAndCategory("Java", dummyCategory))
+                .thenReturn(Optional.of(javaSkill));
+        when(skillRepository.findByNameAndCategory("Spring", dummyCategory))
+                .thenReturn(Optional.of(springSkill));
+        when(skillCategoryRepository.findByName("IT/프로그래밍"))
+                .thenReturn(Optional.of(dummyCategory));
+
+        // when
+        expertService.updateExpertProfile("test@example.com", requestDto);
+
+        // then
+        verify(expertProfileSpecialtyDetailRepository).deleteAllByExpertProfile(existingProfile);
+        verify(careerRepository).deleteAllByExpertProfile(existingProfile);
+        verify(expertProfileRepository, atLeastOnce()).save(existingProfile);
+
+        assertEquals("소개글", existingProfile.getIntroduction());
+        assertEquals("서울 강남구", existingProfile.getRegion());
+        assertEquals(5, existingProfile.getTotalCareerYears());
+        assertEquals("서울대", existingProfile.getEducation());
+        assertEquals(10, existingProfile.getEmployeeCount());
+
+        assertEquals(2, existingProfile.getSpecialtyDetailFields().size());
+        assertEquals(2, existingProfile.getSkills().size());
+        assertEquals(1, existingProfile.getCareers().size());
     }
 }

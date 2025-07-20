@@ -16,6 +16,7 @@ import org.example.backend.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -169,6 +170,7 @@ public class ExpertService {
         return new ExpertSignupMetaDto(detailFields, skills, regions);
     }
 
+    // 전문가 프로필 조회
     @Transactional(readOnly = true)
     public ExpertProfileDto getExpertProfile(String email) {
         ExpertProfileDto profileDto = expertProfileRepository.findExpertProfileByEmail(email);
@@ -176,6 +178,50 @@ public class ExpertService {
             throw new RuntimeException("해당 이메일의 전문가 프로필이 존재하지 않습니다.");  // 필요시 커스텀 예외로 변경 가능
         }
         return profileDto;
+    }
+
+    @Transactional
+    public void updateExpertProfile(String email, ExpertRequestDto dto) {
+        // 1. 이메일로 회원 조회 (전문가 권한이어야 함)
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberNotFoundException("해당 이메일의 사용자가 존재하지 않습니다."));
+
+        if (member.getRole() != Role.EXPERT) {
+            throw new NotExpertException("전문가가 아닌 사용자는 프로필을 수정할 수 없습니다.");
+        }
+
+        // 2. 기존 전문가 프로필 조회
+        ExpertProfile profile = expertProfileRepository.findByMember(member)
+                .orElseThrow(() -> new ExpertProfileNotFoundException("전문가 프로필이 존재하지 않습니다."));
+
+        // 3. 연관 데이터 초기화
+        expertProfileSpecialtyDetailRepository.deleteAllByExpertProfile(profile);
+        profile.getSpecialtyDetailFields().clear();
+
+        profile.getSkills().clear();
+
+        careerRepository.deleteAllByExpertProfile(profile);
+        profile.getCareers().clear();
+
+        // 4. 프로필 정보 업데이트
+        profile.updateProfileInfo(
+                dto.getIntroduction(),
+                dto.getRegion(),
+                dto.getTotalCareerYears(),
+                dto.getEducation(),
+                dto.getEmployeeCount(),
+                dto.getWebsiteUrl(),
+                dto.getFacebookUrl(),
+                dto.getXUrl(),
+                dto.getInstagramUrl()
+        );
+
+        // 5. 새롭게 연관 데이터 저장
+        saveSpecialtyDetails(profile, dto.getSpecialties());
+        saveSkills(profile, dto.getSkills());
+        saveCareers(profile, dto.getCareers());
+
+        expertProfileRepository.save(profile);
     }
 }
 

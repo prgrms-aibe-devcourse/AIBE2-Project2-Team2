@@ -91,24 +91,51 @@ public class ExpertController {
                             mediaType = "application/json",
                             schema = @Schema(implementation = ExpertSignupMetaDto.class),
                             examples = @ExampleObject(value = "{\n" +
-                                    "  \"categories\": [\n" +
-                                    "    { \"id\": 1, \"name\": \"디자인\" },\n" +
-                                    "    { \"id\": 2, \"name\": \"마케팅\" }\n" +
-                                    "  ],\n" +
-                                    "  \"subCategories\": [\n" +
-                                    "    { \"id\": 11, \"name\": \"UI/UX\", \"categoryId\": 1 },\n" +
-                                    "    { \"id\": 21, \"name\": \"SNS 마케팅\", \"categoryId\": 2 }\n" +
+                                    "  \"detailFields\": [\n" +
+                                    "    {\n" +
+                                    "      \"specialty\": \"IT/프로그래밍\",\n" +
+                                    "      \"detailFields\": [\n" +
+                                    "        \"UX 기획\",\n" +
+                                    "        \"웹사이트 신규 제작\",\n" +
+                                    "        \"웹사이트 개선/버그수정\"\n" +
+                                    "      ]\n" +
+                                    "    },\n" +
+                                    "    {\n" +
+                                    "      \"specialty\": \"디자인\",\n" +
+                                    "      \"detailFields\": [\n" +
+                                    "        \"로고 디자인\",\n" +
+                                    "        \"브랜드 디자인/가이드\"\n" +
+                                    "      ]\n" +
+                                    "    }\n" +
                                     "  ],\n" +
                                     "  \"skills\": [\n" +
-                                    "    { \"id\": 101, \"name\": \"Adobe Photoshop\", \"categoryId\": 1 },\n" +
-                                    "    { \"id\": 201, \"name\": \"인스타그램 관리\", \"categoryId\": 2 }\n" +
+                                    "    {\n" +
+                                    "      \"categoryName\": \"IT/프로그래밍\",\n" +
+                                    "      \"skills\": [\n" +
+                                    "        \"Java\",\n" +
+                                    "        \"Python\",\n" +
+                                    "        \"JavaScript\"\n" +
+                                    "      ]\n" +
+                                    "    },\n" +
+                                    "    {\n" +
+                                    "      \"categoryName\": \"디자인\",\n" +
+                                    "      \"skills\": [\n" +
+                                    "        \"Photoshop\",\n" +
+                                    "        \"Illustrator\"\n" +
+                                    "      ]\n" +
+                                    "    }\n" +
+                                    "  ],\n" +
+                                    "  \"regions\": [\n" +
+                                    "    \"서울\",\n" +
+                                    "    \"부산\",\n" +
+                                    "    \"대구\"\n" +
                                     "  ]\n" +
                                     "}")
                     )
             )
     })
     @GetMapping("/meta")
-    public ResponseEntity<?> getExpertSignupMeta() {
+    public ResponseEntity<ExpertSignupMetaDto> getExpertSignupMeta() {
         ExpertSignupMetaDto meta = expertService.getExpertSignupMeta();
         return ResponseEntity.ok(meta);
     }
@@ -173,5 +200,30 @@ public class ExpertController {
         log.info("전문가 프로필 조회 요청: {}", email);
         ExpertProfileDto profile = expertService.getExpertProfile(email);
         return ResponseEntity.ok(profile);
+    }
+
+    /**
+     * 전문가 프로필 업데이트 API
+     * 전문가 프로필 정보를 업데이트합니다.
+     * PUT /api/expert/profile
+     */
+    @Operation(
+            summary = "전문가 프로필 수정",
+            description = "기존 전문가 프로필 정보를 전체 덮어쓰기 방식으로 수정합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "전문가 프로필 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "입력값 오류"),
+            @ApiResponse(responseCode = "404", description = "회원 또는 프로필 없음")
+    })
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateExpertProfile(
+            @Valid @RequestBody ExpertRequestDto dto,
+            Principal principal
+    ) {
+        String email = principal.getName();
+        log.info("전문가 프로필 수정 요청: {}", email);
+        expertService.updateExpertProfile(email, dto);
+        return ResponseEntity.noContent().build();
     }
 }
