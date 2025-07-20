@@ -8,11 +8,9 @@ import org.example.backend.exception.customException.*;
 import org.example.backend.expert.dto.request.ExpertRequestDto;
 import org.example.backend.expert.dto.request.SkillDto;
 import org.example.backend.expert.dto.request.SpecialtyDetailRequestDto;
-import org.example.backend.expert.dto.response.DetailFieldDto;
-import org.example.backend.expert.dto.response.ExpertProfileDto;
-import org.example.backend.expert.dto.response.ExpertSignupMetaDto;
-import org.example.backend.expert.dto.response.SkillCategoryDto;
+import org.example.backend.expert.dto.response.*;
 import org.example.backend.repository.*;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +33,7 @@ public class ExpertService {
     private final SkillRepository skillRepository;
     private final CareerRepository careerRepository;
     private final SkillCategoryRepository skillCategoryRepository;
+    private final PortfolioRepository portfolioRepository;
 
     // 전문가로 전환하는 메소드 - 포트폴리오는 제외하고 나머지 정보들 등록
     public void upgradeToExpert(String email, ExpertRequestDto dto) {
@@ -222,6 +221,34 @@ public class ExpertService {
         saveCareers(profile, dto.getCareers());
 
         expertProfileRepository.save(profile);
+    }
+
+    // 포트폴리오 상세 조회
+    @Transactional(readOnly = true)
+    public PortfolioDetailResponseDto getPortfolioDetail(Long portfolioId) {
+        Portfolio portfolio = portfolioRepository.findById(portfolioId)
+                .orElseThrow(() -> new PortfolioNotFoundException("해당 포트폴리오가 존재하지 않습니다."));
+
+        ExpertProfile expertProfile = portfolio.getExpertProfile();
+
+        // 이미지 리스트 변환
+        List<PortfolioDetailResponseDto.PortfolioImageDto> imageDtos = portfolio.getImages().stream()
+                .map(img -> new PortfolioDetailResponseDto.PortfolioImageDto(
+                        img.getPortfolioImageId(),
+                        img.getImageUrl()))
+                .collect(Collectors.toList());
+
+        return PortfolioDetailResponseDto.builder()
+                .portfolioId(portfolio.getPortfolioId())
+                .title(portfolio.getTitle())
+                .content(portfolio.getContent())
+                .viewCount(portfolio.getViewCount())
+                .workingYear(portfolio.getWorkingYear())
+                .category(portfolio.getCategory())
+                .images(imageDtos)
+                .reviewCount(expertProfile.getReviewCount())
+                .rating(expertProfile.getRating())
+                .build();
     }
 }
 

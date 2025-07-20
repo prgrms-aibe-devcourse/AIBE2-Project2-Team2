@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.backend.expert.dto.request.ExpertRequestDto;
 import org.example.backend.expert.dto.response.ExpertProfileDto;
 import org.example.backend.expert.dto.response.ExpertSignupMetaDto;
+import org.example.backend.expert.dto.response.PortfolioDetailResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -226,4 +227,55 @@ public class ExpertController {
         expertService.updateExpertProfile(email, dto);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * 전문가의 특정 포트폴리오 조회 API
+     * 전문가의 포트폴리오 상세 정보를 조회합니다.
+     * GET /api/expert/portfolio/{portfolioId}
+     */
+    @Operation(
+            summary = "전문가 포트폴리오 상세 조회",
+            description = "포트폴리오 ID를 통해 전문가의 포트폴리오 상세 정보를 조회한다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "포트폴리오 상세 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = PortfolioDetailResponseDto.class),
+                            examples = @ExampleObject(value = "{\n" +
+                                    "  \"portfolioId\": 123,\n" +
+                                    "  \"title\": \"웹사이트 개발 프로젝트\",\n" +
+                                    "  \"content\": \"이 프로젝트는 ...\",\n" +
+                                    "  \"viewCount\": 150,\n" +
+                                    "  \"workingYear\": 3,\n" +
+                                    "  \"category\": \"웹/모바일 개발\",\n" +
+                                    "  \"images\": [\n" +
+                                    "    {\"id\": 10, \"url\": \"https://image.url/1.jpg\"},\n" +
+                                    "    {\"id\": 11, \"url\": \"https://image.url/2.jpg\"}\n" +
+                                    "  ],\n" +
+                                    "  \"reviewCount\": 25,\n" +
+                                    "  \"rating\": 4.8\n" +
+                                    "}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "포트폴리오를 찾을 수 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class),
+                            examples = @ExampleObject(value = "\"해당 포트폴리오가 존재하지 않습니다.\"")
+                    )
+            )
+    })
+    @GetMapping("/portfolio/{portfolioId}")
+    public ResponseEntity<PortfolioDetailResponseDto> getPortfolioDetail(
+            @PathVariable Long portfolioId
+    ) {
+        PortfolioDetailResponseDto dto = expertService.getPortfolioDetail(portfolioId);
+        return ResponseEntity.ok(dto);
+    }
+
 }

@@ -5,6 +5,7 @@ import org.example.backend.entity.*;
 import org.example.backend.expert.dto.request.ExpertRequestDto;
 import org.example.backend.expert.dto.request.SkillDto;
 import org.example.backend.expert.dto.request.SpecialtyDetailRequestDto;
+import org.example.backend.expert.dto.response.PortfolioDetailResponseDto;
 import org.example.backend.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,7 @@ class ExpertServiceTest {
     @Mock private SkillRepository skillRepository;
     @Mock private CareerRepository careerRepository;
     @Mock private SkillCategoryRepository skillCategoryRepository;
+    @Mock private PortfolioRepository portfolioRepository;
 
     @Mock private ExpertProfileRepositoryCustom expertProfileRepositoryCustom;
 
@@ -194,4 +196,109 @@ class ExpertServiceTest {
         assertEquals(2, existingProfile.getSkills().size());
         assertEquals(1, existingProfile.getCareers().size());
     }
+
+    @Test
+    void getPortfolioDetail_정상조회() {
+        // given: 테스트용 ExpertProfile 객체 생성 및 필드 세팅
+        ExpertProfile expertProfile = new ExpertProfile();
+        try {
+            // 리뷰 수 세팅 (private 필드이므로 리플렉션 사용)
+            Field reviewCountField = ExpertProfile.class.getDeclaredField("reviewCount");
+            reviewCountField.setAccessible(true);
+            reviewCountField.set(expertProfile, 5L);
+
+            // 평점 세팅
+            Field ratingField = ExpertProfile.class.getDeclaredField("rating");
+            ratingField.setAccessible(true);
+            ratingField.set(expertProfile, 4.5);
+        } catch (Exception e) {
+            fail("리플렉션 세팅 실패");
+        }
+
+        // given: 테스트용 Portfolio 객체 생성 및 필드 세팅
+        Portfolio portfolio = new Portfolio();
+        try {
+            Field portfolioIdField = Portfolio.class.getDeclaredField("portfolioId");
+            portfolioIdField.setAccessible(true);
+            portfolioIdField.set(portfolio, 100L);
+
+            Field titleField = Portfolio.class.getDeclaredField("title");
+            titleField.setAccessible(true);
+            titleField.set(portfolio, "포트폴리오 제목");
+
+            Field contentField = Portfolio.class.getDeclaredField("content");
+            contentField.setAccessible(true);
+            contentField.set(portfolio, "포트폴리오 내용");
+
+            Field viewCountField = Portfolio.class.getDeclaredField("viewCount");
+            viewCountField.setAccessible(true);
+            viewCountField.set(portfolio, 123L);
+
+            Field workingYearField = Portfolio.class.getDeclaredField("workingYear");
+            workingYearField.setAccessible(true);
+            workingYearField.set(portfolio, 3);
+
+            Field categoryField = Portfolio.class.getDeclaredField("category");
+            categoryField.setAccessible(true);
+            categoryField.set(portfolio, "디자인");
+
+            // Portfolio에 ExpertProfile 연결
+            Field expertProfileField = Portfolio.class.getDeclaredField("expertProfile");
+            expertProfileField.setAccessible(true);
+            expertProfileField.set(portfolio, expertProfile);
+        } catch (Exception e) {
+            fail("리플렉션 세팅 실패");
+        }
+
+        // given: PortfolioImage 리스트 생성 및 필드 세팅
+        PortfolioImage img1 = new PortfolioImage(portfolio, "http://image1.url", 1);
+        PortfolioImage img2 = new PortfolioImage(portfolio, "http://image2.url", 2);
+        try {
+            // 이미지 ID 세팅 (리플렉션)
+            Field imgIdField = PortfolioImage.class.getDeclaredField("portfolioImageId");
+            imgIdField.setAccessible(true);
+            imgIdField.set(img1, 10L);
+            imgIdField.set(img2, 20L);
+        } catch (Exception e) {
+            fail("리플렉션 세팅 실패");
+        }
+
+        // 이미지 리스트를 Portfolio에 연결
+        List<PortfolioImage> images = new ArrayList<>();
+        images.add(img1);
+        images.add(img2);
+
+        try {
+            Field imagesField = Portfolio.class.getDeclaredField("images");
+            imagesField.setAccessible(true);
+            imagesField.set(portfolio, images);
+        } catch (Exception e) {
+            fail("리플렉션 세팅 실패");
+        }
+
+        // Mock 설정: portfolioRepository.findById 호출 시 테스트용 portfolio 반환
+        when(portfolioRepository.findById(100L)).thenReturn(Optional.of(portfolio));
+
+        // when: 서비스 메서드 호출
+        PortfolioDetailResponseDto dto = expertService.getPortfolioDetail(100L);
+
+        // then: 반환된 DTO 검증
+        assertNotNull(dto); // DTO가 null이 아님을 확인
+        assertEquals(100L, dto.getPortfolioId());
+        assertEquals("포트폴리오 제목", dto.getTitle());
+        assertEquals("포트폴리오 내용", dto.getContent());
+        assertEquals(123L, dto.getViewCount());
+        assertEquals(3, dto.getWorkingYear());
+        assertEquals("디자인", dto.getCategory());
+
+        assertEquals(2, dto.getImages().size()); // 이미지 2개가 들어있음
+        assertEquals(10L, dto.getImages().get(0).getId());
+        assertEquals("http://image1.url", dto.getImages().get(0).getUrl());
+        assertEquals(20L, dto.getImages().get(1).getId());
+        assertEquals("http://image2.url", dto.getImages().get(1).getUrl());
+
+        assertEquals(5L, dto.getReviewCount()); // 리뷰 수
+        assertEquals(4.5, dto.getRating());     // 평점
+    }
+
 }

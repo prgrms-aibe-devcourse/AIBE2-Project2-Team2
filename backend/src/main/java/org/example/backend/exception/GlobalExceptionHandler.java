@@ -204,4 +204,15 @@ public class GlobalExceptionHandler {
                 null
         );
     }
+    // 해당 포트폴리오가 없을 때 핸들링
+    @ExceptionHandler(PortfolioNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePortfolioNotFound(PortfolioNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "PORTFOLIO_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
 }

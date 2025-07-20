@@ -119,7 +119,7 @@ class ExpertProfileRepositoryImplTest {
         portfolioRepository.save(portfolio);
 
         // PortfolioImage 생성 및 저장 (썸네일)
-        PortfolioImage portfolioImage = new PortfolioImage(portfolio, "https://thumbnail.url/portfolio1.jpg");
+        PortfolioImage portfolioImage = new PortfolioImage(portfolio, "https://thumbnail.url/portfolio1.jpg",1);
         portfolioImageRepository.save(portfolioImage);
 
         // Content 생성 및 저장
