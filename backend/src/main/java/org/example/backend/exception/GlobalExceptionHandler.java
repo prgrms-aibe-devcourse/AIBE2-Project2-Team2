@@ -215,4 +215,15 @@ public class GlobalExceptionHandler {
                 null
         );
     }
+    // 포트폴리오 이미지를 등록/수정 할 때 이미지가 유효하지 않을 때 핸들링
+    @ExceptionHandler(InvalidPortfolioImageException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidPortfolioImage(InvalidPortfolioImageException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "INVALID_PORTFOLIO_IMAGE",
+                ex.getMessage(),
+                null
+        );
+    }
 }

@@ -9,10 +9,12 @@ import org.example.backend.expert.dto.request.ExpertRequestDto;
 import org.example.backend.expert.dto.request.SkillDto;
 import org.example.backend.expert.dto.request.SpecialtyDetailRequestDto;
 import org.example.backend.expert.dto.response.*;
+import org.example.backend.firebase.FirebaseImageService;
 import org.example.backend.repository.*;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -34,6 +36,7 @@ public class ExpertService {
     private final CareerRepository careerRepository;
     private final SkillCategoryRepository skillCategoryRepository;
     private final PortfolioRepository portfolioRepository;
+    private final FirebaseImageService firebaseImageService;
 
     // 전문가로 전환하는 메소드 - 포트폴리오는 제외하고 나머지 정보들 등록
     public void upgradeToExpert(String email, ExpertRequestDto dto) {
@@ -253,6 +256,36 @@ public class ExpertService {
                 .expertNickname(expertMember.getNickname())
                 .expertProfileImageUrl(expertMember.getProfileImageUrl())
                 .build();
+    }
+
+    @Transactional
+    public void createPortfolio(String email, String title, String content, String category, Integer workingYear, List<MultipartFile> images) {
+        // 0. 이미지 수 검사
+        if (images == null || images.isEmpty() || images.size() > 5) {
+            throw new InvalidPortfolioImageException("포트폴리오 이미지는 최소 1개 이상, 최대 5개까지 업로드할 수 있습니다.");
+        }
+
+        // 1. 전문가 프로필 조회
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberNotFoundException("해당 이메일의 사용자가 존재하지 않습니다."));
+        if (member.getRole() != Role.EXPERT) {
+            throw new NotExpertException("전문가가 아닌 사용자는 포트폴리오를 생성할 수 없습니다.");
+        }
+        ExpertProfile expertProfile = expertProfileRepository.findByMember(member)
+                .orElseThrow(() -> new ExpertProfileNotFoundException("전문가 프로필이 존재하지 않습니다."));
+
+        // 2. Portfolio 엔티티 생성 및 저장
+        Portfolio portfolio = new Portfolio(expertProfile, title, content,  workingYear, category);
+        portfolioRepository.save(portfolio);
+
+        // 3. 이미지 업로드 및 매핑 (검사했으므로 빈 파일 없음 가정)
+        int order = 0;
+        for (MultipartFile image : images) {
+            String fileName = "portfolio/" + member.getNickname() + "_portfolio_image_" + portfolio.getPortfolioId() + "_" + order;
+            String imageUrl = firebaseImageService.uploadImage(image, fileName);
+            PortfolioImage portfolioImage = new PortfolioImage(portfolio, imageUrl, order++);
+            portfolio.getImages().add(portfolioImage);
+        }
     }
 }
 

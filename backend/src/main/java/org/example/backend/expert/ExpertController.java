@@ -1,6 +1,8 @@
 package org.example.backend.expert;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,11 +15,15 @@ import org.example.backend.expert.dto.request.ExpertRequestDto;
 import org.example.backend.expert.dto.response.ExpertProfileDto;
 import org.example.backend.expert.dto.response.ExpertSignupMetaDto;
 import org.example.backend.expert.dto.response.PortfolioDetailResponseDto;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.security.Principal;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -281,9 +287,76 @@ public class ExpertController {
     }
 
     /**
-     * 전문가 프로필의 포트폴리오 목록 조회 API
-     * 전문가의 포트폴리오 목록을 조회합니다.
-     * GET /api/expert/portfolios
+     * 전문가 프로필의 포트폴리오 등록 API
+     * 전문가 프로필에 포트폴리오를 등록합니다.
+     * POST /api/expert/portfolio
      */
+    @Operation(
+            summary = "전문가 포트폴리오 등록",
+            description = "포트폴리오를 등록한다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "포트폴리오 등록 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class),
+                            examples = @ExampleObject(value = "\"포트폴리오 등록이 완료되었습니다.\"")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 입력값 또는 이미지 수 초과",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class),
+                            examples = @ExampleObject(value = "\"포트폴리오 이미지는 최소 1개 이상, 최대 5개까지 업로드할 수 있습니다.\"")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "전문가 프로필이 존재하지 않음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class),
+                            examples = @ExampleObject(value = "\"전문가 프로필을 찾을 수 없습니다.\"")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "전문가 권한이 없는 사용자",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class),
+                            examples = @ExampleObject(value = "\"전문가 권한이 없습니다.\"")
+                    )
+            )
+    })
+    @PostMapping(value = "/portfolio", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createPortfolio(
+            Principal principal,
+
+            @Parameter(description = "포트폴리오 제목", required = true, example = "모던한 웹사이트 디자인")
+            @RequestParam("title") String title,
+
+            @Parameter(description = "포트폴리오 상세 내용", required = true, example = "반응형 웹사이트와 관리자 페이지 디자인 작업입니다.")
+            @RequestParam("content") String content,
+
+            @Parameter(description = "포트폴리오 카테고리", required = true, example = "디자인")
+            @RequestParam("category") String category,
+
+            @Parameter(description = "작업년도", required = true, example = "2024")
+            @RequestParam("workingYear") Integer workingYear,
+
+            @Parameter(description = "포트폴리오 이미지 파일 목록", required = true)
+            @RequestPart("images") List<MultipartFile> images
+    ) {
+        String email = principal.getName();
+        log.info("포트폴리오 등록 요청: {}, 제목: {}, 카테고리: {}, 경력 연수: {}, 이미지 수: {}",
+                email, title, category, workingYear, images.size());
+        expertService.createPortfolio(email, title, content, category, workingYear, images);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
 
 }
