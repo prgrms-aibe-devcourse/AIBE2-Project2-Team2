@@ -30,9 +30,6 @@ public class Matching extends BaseTimeEntity {
     private LocalDate startDate;
     private LocalDate endDate;
 
-    @Column(name = "estimate_url")
-    private String estimateUrl;
-
     @OneToMany(mappedBy = "matching", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
 

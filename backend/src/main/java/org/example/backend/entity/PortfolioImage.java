@@ -23,9 +23,13 @@ public class PortfolioImage {
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
-    public PortfolioImage(Portfolio portfolio, String imageUrl) {
+    @Column(name = "sort_order", nullable = false)
+    private Integer sortOrder;
+
+    public PortfolioImage(Portfolio portfolio, String imageUrl, Integer sortOrder) {
         this.portfolio = portfolio;
         this.imageUrl = imageUrl;
+        this.sortOrder = sortOrder;
     }
 
 }

@@ -5,10 +5,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.backend.constant.Role;
 import org.example.backend.entity.*;
 import org.example.backend.exception.customException.*;
-import org.example.backend.expert.dto.*;
+import org.example.backend.expert.dto.request.ExpertRequestDto;
+import org.example.backend.expert.dto.request.SkillDto;
+import org.example.backend.expert.dto.request.SpecialtyDetailRequestDto;
+import org.example.backend.expert.dto.response.*;
 import org.example.backend.repository.*;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +22,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ExpertService {
 
     private final MemberRepository memberRepository;
@@ -26,6 +33,7 @@ public class ExpertService {
     private final SkillRepository skillRepository;
     private final CareerRepository careerRepository;
     private final SkillCategoryRepository skillCategoryRepository;
+    private final PortfolioRepository portfolioRepository;
 
     // 전문가로 전환하는 메소드 - 포트폴리오는 제외하고 나머지 정보들 등록
     public void upgradeToExpert(String email, ExpertRequestDto dto) {
@@ -159,6 +167,92 @@ public class ExpertService {
                 "대구","인천", "광주", "대전", "울산", "세종", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주","해외");
 
         return new ExpertSignupMetaDto(detailFields, skills, regions);
+    }
+
+    // 전문가 프로필 조회
+    @Transactional(readOnly = true)
+    public ExpertProfileDto getExpertProfile(String email) {
+        ExpertProfileDto profileDto = expertProfileRepository.findExpertProfileByEmail(email);
+        if (profileDto == null) {
+            throw new RuntimeException("해당 이메일의 전문가 프로필이 존재하지 않습니다.");  // 필요시 커스텀 예외로 변경 가능
+        }
+        return profileDto;
+    }
+
+    @Transactional
+    public void updateExpertProfile(String email, ExpertRequestDto dto) {
+        // 1. 이메일로 회원 조회 (전문가 권한이어야 함)
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberNotFoundException("해당 이메일의 사용자가 존재하지 않습니다."));
+
+        if (member.getRole() != Role.EXPERT) {
+            throw new NotExpertException("전문가가 아닌 사용자는 프로필을 수정할 수 없습니다.");
+        }
+
+        // 2. 기존 전문가 프로필 조회
+        ExpertProfile profile = expertProfileRepository.findByMember(member)
+                .orElseThrow(() -> new ExpertProfileNotFoundException("전문가 프로필이 존재하지 않습니다."));
+
+        // 3. 연관 데이터 초기화
+        expertProfileSpecialtyDetailRepository.deleteAllByExpertProfile(profile);
+        profile.getSpecialtyDetailFields().clear();
+
+        profile.getSkills().clear();
+
+        careerRepository.deleteAllByExpertProfile(profile);
+        profile.getCareers().clear();
+
+        // 4. 프로필 정보 업데이트
+        profile.updateProfileInfo(
+                dto.getIntroduction(),
+                dto.getRegion(),
+                dto.getTotalCareerYears(),
+                dto.getEducation(),
+                dto.getEmployeeCount(),
+                dto.getWebsiteUrl(),
+                dto.getFacebookUrl(),
+                dto.getXUrl(),
+                dto.getInstagramUrl()
+        );
+
+        // 5. 새롭게 연관 데이터 저장
+        saveSpecialtyDetails(profile, dto.getSpecialties());
+        saveSkills(profile, dto.getSkills());
+        saveCareers(profile, dto.getCareers());
+
+        expertProfileRepository.save(profile);
+    }
+
+    // 포트폴리오 상세 조회
+    @Transactional(readOnly = true)
+    public PortfolioDetailResponseDto getPortfolioDetail(Long portfolioId) {
+        Portfolio portfolio = portfolioRepository.findById(portfolioId)
+                .orElseThrow(() -> new PortfolioNotFoundException("해당 포트폴리오가 존재하지 않습니다."));
+
+        ExpertProfile expertProfile = portfolio.getExpertProfile();
+
+        Member expertMember = expertProfile.getMember();
+
+        // 이미지 리스트 변환
+        List<PortfolioDetailResponseDto.PortfolioImageDto> imageDtos = portfolio.getImages().stream()
+                .map(img -> new PortfolioDetailResponseDto.PortfolioImageDto(
+                        img.getPortfolioImageId(),
+                        img.getImageUrl()))
+                .collect(Collectors.toList());
+
+        return PortfolioDetailResponseDto.builder()
+                .portfolioId(portfolio.getPortfolioId())
+                .title(portfolio.getTitle())
+                .content(portfolio.getContent())
+                .viewCount(portfolio.getViewCount())
+                .workingYear(portfolio.getWorkingYear())
+                .category(portfolio.getCategory())
+                .images(imageDtos)
+                .reviewCount(expertProfile.getReviewCount())
+                .rating(expertProfile.getRating())
+                .expertNickname(expertMember.getNickname())
+                .expertProfileImageUrl(expertMember.getProfileImageUrl())
+                .build();
     }
 }
 

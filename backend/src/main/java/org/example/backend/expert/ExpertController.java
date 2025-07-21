@@ -9,8 +9,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.backend.expert.dto.ExpertRequestDto;
-import org.example.backend.expert.dto.ExpertSignupMetaDto;
+import org.example.backend.expert.dto.request.ExpertRequestDto;
+import org.example.backend.expert.dto.response.ExpertProfileDto;
+import org.example.backend.expert.dto.response.ExpertSignupMetaDto;
+import org.example.backend.expert.dto.response.PortfolioDetailResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -90,25 +92,198 @@ public class ExpertController {
                             mediaType = "application/json",
                             schema = @Schema(implementation = ExpertSignupMetaDto.class),
                             examples = @ExampleObject(value = "{\n" +
-                                    "  \"categories\": [\n" +
-                                    "    { \"id\": 1, \"name\": \"디자인\" },\n" +
-                                    "    { \"id\": 2, \"name\": \"마케팅\" }\n" +
-                                    "  ],\n" +
-                                    "  \"subCategories\": [\n" +
-                                    "    { \"id\": 11, \"name\": \"UI/UX\", \"categoryId\": 1 },\n" +
-                                    "    { \"id\": 21, \"name\": \"SNS 마케팅\", \"categoryId\": 2 }\n" +
+                                    "  \"detailFields\": [\n" +
+                                    "    {\n" +
+                                    "      \"specialty\": \"IT/프로그래밍\",\n" +
+                                    "      \"detailFields\": [\n" +
+                                    "        \"UX 기획\",\n" +
+                                    "        \"웹사이트 신규 제작\",\n" +
+                                    "        \"웹사이트 개선/버그수정\"\n" +
+                                    "      ]\n" +
+                                    "    },\n" +
+                                    "    {\n" +
+                                    "      \"specialty\": \"디자인\",\n" +
+                                    "      \"detailFields\": [\n" +
+                                    "        \"로고 디자인\",\n" +
+                                    "        \"브랜드 디자인/가이드\"\n" +
+                                    "      ]\n" +
+                                    "    }\n" +
                                     "  ],\n" +
                                     "  \"skills\": [\n" +
-                                    "    { \"id\": 101, \"name\": \"Adobe Photoshop\", \"categoryId\": 1 },\n" +
-                                    "    { \"id\": 201, \"name\": \"인스타그램 관리\", \"categoryId\": 2 }\n" +
+                                    "    {\n" +
+                                    "      \"categoryName\": \"IT/프로그래밍\",\n" +
+                                    "      \"skills\": [\n" +
+                                    "        \"Java\",\n" +
+                                    "        \"Python\",\n" +
+                                    "        \"JavaScript\"\n" +
+                                    "      ]\n" +
+                                    "    },\n" +
+                                    "    {\n" +
+                                    "      \"categoryName\": \"디자인\",\n" +
+                                    "      \"skills\": [\n" +
+                                    "        \"Photoshop\",\n" +
+                                    "        \"Illustrator\"\n" +
+                                    "      ]\n" +
+                                    "    }\n" +
+                                    "  ],\n" +
+                                    "  \"regions\": [\n" +
+                                    "    \"서울\",\n" +
+                                    "    \"부산\",\n" +
+                                    "    \"대구\"\n" +
                                     "  ]\n" +
                                     "}")
                     )
             )
     })
     @GetMapping("/meta")
-    public ResponseEntity<?> getExpertSignupMeta() {
+    public ResponseEntity<ExpertSignupMetaDto> getExpertSignupMeta() {
         ExpertSignupMetaDto meta = expertService.getExpertSignupMeta();
         return ResponseEntity.ok(meta);
     }
+
+    /**
+     * 전문가 프로필 조회 API
+     * 전문가의 프로필 정보를 조회합니다.
+     * GET /api/expert/profile
+     */
+    @Operation(
+            summary = "전문가 프로필 조회",
+            description = "현재 로그인한 사용자의 전문가 프로필 정보를 조회합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "전문가 프로필 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ExpertProfileDto.class),
+                            examples = @ExampleObject(value = "{\n" +
+                                    "  \"nickname\": \"tester\",\n" +
+                                    "  \"introduction\": \"자기소개\",\n" +
+                                    "  \"region\": \"서울\",\n" +
+                                    "  \"totalCareerYears\": 5,\n" +
+                                    "  \"websiteUrl\": \"https://site.com\",\n" +
+                                    "  \"facebookUrl\": \"https://facebook.com\",\n" +
+                                    "  \"instagramUrl\": \"https://instagram.com\",\n" +
+                                    "  \"xUrl\": \"https://x.com\",\n" +
+                                    "  \"reviewCount\": 10,\n" +
+                                    "  \"averageScore\": 4.5,\n" +
+                                    "  \"fields\": [\n" +
+                                    "    { \"specialtyName\": \"디자인\", \"detailFieldName\": \"웹/모바일 디자인\" }\n" +
+                                    "  ],\n" +
+                                    "  \"skills\": [\n" +
+                                    "    { \"skillCategoryName\": \"IT/프로그래밍\", \"skillName\": \"Java\" }\n" +
+                                    "  ],\n" +
+                                    "  \"portfolios\": [\n" +
+                                    "    { \"title\": \"포트폴리오 제목\", \"thumbnailUrl\": \"https://thumbnail.url/portfolio1.jpg\" }\n" +
+                                    "  ],\n" +
+                                    "  \"contents\": [\n" +
+                                    "    { \"title\": \"컨텐츠 제목\", \"thumbnailUrl\": \"https://thumbnail.url/content1.jpg\" }\n" +
+                                    "  ]\n" +
+                                    "}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "전문가 프로필이 존재하지 않음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class),
+                            examples = @ExampleObject(value = "\"전문가 프로필을 찾을 수 없습니다.\"")
+                    )
+            )
+    })
+    @GetMapping("/profile")
+    public ResponseEntity<?> getExpertProfile(
+            Principal principal
+    ) {
+        String email = principal.getName();
+        log.info("전문가 프로필 조회 요청: {}", email);
+        ExpertProfileDto profile = expertService.getExpertProfile(email);
+        return ResponseEntity.ok(profile);
+    }
+
+    /**
+     * 전문가 프로필 업데이트 API
+     * 전문가 프로필 정보를 업데이트합니다.
+     * PUT /api/expert/profile
+     */
+    @Operation(
+            summary = "전문가 프로필 수정",
+            description = "기존 전문가 프로필 정보를 전체 덮어쓰기 방식으로 수정합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "전문가 프로필 수정 성공"),
+            @ApiResponse(responseCode = "400", description = "입력값 오류"),
+            @ApiResponse(responseCode = "404", description = "회원 또는 프로필 없음")
+    })
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateExpertProfile(
+            @Valid @RequestBody ExpertRequestDto dto,
+            Principal principal
+    ) {
+        String email = principal.getName();
+        log.info("전문가 프로필 수정 요청: {}", email);
+        expertService.updateExpertProfile(email, dto);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * 전문가의 특정 포트폴리오 조회 API
+     * 전문가의 포트폴리오 상세 정보를 조회합니다.
+     * GET /api/expert/portfolio/{portfolioId}
+     */
+    @Operation(
+            summary = "전문가 포트폴리오 상세 조회",
+            description = "포트폴리오 ID를 통해 전문가의 포트폴리오 상세 정보를 조회한다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "포트폴리오 상세 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = PortfolioDetailResponseDto.class),
+                            examples = @ExampleObject(value = "{\n" +
+                                    "  \"portfolioId\": 123,\n" +
+                                    "  \"title\": \"웹사이트 개발 프로젝트\",\n" +
+                                    "  \"content\": \"이 프로젝트는 ...\",\n" +
+                                    "  \"viewCount\": 150,\n" +
+                                    "  \"workingYear\": 3,\n" +
+                                    "  \"category\": \"웹/모바일 개발\",\n" +
+                                    "  \"images\": [\n" +
+                                    "    {\"id\": 10, \"url\": \"https://image.url/1.jpg\"},\n" +
+                                    "    {\"id\": 11, \"url\": \"https://image.url/2.jpg\"}\n" +
+                                    "  ],\n" +
+                                    "  \"reviewCount\": 25,\n" +
+                                    "  \"rating\": 4.8,\n" +
+                                    "  \"expertNickname\": \"expertUser\",\n" +
+                                    "  \"expertProfileImageUrl\": \"https://profile.image.url\"\n" +
+                                    "}")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "포트폴리오를 찾을 수 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class),
+                            examples = @ExampleObject(value = "\"해당 포트폴리오가 존재하지 않습니다.\"")
+                    )
+            )
+    })
+    @GetMapping("/portfolio/{portfolioId}")
+    public ResponseEntity<PortfolioDetailResponseDto> getPortfolioDetail(
+            @PathVariable Long portfolioId
+    ) {
+        PortfolioDetailResponseDto dto = expertService.getPortfolioDetail(portfolioId);
+        return ResponseEntity.ok(dto);
+    }
+
+    /**
+     * 전문가 프로필의 포트폴리오 목록 조회 API
+     * 전문가의 포트폴리오 목록을 조회합니다.
+     * GET /api/expert/portfolios
+     */
+
 }

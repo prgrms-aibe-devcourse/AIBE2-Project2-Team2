@@ -1,4 +1,4 @@
-package org.example.backend.expert.dto;
+package org.example.backend.expert.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

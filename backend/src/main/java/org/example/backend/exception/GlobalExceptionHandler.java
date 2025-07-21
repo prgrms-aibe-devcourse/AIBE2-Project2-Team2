@@ -182,4 +182,37 @@ public class GlobalExceptionHandler {
                 null
         );
     }
+    // 전문가 권한이 없을 때 핸들링
+    @ExceptionHandler(NotExpertException.class)
+    public ResponseEntity<Map<String, Object>> handleNotExpert(NotExpertException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.FORBIDDEN,
+                "NOT_EXPERT",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 전문가 프로필이 없을 때 핸들링
+    @ExceptionHandler(ExpertProfileNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleExpertProfileNotFound(ExpertProfileNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "EXPERT_PROFILE_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 해당 포트폴리오가 없을 때 핸들링
+    @ExceptionHandler(PortfolioNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePortfolioNotFound(PortfolioNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "PORTFOLIO_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
 }
