@@ -83,12 +83,12 @@ public class ExpertProfileRepositoryImpl implements ExpertProfileRepositoryCusto
         List<ExpertPortfolioDto> portfolios = queryFactory
                 .select(new QExpertPortfolioDto(
                         portfolio.portfolioId,
-                        // 썸네일 이미지는 PortfolioImage 중 첫번째 이미지 url을 가져온다 가정
                         portfolioImage.imageUrl,
                         portfolio.title
                 ))
                 .from(portfolio)
                 .leftJoin(portfolio.images, portfolioImage)
+                .on(portfolioImage.thumbnailCheck.eq(true))
                 .where(portfolio.expertProfile.eq(profile))
                 .fetch();
 
