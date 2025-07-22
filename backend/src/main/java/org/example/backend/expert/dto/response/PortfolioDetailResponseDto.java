@@ -19,6 +19,9 @@ public class PortfolioDetailResponseDto {
 
     private List<PortfolioImageDto> images;
 
+    // 썸네일 이미지 (포트폴리오 이미지 중 thumbnailCheck가 true인 이미지)
+    private PortfolioImageDto thumbnailImage;
+
     // 전문가 정보
     private String expertNickname;
     private String expertProfileImageUrl;

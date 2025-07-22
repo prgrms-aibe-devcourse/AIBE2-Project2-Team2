@@ -49,4 +49,20 @@ public class Portfolio {
         this.category = category;
     }
 
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public void setWorkingYear(Integer workingYear) {
+        this.workingYear = workingYear;
+    }
+
 }

@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,6 +37,7 @@ public class ExpertService {
     private final CareerRepository careerRepository;
     private final SkillCategoryRepository skillCategoryRepository;
     private final PortfolioRepository portfolioRepository;
+    private final PortfolioImageRepository portfolioImageRepository;
     private final FirebaseImageService firebaseImageService;
 
     // 전문가로 전환하는 메소드 - 포트폴리오는 제외하고 나머지 정보들 등록
@@ -233,15 +235,28 @@ public class ExpertService {
                 .orElseThrow(() -> new PortfolioNotFoundException("해당 포트폴리오가 존재하지 않습니다."));
 
         ExpertProfile expertProfile = portfolio.getExpertProfile();
-
         Member expertMember = expertProfile.getMember();
 
-        // 이미지 리스트 변환
+        // 전체 이미지 리스트 DTO 변환
         List<PortfolioDetailResponseDto.PortfolioImageDto> imageDtos = portfolio.getImages().stream()
                 .map(img -> new PortfolioDetailResponseDto.PortfolioImageDto(
                         img.getPortfolioImageId(),
                         img.getImageUrl()))
                 .collect(Collectors.toList());
+
+        // 썸네일 이미지 찾기
+        PortfolioImage thumbnailImage = portfolio.getImages().stream()
+                .filter(PortfolioImage::isThumbnailCheck)  // boolean getter 메서드 이름이 isThumbnailCheck여야 함
+                .findFirst()
+                .orElse(null);
+
+        PortfolioDetailResponseDto.PortfolioImageDto thumbnailDto = null;
+        if (thumbnailImage != null) {
+            thumbnailDto = new PortfolioDetailResponseDto.PortfolioImageDto(
+                    thumbnailImage.getPortfolioImageId(),
+                    thumbnailImage.getImageUrl()
+            );
+        }
 
         return PortfolioDetailResponseDto.builder()
                 .portfolioId(portfolio.getPortfolioId())
@@ -251,6 +266,7 @@ public class ExpertService {
                 .workingYear(portfolio.getWorkingYear())
                 .category(portfolio.getCategory())
                 .images(imageDtos)
+                .thumbnailImage(thumbnailDto)   // 썸네일 추가
                 .reviewCount(expertProfile.getReviewCount())
                 .rating(expertProfile.getRating())
                 .expertNickname(expertMember.getNickname())
@@ -258,11 +274,18 @@ public class ExpertService {
                 .build();
     }
 
+
     @Transactional
-    public void createPortfolio(String email, String title, String content, String category, Integer workingYear, List<MultipartFile> images) {
-        // 0. 이미지 수 검사
-        if (images == null || images.isEmpty() || images.size() > 5) {
-            throw new InvalidPortfolioImageException("포트폴리오 이미지는 최소 1개 이상, 최대 5개까지 업로드할 수 있습니다.");
+    public void createPortfolio(String email, String title, String content, String category,
+                                Integer workingYear, List<MultipartFile> images, MultipartFile thumbnailImage) {
+
+        // 0. 이미지 수 검사 (썸네일 제외 일반 이미지 수 검사)
+        int totalImages = images == null ? 0 : images.size();
+        if (thumbnailImage == null) {
+            throw new InvalidPortfolioImageException("썸네일 이미지를 반드시 전송해야 합니다.");
+        }
+        if (totalImages + 1 > 5) {
+            throw new InvalidPortfolioImageException("포트폴리오 이미지는 최대 5개까지 업로드할 수 있습니다.");
         }
 
         // 1. 전문가 프로필 조회
@@ -275,17 +298,125 @@ public class ExpertService {
                 .orElseThrow(() -> new ExpertProfileNotFoundException("전문가 프로필이 존재하지 않습니다."));
 
         // 2. Portfolio 엔티티 생성 및 저장
-        Portfolio portfolio = new Portfolio(expertProfile, title, content,  workingYear, category);
+        Portfolio portfolio = new Portfolio(expertProfile, title, content, workingYear, category);
         portfolioRepository.save(portfolio);
 
-        // 3. 이미지 업로드 및 매핑 (검사했으므로 빈 파일 없음 가정)
-        int order = 0;
-        for (MultipartFile image : images) {
-            String fileName = "portfolio/" + member.getNickname() + "_portfolio_image_" + portfolio.getPortfolioId() + "_" + order;
-            String imageUrl = firebaseImageService.uploadImage(image, fileName);
-            PortfolioImage portfolioImage = new PortfolioImage(portfolio, imageUrl, order++);
-            portfolio.getImages().add(portfolioImage);
+        // 3. 썸네일 이미지 업로드 및 저장
+        String thumbnailFileName = "portfolio/" + member.getNickname() + "_portfolio_thumbnail_" + portfolio.getPortfolioId();
+        String thumbnailUrl = firebaseImageService.uploadImage(thumbnailImage, thumbnailFileName);
+        PortfolioImage thumbnailPortfolioImage = new PortfolioImage(portfolio, thumbnailUrl, true);
+        portfolio.getImages().add(thumbnailPortfolioImage);
+
+        // 4. 일반 이미지 업로드 및 저장 (썸네일 제외)
+        if (images != null) {
+            for (int i = 0; i < images.size(); i++) {
+                MultipartFile image = images.get(i);
+                String fileName = "portfolio/" + member.getNickname() + "_portfolio_image_" + portfolio.getPortfolioId() + "_" + i;
+                String imageUrl = firebaseImageService.uploadImage(image, fileName);
+                PortfolioImage portfolioImage = new PortfolioImage(portfolio, imageUrl, false);
+                portfolio.getImages().add(portfolioImage);
+            }
         }
+    }
+
+    @Transactional
+    public void updatePortfolio(
+            String email,
+            Long portfolioId,
+            String title,
+            String content,
+            String category,
+            Integer workingYear,
+            List<Long> remainingImageIds,
+            List<MultipartFile> newImages,
+            MultipartFile thumbnailImage,
+            Long thumbnailRemainImageId
+    ) {
+        // 1. 포트폴리오 조회 및 권한 체크
+        Portfolio portfolio = portfolioRepository.findById(portfolioId)
+                .orElseThrow(() -> new PortfolioNotFoundException("해당 포트폴리오가 존재하지 않습니다."));
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberNotFoundException("해당 이메일의 사용자가 존재하지 않습니다."));
+
+        if (!portfolio.getExpertProfile().getMember().equals(member)) {
+            throw new MemberNotFoundException("해당 포트폴리오의 작성자가 아닙니다.");
+        }
+
+        if (member.getRole() != Role.EXPERT) {
+            throw new NotExpertException("전문가 권한이 없습니다.");
+        }
+
+        // 2. 포트폴리오 기본 정보 수정
+        portfolio.setTitle(title);
+        portfolio.setContent(content);
+        portfolio.setCategory(category);
+        portfolio.setWorkingYear(workingYear);
+
+        // 3. 기존 이미지 중 남길 이미지 필터링
+        List<PortfolioImage> existingImages = portfolioImageRepository.findByPortfolio(portfolio);
+        List<PortfolioImage> imagesToKeep = new ArrayList<>();
+
+        for (PortfolioImage img : existingImages) {
+            if (remainingImageIds.contains(img.getPortfolioImageId())) {
+                imagesToKeep.add(img);
+            } else {
+                // 기존 이미지 삭제 처리 (DB 및 스토리지)
+                firebaseImageService.deleteImage(img.getImageUrl());
+                portfolioImageRepository.delete(img);
+            }
+        }
+
+        // 4. 새 이미지 업로드 및 추가
+        if (newImages != null) {
+            for (MultipartFile newImage : newImages) {
+                String fileName = "portfolio/" + member.getNickname() + "_portfolio_image_" + portfolio.getPortfolioId() + "_" + System.currentTimeMillis();
+                String imageUrl = firebaseImageService.uploadImage(newImage, fileName);
+
+                PortfolioImage newPortfolioImage = new PortfolioImage(portfolio, imageUrl, false);
+                portfolio.getImages().add(newPortfolioImage);
+                imagesToKeep.add(newPortfolioImage);
+            }
+        }
+
+        // 5. 썸네일 처리
+        // 5-1) 새 썸네일 이미지가 있다면 새로 추가 + 기존 썸네일 false 처리
+        if (thumbnailImage != null) {
+            imagesToKeep.forEach(img -> img.setThumbnailCheck(false));
+
+            String thumbnailFileName = "portfolio/" + member.getNickname() + "_portfolio_thumbnail_" + portfolio.getPortfolioId() + "_" + System.currentTimeMillis();
+            String thumbnailUrl = firebaseImageService.uploadImage(thumbnailImage, thumbnailFileName);
+
+            PortfolioImage newThumbnailImage = new PortfolioImage(portfolio, thumbnailUrl, true);
+            portfolio.getImages().add(newThumbnailImage);
+
+        } else if (thumbnailRemainImageId != null) {
+            // 5-2) 기존 이미지 중 명시한 이미지 썸네일 지정
+            boolean found = false;
+            for (PortfolioImage img : imagesToKeep) {
+                if (img.getPortfolioImageId().equals(thumbnailRemainImageId)) {
+                    imagesToKeep.forEach(i -> i.setThumbnailCheck(false)); // 초기화
+                    img.setThumbnailCheck(true);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                throw new InvalidThumbnailIndexException("썸네일로 지정한 기존 이미지가 존재하지 않습니다.");
+            }
+
+        } else {
+            // 3) 기존 썸네일 이미지가 남아있으면 유지, 없으면 첫 번째 이미지 썸네일 지정
+            boolean hasThumbnail = imagesToKeep.stream()
+                    .anyMatch(PortfolioImage::isThumbnailCheck);
+
+            if (!hasThumbnail && !imagesToKeep.isEmpty()) {
+                imagesToKeep.get(0).setThumbnailCheck(true);
+            }
+        }
+
+        // 6. 변경 내용 저장
+        portfolioRepository.save(portfolio);
     }
 }
 

@@ -261,6 +261,7 @@ public class ExpertController {
                                     "    {\"id\": 10, \"url\": \"https://image.url/1.jpg\"},\n" +
                                     "    {\"id\": 11, \"url\": \"https://image.url/2.jpg\"}\n" +
                                     "  ],\n" +
+                                    "  \"thumbnailImage\": {\"id\": 10, \"url\": \"https://image.url/1.jpg\"},\n" +
                                     "  \"reviewCount\": 25,\n" +
                                     "  \"rating\": 4.8,\n" +
                                     "  \"expertNickname\": \"expertUser\",\n" +
@@ -293,7 +294,7 @@ public class ExpertController {
      */
     @Operation(
             summary = "전문가 포트폴리오 등록",
-            description = "포트폴리오를 등록한다."
+            description = "포트폴리오를 등록한다. 이미지 개수는 1~5개이며, 썸네일 이미지는 별도로 전송한다."
     )
     @ApiResponses({
             @ApiResponse(
@@ -307,20 +308,13 @@ public class ExpertController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "잘못된 입력값 또는 이미지 수 초과",
+                    description = "잘못된 입력값 (이미지 수 초과 또는 썸네일 미전송 등)",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = String.class),
-                            examples = @ExampleObject(value = "\"포트폴리오 이미지는 최소 1개 이상, 최대 5개까지 업로드할 수 있습니다.\"")
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "전문가 프로필이 존재하지 않음",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = String.class),
-                            examples = @ExampleObject(value = "\"전문가 프로필을 찾을 수 없습니다.\"")
+                            examples = @ExampleObject(
+                                    value = "\"포트폴리오 이미지는 최소 1개 이상, 최대 5개까지 업로드할 수 있습니다. 또는 썸네일 이미지를 반드시 전송해야 합니다.\""
+                            )
                     )
             ),
             @ApiResponse(
@@ -329,7 +323,18 @@ public class ExpertController {
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = String.class),
-                            examples = @ExampleObject(value = "\"전문가 권한이 없습니다.\"")
+                            examples = @ExampleObject(value = "\"전문가가 아닌 사용자는 포트폴리오를 생성할 수 없습니다.\"")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "회원 또는 전문가 프로필이 존재하지 않음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class),
+                            examples = @ExampleObject(
+                                    value = "\"해당 이메일의 사용자가 존재하지 않습니다. 또는 전문가 프로필이 존재하지 않습니다.\""
+                            )
                     )
             )
     })
@@ -349,14 +354,116 @@ public class ExpertController {
             @Parameter(description = "작업년도", required = true, example = "2024")
             @RequestParam("workingYear") Integer workingYear,
 
-            @Parameter(description = "포트폴리오 이미지 파일 목록", required = true)
-            @RequestPart("images") List<MultipartFile> images
+            @Parameter(description = "포트폴리오 이미지 파일 목록 (썸네일 제외)", required = true)
+            @RequestPart("images") List<MultipartFile> images,
+
+            @Parameter(description = "썸네일 이미지 파일", required = true)
+            @RequestPart("thumbnail") MultipartFile thumbnailImage
     ) {
         String email = principal.getName();
-        log.info("포트폴리오 등록 요청: {}, 제목: {}, 카테고리: {}, 경력 연수: {}, 이미지 수: {}",
-                email, title, category, workingYear, images.size());
-        expertService.createPortfolio(email, title, content, category, workingYear, images);
+        log.info("포트폴리오 등록 요청: {}, 제목: {}, 카테고리: {}, 경력 연수: {}, 이미지 수: {}, 썸네일 이미지 포함 여부: {}",
+                email, title, category, workingYear, images.size(), (thumbnailImage != null));
+        expertService.createPortfolio(email, title, content, category, workingYear, images, thumbnailImage);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+
+    /**
+     * 전문가 프로필의 포트폴리오 수정 API
+     * 전문가 프로필의 기존 포트폴리오를 수정합니다.
+     * PUT /api/expert/portfolio/{portfolioId}
+     */
+    @Operation(
+            summary = "전문가 포트폴리오 수정",
+            description = "기존 포트폴리오 정보를 수정한다. " +
+                    "유지할 기존 이미지 ID 목록과 새 이미지 파일 목록을 함께 보내며, " +
+                    "썸네일 이미지는 새 이미지 또는 유지하는 이미지 중 하나를 지정해야 한다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "포트폴리오 수정 성공",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 입력값 또는 이미지 수 초과, 혹은 썸네일 지정 오류",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class),
+                            examples = @ExampleObject(
+                                    value = "\"포트폴리오 이미지는 최소 1개 이상, 최대 5개까지 업로드할 수 있습니다.\" 또는 " +
+                                            "\"썸네일로 지정한 기존 이미지가 존재하지 않습니다.\""
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "포트폴리오를 찾을 수 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class),
+                            examples = @ExampleObject(value = "\"해당 포트폴리오가 존재하지 않습니다.\"")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "전문가 권한이 없는 사용자",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class),
+                            examples = @ExampleObject(value = "\"전문가 권한이 없습니다.\"")
+                    )
+            )
+    })
+    @PutMapping(value = "/portfolio/{portfolioId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updatePortfolio(
+            Principal principal,
+            @PathVariable Long portfolioId,
+
+            @Parameter(description = "포트폴리오 제목", required = true, example = "모던한 웹사이트 디자인")
+            @RequestParam("title") String title,
+
+            @Parameter(description = "포트폴리오 상세 내용", required = true, example = "반응형 웹사이트와 관리자 페이지 디자인 작업입니다.")
+            @RequestParam("content") String content,
+
+            @Parameter(description = "포트폴리오 카테고리", required = true, example = "디자인")
+            @RequestParam("category") String category,
+
+            @Parameter(description = "작업년도", required = true, example = "2024")
+            @RequestParam("workingYear") Integer workingYear,
+
+            @Parameter(description = "유지할 기존 이미지 ID 목록", example = "[1, 2]")
+            @RequestParam("remainingImageIds") List<Long> remainingImageIds,
+
+            @Parameter(description = "추가할 새 이미지 파일 목록")
+            @RequestPart(value = "images", required = false) List<MultipartFile> images,
+
+            @Parameter(description = "썸네일 이미지 파일 (새 이미지로 변경 시) - 없으면 null", required = false)
+            @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnailImage,
+
+            @Parameter(description = "썸네일로 지정할 기존 이미지 ID (기존 이미지 중 변경 시)", required = false)
+            @RequestParam(value = "thumbnailRemainImageId", required = false) Long thumbnailRemainImageId
+    ) {
+        String email = principal.getName();
+        log.info("포트폴리오 수정 요청: {}, 포트폴리오 ID: {}, 제목: {}, 카테고리: {}, 경력 연수: {}, 유지 이미지 수: {}, 추가 이미지 수: {}, 썸네일 새 이미지 포함: {}, 썸네일 기존 이미지 ID: {}",
+                email, portfolioId, title, category, workingYear,
+                remainingImageIds.size(), images != null ? images.size() : 0,
+                (thumbnailImage != null), thumbnailRemainImageId);
+
+        expertService.updatePortfolio(
+                email,
+                portfolioId,
+                title,
+                content,
+                category,
+                workingYear,
+                remainingImageIds,
+                images,
+                thumbnailImage,
+                thumbnailRemainImageId
+        );
+        return ResponseEntity.noContent().build();
     }
 
 }

@@ -226,4 +226,15 @@ public class GlobalExceptionHandler {
                 null
         );
     }
+    // 썸네일 이미지 인덱스가 잘못되었을 때 핸들링
+    @ExceptionHandler(InvalidThumbnailIndexException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidThumbnailIndex(InvalidThumbnailIndexException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "INVALID_THUMBNAIL_INDEX",
+                ex.getMessage(),
+                null
+        );
+    }
 }
