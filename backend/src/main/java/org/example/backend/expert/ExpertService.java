@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.backend.constant.Role;
 import org.example.backend.entity.*;
 import org.example.backend.exception.customException.*;
+import org.example.backend.expert.dto.PortfolioWithMember;
 import org.example.backend.expert.dto.request.ExpertRequestDto;
 import org.example.backend.expert.dto.request.SkillDto;
 import org.example.backend.expert.dto.request.SpecialtyDetailRequestDto;
@@ -332,7 +333,9 @@ public class ExpertService {
             MultipartFile thumbnailImage,
             Long thumbnailRemainImageId
     ) {
-        Portfolio portfolio = validatePortfolioOwnership(email, portfolioId);
+        PortfolioWithMember pwm = validatePortfolioOwnership(email, portfolioId);
+        Portfolio portfolio = pwm.getPortfolio();
+        Member member = pwm.getMember();
 
         // 2. 포트폴리오 기본 정보 수정
         portfolio.setTitle(title);
@@ -408,7 +411,8 @@ public class ExpertService {
 
     @Transactional
     public void deletePortfolio(String email, Long portfolioId) {
-        Portfolio portfolio = validatePortfolioOwnership(email, portfolioId);
+        PortfolioWithMember pwm = validatePortfolioOwnership(email, portfolioId);
+        Portfolio portfolio = pwm.getPortfolio();
 
         // 이미지 스토리지 삭제 (필요 시)
         List<PortfolioImage> images = portfolioImageRepository.findByPortfolio(portfolio);
@@ -421,7 +425,7 @@ public class ExpertService {
     }
 
     @Transactional(readOnly = true)
-    public Portfolio validatePortfolioOwnership(String email, Long portfolioId) {
+    public PortfolioWithMember validatePortfolioOwnership(String email, Long portfolioId) {
         Portfolio portfolio = portfolioRepository.findById(portfolioId)
                 .orElseThrow(() -> new PortfolioNotFoundException("해당 포트폴리오가 존재하지 않습니다."));
 
@@ -436,7 +440,7 @@ public class ExpertService {
             throw new NotExpertException("전문가 권한이 없습니다.");
         }
 
-        return portfolio;
+        return new PortfolioWithMember(portfolio, member);
     }
 
 }
