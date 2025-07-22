@@ -33,6 +33,7 @@ public class CommonService {
                 .profileImageUrl(member.getProfileImageUrl())
                 .email(member.getEmail())
                 .profileImageUrl(member.getProfileImageUrl() != null ? member.getProfileImageUrl() : "")
+                .role(member.getRole().name())
                 .build();
     }
 }
