@@ -466,4 +466,48 @@ public class ExpertController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * 전문가 포트폴리오 삭제 API
+     * 전문가가 자신의 포트폴리오를 삭제합니다.
+     * DELETE /api/expert/portfolio/{portfolioId}
+     */
+    @Operation(
+            summary = "전문가 포트폴리오 삭제",
+            description = "전문가가 자신의 포트폴리오를 삭제한다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "포트폴리오 삭제 성공",
+                    content = @Content
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "권한 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class),
+                            examples = @ExampleObject(value = "\"포트폴리오 삭제 권한이 없습니다.\"")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "포트폴리오를 찾을 수 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = String.class),
+                            examples = @ExampleObject(value = "\"해당 포트폴리오가 존재하지 않습니다.\"")
+                    )
+            )
+    })
+    @DeleteMapping("/portfolio/{portfolioId}")
+    public ResponseEntity<Void> deletePortfolio(
+            Principal principal,
+            @PathVariable Long portfolioId
+    ) {
+        String email = principal.getName();
+        expertService.deletePortfolio(email, portfolioId);
+        return ResponseEntity.noContent().build();
+    }
+
 }

@@ -332,20 +332,7 @@ public class ExpertService {
             MultipartFile thumbnailImage,
             Long thumbnailRemainImageId
     ) {
-        // 1. 포트폴리오 조회 및 권한 체크
-        Portfolio portfolio = portfolioRepository.findById(portfolioId)
-                .orElseThrow(() -> new PortfolioNotFoundException("해당 포트폴리오가 존재하지 않습니다."));
-
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberNotFoundException("해당 이메일의 사용자가 존재하지 않습니다."));
-
-        if (!portfolio.getExpertProfile().getMember().equals(member)) {
-            throw new MemberNotFoundException("해당 포트폴리오의 작성자가 아닙니다.");
-        }
-
-        if (member.getRole() != Role.EXPERT) {
-            throw new NotExpertException("전문가 권한이 없습니다.");
-        }
+        Portfolio portfolio = validatePortfolioOwnership(email, portfolioId);
 
         // 2. 포트폴리오 기본 정보 수정
         portfolio.setTitle(title);
@@ -418,5 +405,39 @@ public class ExpertService {
         // 6. 변경 내용 저장
         portfolioRepository.save(portfolio);
     }
+
+    @Transactional
+    public void deletePortfolio(String email, Long portfolioId) {
+        Portfolio portfolio = validatePortfolioOwnership(email, portfolioId);
+
+        // 이미지 스토리지 삭제 (필요 시)
+        List<PortfolioImage> images = portfolioImageRepository.findByPortfolio(portfolio);
+        for (PortfolioImage img : images) {
+            firebaseImageService.deleteImage(img.getImageUrl());
+        }
+
+        // 연관된 이미지 삭제는 cascade = ALL, orphanRemoval = true로 Portfolio 삭제 시 자동 삭제됨
+        portfolioRepository.delete(portfolio);
+    }
+
+    @Transactional(readOnly = true)
+    public Portfolio validatePortfolioOwnership(String email, Long portfolioId) {
+        Portfolio portfolio = portfolioRepository.findById(portfolioId)
+                .orElseThrow(() -> new PortfolioNotFoundException("해당 포트폴리오가 존재하지 않습니다."));
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberNotFoundException("해당 이메일의 사용자가 존재하지 않습니다."));
+
+        if (!portfolio.getExpertProfile().getMember().equals(member)) {
+            throw new NotExpertException("해당 포트폴리오에 대한 권한이 없습니다.");
+        }
+
+        if (member.getRole() != Role.EXPERT) {
+            throw new NotExpertException("전문가 권한이 없습니다.");
+        }
+
+        return portfolio;
+    }
+
 }
 
