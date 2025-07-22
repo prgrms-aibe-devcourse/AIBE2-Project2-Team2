@@ -10,4 +10,12 @@ public interface ReportService {
 
     void updateReportStatus(Long reportId, String newStatus);
 
+    void deleteReport(Long reportId);
+
+    ReportResponse getReportById(Long id);
+
+    List<ReportResponse> getReportsByCurrentUser();
+
+
+
 }

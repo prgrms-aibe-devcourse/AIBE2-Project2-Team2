@@ -4,6 +4,8 @@ import lombok.Builder;
 import lombok.Getter;
 import org.example.backend.constant.ReportStatus;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 public class ReportResponse {
@@ -14,4 +16,7 @@ public class ReportResponse {
     private String reportedNickname;
     private String reason;
     private ReportStatus status;
+
+    private String resolverNickname;
+    private LocalDateTime resolvedAt;
 }

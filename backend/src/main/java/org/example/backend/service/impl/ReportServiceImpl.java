@@ -13,6 +13,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.example.backend.dto.ReportResponse;
 import org.springframework.transaction.annotation.Transactional;
+import org.example.backend.exception.customException.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,10 +30,9 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public void submitReport(Long reporterId, Long reportedId, String reason) {
         Member reporter = memberRepository.findById(reporterId)
-                .orElseThrow(() -> new IllegalArgumentException("신고자 없음"));
-
+                .orElseThrow(() -> new MemberNotFoundException("신고자 정보를 찾을 수 없습니다."));
         Member reported = memberRepository.findById(reportedId)
-                .orElseThrow(() -> new IllegalArgumentException("피신고자 없음"));
+                .orElseThrow(() -> new MemberNotFoundException("피신고자 정보를 찾을 수 없습니다."));
 
         Report report = new Report();
         report.setReporter(reporter);
@@ -46,11 +46,15 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public List<ReportResponse> getReportsByStatus(String status) {
         List<Report> reports;
-
         if (status == null || status.isBlank()) {
             reports = reportRepository.findAll();
         } else {
-            ReportStatus parsedStatus = ReportStatus.valueOf(status.toUpperCase());
+            ReportStatus parsedStatus;
+            try {
+                parsedStatus = ReportStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new InvalidReportStatusException("유효하지 않은 신고 상태입니다: " + status);
+            }
             reports = reportRepository.findByReportStatus(parsedStatus);
         }
 
@@ -62,27 +66,32 @@ public class ReportServiceImpl implements ReportService {
                 .reportedNickname(report.getReported().getNickname())
                 .reason(report.getReason())
                 .status(report.getReportStatus())
+                .resolverNickname(report.getResolver() != null ? report.getResolver().getNickname() : null)
+                .resolvedAt(report.getResolvedAt())
                 .build()
         ).collect(Collectors.toList());
     }
 
     @Override
-    @Transactional
     public void updateReportStatus(Long reportId, String newStatus) {
         Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new IllegalArgumentException("신고 없음"));
+                .orElseThrow(() -> new ReportNotFoundException("해당 신고가 존재하지 않습니다."));
 
-        ReportStatus status = ReportStatus.valueOf(newStatus.toUpperCase());
+        ReportStatus status;
+        try {
+            status = ReportStatus.valueOf(newStatus.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new InvalidReportStatusException("유효하지 않은 신고 상태입니다: " + newStatus);
+        }
+
         report.setReportStatus(status);
 
-        // 상태가 COMPLETED일 경우에만 처리자와 시간 설정
         if (status == ReportStatus.COMPLETED) {
             report.setResolvedAt(LocalDateTime.now());
 
-            // 현재 로그인한 사용자 정보 가져오기
             String email = SecurityUtil.getCurrentUsername();
             Member resolver = memberRepository.findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("로그인된 사용자 정보 없음"));
+                    .orElseThrow(() -> new MemberNotFoundException("현재 로그인된 사용자 정보를 찾을 수 없습니다."));
 
             if (resolver.getRole() != Role.ADMIN) {
                 throw new AccessDeniedException("신고 처리는 관리자만 할 수 있습니다.");
@@ -93,4 +102,53 @@ public class ReportServiceImpl implements ReportService {
     }
 
 
+    @Override
+    public void deleteReport(Long reportId) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new ReportNotFoundException("해당 신고가 존재하지 않습니다."));
+        reportRepository.delete(report);
+    }
+
+    @Override
+    public ReportResponse getReportById(Long id) {
+        Report report = reportRepository.findById(id)
+                .orElseThrow(() -> new ReportNotFoundException("해당 신고가 존재하지 않습니다."));
+
+        return ReportResponse.builder()
+                .id(report.getId())
+                .reporterId(report.getReporter().getMemberId())
+                .reporterNickname(report.getReporter().getNickname())
+                .reportedId(report.getReported().getMemberId())
+                .reportedNickname(report.getReported().getNickname())
+                .reason(report.getReason())
+                .status(report.getReportStatus())
+                .resolvedAt(report.getResolvedAt())
+                .resolverNickname(report.getResolver() != null ? report.getResolver().getNickname() : null)
+                .build();
+    }
+
+    @Override
+    public List<ReportResponse> getReportsByCurrentUser() {
+        String email = SecurityUtil.getCurrentUsername();
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberNotFoundException("사용자 정보를 찾을 수 없습니다."));
+
+        List<Report> reports = reportRepository.findByReporterEmail(email);
+
+        return reports.stream()
+                .map(report -> ReportResponse.builder()
+                        .id(report.getId())
+                        .reporterId(report.getReporter().getMemberId())
+                        .reporterNickname(report.getReporter().getNickname())
+                        .reportedId(report.getReported().getMemberId())
+                        .reportedNickname(report.getReported().getNickname())
+                        .reason(report.getReason())
+                        .status(report.getReportStatus())
+                        .resolverNickname(report.getResolver() != null ? report.getResolver().getNickname() : null)
+                        .resolvedAt(report.getResolvedAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+// End
 }

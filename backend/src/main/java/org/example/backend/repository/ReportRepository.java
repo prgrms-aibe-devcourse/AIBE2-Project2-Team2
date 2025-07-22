@@ -10,5 +10,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
 
 
     List<Report> findByReportStatus(ReportStatus status);
+    List<Report> findByReporterEmail(String email);
+
 
 }

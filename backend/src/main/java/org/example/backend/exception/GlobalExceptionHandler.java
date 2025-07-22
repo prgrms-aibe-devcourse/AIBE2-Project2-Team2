@@ -9,6 +9,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.access.AccessDeniedException;
+
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -182,4 +184,38 @@ public class GlobalExceptionHandler {
                 null
         );
     }
+        // 권한이 없는 사용자가 접근했을 때 핸들링
+        @ExceptionHandler(AccessDeniedException.class)
+        public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+            return buildErrorResponse(
+                    request,
+                    HttpStatus.FORBIDDEN,
+                    "ACCESS_DENIED",
+                    "접근 권한이 없습니다.",
+                    null
+            );
+    }
+
+    @ExceptionHandler(ReportNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleReportNotFound(ReportNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "REPORT_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+
+    @ExceptionHandler(InvalidReportStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidStatus(InvalidReportStatusException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "INVALID_REPORT_STATUS",
+                ex.getMessage(),
+                null
+        );
+    }
+
 }
