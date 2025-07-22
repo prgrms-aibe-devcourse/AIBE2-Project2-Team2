@@ -237,4 +237,37 @@ public class GlobalExceptionHandler {
                 null
         );
     }
+    // 결제 정보가 없는 경우 핸들링
+    @ExceptionHandler(PaymentNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePaymentInfoNotFound(PaymentNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "PAYMENT_INFO_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 견적 정보가 없는 경우 핸들링
+    @ExceptionHandler(EstimateRecordNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleEstimateNotFound(EstimateRecordNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "ESTIMATE_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 결제 상태가 잘못된 경우 핸들링
+    @ExceptionHandler(InvalidPaymentStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidPaymentStatus(InvalidPaymentStatusException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "INVALID_PAYMENT_STATUS",
+                ex.getMessage(),
+                null
+        );
+    }
 }
