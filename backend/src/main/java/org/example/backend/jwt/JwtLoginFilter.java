@@ -88,6 +88,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         // 닉네임 조회
         Member member = loginService.findByEmail(email);
         String nickname = member.getNickname();
+        String profileImageUrl = member.getProfileImageUrl();
 
         try {
             loginService.updateLastLogin(email);
@@ -111,8 +112,8 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(String.format(
-                "{\"message\": \"로그인 성공\", \"nickname\": \"%s\", \"role\": \"%s\"}",
-                nickname, role
+                "{\"message\": \"로그인 성공\", \"nickname\": \"%s\", \"role\": \"%s\", \"profileImageUrl\": \"%s\" +\"email\": \"%s\"}",
+                nickname, role, profileImageUrl, email
         ));
 
 //        String token = tokenInfo.getToken();

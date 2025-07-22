@@ -167,5 +167,7 @@ public class AuthService {
         dto.setMessage("로그인 성공");
         dto.setNickname(member.getNickname());
         dto.setRole(member.getRole().toString());
+        dto.setProfileImageUrl(member.getProfileImageUrl());
+        dto.setEmail(member.getEmail());
     }
 }
