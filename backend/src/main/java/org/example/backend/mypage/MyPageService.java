@@ -4,17 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.constant.PaymentStatus;
 import org.example.backend.entity.Content;
-import org.example.backend.entity.EstimateRecord;
 import org.example.backend.entity.Member;
 import org.example.backend.entity.Payment;
-import org.example.backend.exception.customException.EstimateRecordNotFoundException;
 import org.example.backend.exception.customException.MemberNotFoundException;
-import org.example.backend.exception.customException.PaymentNotFoundException;
 import org.example.backend.firebase.FirebaseImageService;
 import org.example.backend.mypage.dto.request.NicknameUpdateRequestDto;
 import org.example.backend.mypage.dto.response.MyPageResponseDto;
 import org.example.backend.mypage.dto.response.PaymentResponseDto;
-import org.example.backend.repository.EstimateRecordRepository;
 import org.example.backend.repository.MemberRepository;
 import org.example.backend.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
@@ -33,7 +29,6 @@ public class MyPageService {
     private final MemberRepository memberRepository;
     private final FirebaseImageService firebaseImageService;
     private final PaymentRepository paymentRepository;
-    private final EstimateRecordRepository estimateRecordRepository;
     private static final String DEFAULT_PROFILE_IMAGE_URL = "https://firebasestorage.googleapis.com/v0/b/team2maldive.firebasestorage.app/o/default-profile.png?alt=media";
 
     // 내 정보 조회 메서드

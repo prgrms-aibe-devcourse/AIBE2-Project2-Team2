@@ -270,4 +270,15 @@ public class GlobalExceptionHandler {
                 null
         );
     }
+    // 매칭 상태가 잘못된 경우 핸들링
+    @ExceptionHandler(InvalidMatchingStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidMatchingStatus(InvalidMatchingStatusException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "INVALID_MATCHING_STATUS",
+                ex.getMessage(),
+                null
+        );
+    }
 }

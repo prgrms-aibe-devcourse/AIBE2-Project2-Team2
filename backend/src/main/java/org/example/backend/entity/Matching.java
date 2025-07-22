@@ -35,4 +35,15 @@ public class Matching extends BaseTimeEntity {
 
     @OneToOne(mappedBy = "matching", cascade = CascadeType.ALL, orphanRemoval = true)
     private Review review;
+
+    @OneToOne(mappedBy = "matching", cascade = CascadeType.ALL, orphanRemoval = true)
+    private EstimateRecord estimateRecord;
+
+    public Matching(Member member, Content content, MatchingStatus status, LocalDate startDate, LocalDate endDate) {
+        this.member = member;
+        this.content = content;
+        this.status = status;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
 }

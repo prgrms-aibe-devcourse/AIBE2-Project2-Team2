@@ -84,6 +84,20 @@ public class Member extends BaseTimeEntity{
         return member;
     }
 
+    //테스트용 전문가 권한 유저생성
+    public static Member createExpert(String email, String encodedPassword, String nickname, String phone, JoinType joinType) {
+        Member member = new Member();
+        member.email = email;
+        member.password = encodedPassword;
+        member.nickname = nickname;
+        member.phone = phone;
+        member.role = Role.EXPERT;         // 전문가 역할 설정
+        member.status = Status.ACTIVE;        // 기본 상태 설정
+        member.joinType = joinType;           // 가입 유형 설정
+        member.profileImageUrl = "https://firebasestorage.googleapis.com/v0/b/team2maldive.firebasestorage.app/o/default-profile.png?alt=media"; // 기본 프로필 이미지 URL 설정
+        return member;
+    }
+
     public void updateLastLoginAt(LocalDateTime time) {
         this.lastLoginAt = time;
     }

@@ -37,6 +37,7 @@ public class MyPageController {
     /*
     * 마이페이지 정보를 조회하는 API
      */
+
     /**
      * 내 정보 조회
      * GET /api/me
