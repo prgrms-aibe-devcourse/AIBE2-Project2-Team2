@@ -5,10 +5,10 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
+import org.example.backend.matchinghistory.dto.response.MatchingSummaryExpertDto;
 import org.example.backend.entity.*;
 import org.example.backend.matchinghistory.dto.request.MatchingSearchCondition;
-import org.example.backend.matchinghistory.dto.response.MatchingSummaryDto;
+import org.example.backend.matchinghistory.dto.response.MatchingSummaryUserDto;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 
@@ -50,7 +50,7 @@ public class MatchingRepositoryImpl implements MatchingRepositoryCustom {
      * @return 매칭 이력 목록 DTO 리스트
      */
     @Override
-    public List<MatchingSummaryDto> findExpertMatchingSummaries(String expertEmail, MatchingSearchCondition condition, Pageable pageable) {
+    public List<MatchingSummaryUserDto> findExpertMatchingSummaries(String expertEmail, MatchingSearchCondition condition, Pageable pageable) {
         QMatching matching = QMatching.matching;
         QContent content = QContent.content;
         QMember expert = QMember.member;
@@ -74,9 +74,8 @@ public class MatchingRepositoryImpl implements MatchingRepositoryCustom {
                         matching.matchingId,           // 매칭 고유 ID
                         content.title,                 // 콘텐츠 제목
                         thumbnailSubQuery,             // 썸네일 이미지 URL (서브쿼리)
-                        expert.nickname,               // 전문가 닉네임
-                        expert.profileImageUrl,        // 전문가 프로필 이미지 URL
-                        expert.phone,                  // 전문가 전화번호
+                        matching.member.nickname,      // 일반 사용자 닉네임
+                        matching.member.phone,         // 일반 사용자 전화번호
                         matching.status,               // 매칭 상태
                         matching.startDate,            // 작업 시작일
                         matching.endDate,              // 작업 종료일
@@ -113,24 +112,23 @@ public class MatchingRepositoryImpl implements MatchingRepositoryCustom {
 
         // 중복된 matchingId를 가진 행들이 있을 수 있으므로
         // 매칭 ID 기준으로 DTO를 관리하기 위해 LinkedHashMap 사용
-        Map<Long, MatchingSummaryDto> dtoMap = new LinkedHashMap<>();
+        Map<Long, MatchingSummaryUserDto> dtoMap = new LinkedHashMap<>();
 
         for (Tuple t : tuples) {
             Long matchingId = t.get(matching.matchingId);
-            MatchingSummaryDto dto = dtoMap.get(matchingId);
+            MatchingSummaryUserDto dto = dtoMap.get(matchingId);
 
             // 견적서 총 금액은 Long 타입이며 null일 수 있으므로 안전하게 변환
             Long totalPriceLong = t.get(estimateRecord.totalPrice);
 
             // 매칭 ID에 해당하는 DTO가 아직 없으면 새로 생성하여 맵에 저장
             if (dto == null) {
-                dto = MatchingSummaryDto.builder()
+                dto = MatchingSummaryUserDto.builder()
                         .matchingId(matchingId)
                         .contentTitle(t.get(content.title))
                         .contentThumbnailUrl(t.get(thumbnailSubQuery))
-                        .expertName(t.get(expert.nickname))
-                        .expertProfileImageUrl(t.get(expert.profileImageUrl))
-                        .expertPhone(t.get(expert.phone))
+                        .userName(t.get(matching.member.nickname))
+                        .userPhone(t.get(matching.member.phone))
                         .matchingStatus(t.get(matching.status))
                         .workStartDate(t.get(matching.startDate))
                         .workEndDate(t.get(matching.endDate))
@@ -147,7 +145,7 @@ public class MatchingRepositoryImpl implements MatchingRepositoryCustom {
             // 상품 정보가 존재하면 DTO의 selectedItems 리스트에 추가
             if (productName != null && productPrice != null) {
                 dto.getSelectedItems().add(
-                        new MatchingSummaryDto.SelectedItemDto(productName, productPrice.intValue())
+                        new MatchingSummaryUserDto.SelectedItemDto(productName, productPrice.intValue())
                 );
             }
         }
@@ -155,4 +153,92 @@ public class MatchingRepositoryImpl implements MatchingRepositoryCustom {
         // 맵에 저장된 DTO들을 리스트로 변환하여 반환
         return new ArrayList<>(dtoMap.values());
     }
+
+    public List<MatchingSummaryExpertDto> findUserMatchingSummaries(String userEmail, MatchingSearchCondition condition, Pageable pageable) {
+        QMatching matching = QMatching.matching;
+        QContent content = QContent.content;
+        QMember user = QMember.member;
+        QMember expert = new QMember("expert");
+        QContentImage contentImage = QContentImage.contentImage;
+        QEstimateRecord estimateRecord = QEstimateRecord.estimateRecord;
+        QSelectedProduct selectedProduct = QSelectedProduct.selectedProduct;
+
+        // 썸네일 이미지 서브쿼리
+        JPQLQuery<String> thumbnailSubQuery = JPAExpressions
+                .select(contentImage.imageUrl)
+                .from(contentImage)
+                .where(contentImage.content.eq(content)
+                        .and(contentImage.orderIndex.eq((byte) 0)))
+                .limit(1);
+
+        JPQLQuery<Tuple> query = queryFactory
+                .select(
+                        matching.matchingId,
+                        content.title,
+                        thumbnailSubQuery,
+                        expert.nickname,
+                        expert.phone,
+                        matching.status,
+                        matching.startDate,
+                        matching.endDate,
+                        estimateRecord.totalPrice,
+                        selectedProduct.name,
+                        selectedProduct.price
+                )
+                .from(matching)
+                .join(matching.member, user)  // 의뢰인 정보
+                .join(matching.content, content)  // 매칭 -> 콘텐츠
+                .join(content.member, expert)
+                .leftJoin(matching.estimateRecord, estimateRecord)
+                .leftJoin(estimateRecord.selectedProducts, selectedProduct)
+                .where(
+                        user.email.eq(userEmail)
+                                .and(condition.getMatchingStatus() != null ? matching.status.eq(condition.getMatchingStatus()) : null)
+                                .and(condition.getMatchingId() != null ? matching.matchingId.eq(condition.getMatchingId()) : null)
+                                .and(condition.getFromMonth() != null ? matching.startDate.goe(condition.getFromMonth().atDay(1)) : null)
+                                .and(condition.getToMonth() != null ? matching.startDate.loe(condition.getToMonth().atEndOfMonth()) : null)
+                                .and(StringUtils.hasText(condition.getNickname()) ?
+                                        content.member.nickname.containsIgnoreCase(condition.getNickname()) : null) // 전문가 닉네임
+                )
+                .orderBy(matching.matchingId.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize());
+
+        List<Tuple> tuples = query.fetch();
+        Map<Long, MatchingSummaryExpertDto> dtoMap = new LinkedHashMap<>();
+
+        for (Tuple t : tuples) {
+            Long matchingId = t.get(matching.matchingId);
+            MatchingSummaryExpertDto dto = dtoMap.get(matchingId);
+
+            Long totalPriceLong = t.get(estimateRecord.totalPrice);
+
+            if (dto == null) {
+                dto = MatchingSummaryExpertDto.builder()
+                        .matchingId(matchingId)
+                        .contentTitle(t.get(content.title))
+                        .contentThumbnailUrl(t.get(thumbnailSubQuery))
+                        .expertName(t.get(expert.nickname))
+                        .expertPhone(t.get(expert.phone))
+                        .matchingStatus(t.get(matching.status))
+                        .workStartDate(t.get(matching.startDate))
+                        .workEndDate(t.get(matching.endDate))
+                        .totalPrice(totalPriceLong != null ? totalPriceLong.intValue() : null)
+                        .selectedItems(new ArrayList<>())
+                        .build();
+                dtoMap.put(matchingId, dto);
+            }
+
+            String itemName = t.get(selectedProduct.name);
+            Long itemPrice = t.get(selectedProduct.price);
+            if (itemName != null && itemPrice != null) {
+                dto.getSelectedItems().add(
+                        new MatchingSummaryExpertDto.SelectedItemDto(itemName, itemPrice.intValue())
+                );
+            }
+        }
+
+        return new ArrayList<>(dtoMap.values());
+    }
+
 }

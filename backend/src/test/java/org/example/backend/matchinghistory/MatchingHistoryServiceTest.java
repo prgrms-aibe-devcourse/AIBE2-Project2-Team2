@@ -7,7 +7,7 @@ import org.example.backend.entity.Content;
 import org.example.backend.entity.Matching;
 import org.example.backend.entity.Member;
 import org.example.backend.matchinghistory.dto.request.MatchingSearchCondition;
-import org.example.backend.matchinghistory.dto.response.MatchingSummaryDto;
+import org.example.backend.matchinghistory.dto.response.MatchingSummaryUserDto;
 import org.example.backend.repository.ContentRepository;
 import org.example.backend.repository.MatchingRepository;
 import org.example.backend.repository.MemberRepository;
@@ -88,13 +88,13 @@ class MatchingHistoryServiceTest {
         PageRequest pageable = PageRequest.of(0, 10);
 
         // 실행
-        List<MatchingSummaryDto> result = matchingHistoryService.getExpertMatchingHistories(
+        List<MatchingSummaryUserDto> result = matchingHistoryService.getExpertMatchingHistories(
                 expert.getEmail(), condition, pageable
         );
 
         // 검증
         assertThat(result).hasSize(1);
-        MatchingSummaryDto dto = result.get(0);
+        MatchingSummaryUserDto dto = result.get(0);
         assertThat(dto.getContentTitle()).isEqualTo("로고 디자인");
         assertThat(dto.getMatchingStatus()).isEqualTo(MatchingStatus.ACCEPTED);
         assertThat(dto.getWorkStartDate()).isEqualTo(LocalDate.of(2025, 7, 1));

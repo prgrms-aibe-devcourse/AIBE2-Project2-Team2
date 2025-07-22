@@ -4,28 +4,23 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.example.backend.constant.MatchingStatus;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Getter
-@Builder
+@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-public class MatchingSummaryDto {
-
+public class MatchingSummaryBaseDto {
     // 매칭 식별 정보
     private Long matchingId;
 
     // 콘텐츠 정보
     private String contentTitle;
     private String contentThumbnailUrl;
-
-    // 전문가 정보
-    private String expertName;
-    private String expertProfileImageUrl;
-    private String expertPhone;
 
     // 매칭 상태 및 작업 일정
     private MatchingStatus matchingStatus;
@@ -39,7 +34,7 @@ public class MatchingSummaryDto {
     private List<SelectedItemDto> selectedItems;
 
     @Getter
-    @Builder
+    @SuperBuilder
     @AllArgsConstructor
     @NoArgsConstructor
     public static class SelectedItemDto {
