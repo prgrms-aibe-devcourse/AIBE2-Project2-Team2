@@ -23,4 +23,8 @@ public class Specialty {
 
     @OneToMany(mappedBy = "specialty", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetailField> detailFields = new ArrayList<>();
+
+    public Specialty(String name) {
+        this.name = name;
+    }
 }

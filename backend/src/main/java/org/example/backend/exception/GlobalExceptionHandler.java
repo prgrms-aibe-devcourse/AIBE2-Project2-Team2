@@ -1,6 +1,7 @@
 package org.example.backend.exception;
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.backend.exception.customException.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -31,7 +33,7 @@ public class GlobalExceptionHandler {
                 "error", status.getReasonPhrase(),
                 "errorCode", errorCode,
                 "message", message,
-                "errors", errors
+                "errors", errors != null ? errors : Map.of()
         );
         return ResponseEntity.status(status).body(body);
     }
@@ -102,5 +104,115 @@ public class GlobalExceptionHandler {
                 null
         );
     }
-
+    // 유저 정보 조회시 유저 정보가 없을 때 핸들링
+    @ExceptionHandler(MemberNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleMemberNotFound(MemberNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "MEMBER_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 유저가 이미 전문가일 때 핸들링
+    @ExceptionHandler(AlreadyExpertException.class)
+    public ResponseEntity<Map<String, Object>> handleAlreadyExpert(AlreadyExpertException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "ALREADY_EXPERT",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 없는 전문 분야를 요청했을 때 핸들링
+    @ExceptionHandler(SpecialtyNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleSpecialtyNotFound(SpecialtyNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "SPECIALTY_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 없는 상세 분야를 요청했을 때 핸들링
+    @ExceptionHandler(DetailFieldNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleDetailFieldNotFound(DetailFieldNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "DETAIL_FIELD_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 일반 예외처리 추가
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex, HttpServletRequest request) {
+        log.error("예상치 못한 오류 발생", ex);
+        return buildErrorResponse(
+                request,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "INTERNAL_SERVER_ERROR",
+                "서버 내부 오류가 발생했습니다.",
+                null
+        );
+    }
+    // 해당 스킬 카테고리가 없을 때 핸들링
+    @ExceptionHandler(SkillCategoryNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleSkillCategoryNotFound(SkillCategoryNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "SKILL_CATEGORY_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 해당 스킬이 없을 때 핸들링
+    @ExceptionHandler(SkillNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleSkillNotFound(SkillNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "SKILL_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 전문가 권한이 없을 때 핸들링
+    @ExceptionHandler(NotExpertException.class)
+    public ResponseEntity<Map<String, Object>> handleNotExpert(NotExpertException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.FORBIDDEN,
+                "NOT_EXPERT",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 전문가 프로필이 없을 때 핸들링
+    @ExceptionHandler(ExpertProfileNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleExpertProfileNotFound(ExpertProfileNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "EXPERT_PROFILE_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 해당 포트폴리오가 없을 때 핸들링
+    @ExceptionHandler(PortfolioNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePortfolioNotFound(PortfolioNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "PORTFOLIO_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
 }

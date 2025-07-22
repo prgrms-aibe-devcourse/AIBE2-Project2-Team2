@@ -21,4 +21,9 @@ public class DetailField {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "specialty_id", nullable = false)
     private Specialty specialty;
+
+    public DetailField(String name, Specialty specialty) {
+        this.name = name;
+        this.specialty = specialty;
+    }
 }
