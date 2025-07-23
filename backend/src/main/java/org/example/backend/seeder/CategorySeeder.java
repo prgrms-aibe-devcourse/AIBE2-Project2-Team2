@@ -1,16 +1,11 @@
 package org.example.backend.seeder;
 
 import org.example.backend.entity.Category;
-import org.example.backend.entity.SubCategory;
-import org.example.backend.entity.SubSubCategory;
 import org.example.backend.repository.CategoryRepository;
-import org.example.backend.repository.SubCategoryRepository;
-import org.example.backend.repository.SubSubCategoryRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import java.util.Arrays;
-import java.util.List;
 
 
 @Component
