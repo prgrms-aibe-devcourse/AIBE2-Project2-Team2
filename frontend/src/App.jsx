@@ -1,20 +1,54 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import MyReports from './pages/MyReports'; // ✅ 실제 파일 import
-// import ReportForm from './pages/ReportForm'; // ← 나중에 만들 거면 일단 주석 처리해도 돼
+import { Routes, Route } from "react-router-dom";
+import Header from "./components/header.jsx";
+import Auth from "./router/auth/auth.jsx";
+import { Modal } from "./components/modal/Modal.jsx";
+import { useEffect } from "react";
+import axiosInstance from "./lib/axios.js";
+import { useUserInfoStore } from "./store/userInfo.js";
 
-// 임시 홈 페이지
-const Home = () => <h2>홈 페이지입니다</h2>;
+//api/me
+// {
+//   "nickname": "홍길동",
+//   "profileImageUrl": "https://cdn.example.com/profile.jpg",
+//   "email": "hong@example.com",
+//   "joinType": "KAKAO"
+// }
 
 function App() {
-    return (
-        <Router>
-            <Routes>
-                <Route path="/" element={<Home />} />
-                {/* <Route path="/report/new" element={<ReportForm />} /> */}
-                <Route path="/reports" element={<MyReports />} /> {/* ✅ 이제 진짜 컴포넌트 */}
-            </Routes>
-        </Router>
-    );
+  //store에서 유저 정보를 저장하는 함수 가져오기
+  // useUserInfoStore는 Zustand를 사용하여 전역 상태를 관리하는 훅
+  const setUserInfo = useUserInfoStore((state) => state.setUserInfo);
+
+  // 사용자 정보를 가져오는 함수
+  async function getUserInfo() {
+    try {
+      const response = await axiosInstance.get("/api/common/check");
+      setUserInfo(response.data); // 사용자 정보를 store에 저장
+      console.log(response.data);
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+    }
+  }
+
+  useEffect(() => {
+    getUserInfo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <>
+      <div className="w-dvw h-dvh flex flex-col justify-start items-center">
+        <Header />
+        <div className="h-30"></div>
+        <Routes>
+          <Route path="/" element={<h2>Home Page</h2>} />
+          <Route path="/auth/*" element={<Auth />} />
+          <Route path="/about" element={<h2>About Page</h2>} />
+        </Routes>
+        <Modal />
+      </div>
+    </>
+  );
 }
 
 export default App;

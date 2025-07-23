@@ -7,4 +7,6 @@ public class KakaoLoginResponseDto {
     private String message;
     private String nickname;
     private String role;
+    private String profileImageUrl;
+    private String email;
 }
