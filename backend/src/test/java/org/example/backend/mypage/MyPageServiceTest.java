@@ -48,7 +48,8 @@ class MyPageServiceTest {
                 "홍길동",
                 "https://cdn.example.com/profile.jpg",
                 "test@example.com",
-                JoinType.KAKAO
+                JoinType.KAKAO,
+                "010-1234-5678"
         );
     }
 
