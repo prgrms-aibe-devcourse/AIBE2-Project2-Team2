@@ -274,8 +274,8 @@ class ExpertServiceTest {
         }
 
         // given: PortfolioImage 리스트 생성 및 필드 세팅
-        PortfolioImage img1 = new PortfolioImage(portfolio, "http://image1.url", 1);
-        PortfolioImage img2 = new PortfolioImage(portfolio, "http://image2.url", 2);
+        PortfolioImage img1 = new PortfolioImage(portfolio, "http://image1.url", true);
+        PortfolioImage img2 = new PortfolioImage(portfolio, "http://image2.url", false);
         try {
             // 이미지 ID 세팅 (리플렉션)
             Field imgIdField = PortfolioImage.class.getDeclaredField("portfolioImageId");
