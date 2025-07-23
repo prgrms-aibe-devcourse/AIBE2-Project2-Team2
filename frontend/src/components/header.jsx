@@ -19,7 +19,7 @@ export default function Header() {
   const profileMenuList = [
     { name: "프로필 관리", path: "/profile" },
     { name: "내 정보 관리", path: "/mypage/my-info" },
-    { name: "친구 초대", path: "/invite-friends" },
+    { name: "결제 내역", path: "/mypage/pay-history" },
     { name: "고객센터", path: "/customer-support" },
     { name: "전문가 등록", path: "/register-expert" },
     { name: "비즈계정 신청", path: "/apply-business-account" },
