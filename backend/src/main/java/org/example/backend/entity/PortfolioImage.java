@@ -23,9 +23,17 @@ public class PortfolioImage {
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
-    public PortfolioImage(Portfolio portfolio, String imageUrl) {
+    @Column(name = "thumbnail_check", nullable = false)
+    private boolean thumbnailCheck;
+
+    public PortfolioImage(Portfolio portfolio, String imageUrl, boolean thumbnailCheck) {
         this.portfolio = portfolio;
         this.imageUrl = imageUrl;
+        this.thumbnailCheck = thumbnailCheck;
+    }
+
+    public void setThumbnailCheck(Boolean thumbnailCheck) {
+        this.thumbnailCheck = thumbnailCheck;
     }
 
 }

@@ -10,7 +10,7 @@ import javax.persistence.*;
 public class ContentImage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long contentImageid;
+    private Long contentImageId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "content_id", nullable = false)

@@ -149,6 +149,8 @@ public class AuthController {
                                             "  \"message\": \"로그인 성공\",\n" +
                                             "  \"nickname\": \"홍길동\",\n" +
                                             "  \"role\": \"USER\"\n" +
+                                            "  \"email\": \"example1@naver.com\"\n" +
+                                            "  \"profileImageUrl\": \"https://example.com/profile.jpg\"\n" +
                                             "}"
                             )
                     )

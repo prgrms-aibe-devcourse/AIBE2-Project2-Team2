@@ -20,6 +20,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -88,6 +89,7 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         // 닉네임 조회
         Member member = loginService.findByEmail(email);
         String nickname = member.getNickname();
+        String profileImageUrl = member.getProfileImageUrl();
 
         try {
             loginService.updateLastLogin(email);
@@ -110,10 +112,17 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(String.format(
-                "{\"message\": \"로그인 성공\", \"nickname\": \"%s\", \"role\": \"%s\"}",
-                nickname, role
-        ));
+        Map<String, Object> responseMap = new HashMap<>();
+        responseMap.put("message", "로그인 성공");
+        responseMap.put("nickname", nickname);
+        responseMap.put("role", role);
+        responseMap.put("profileImageUrl", profileImageUrl);
+        responseMap.put("email", email);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json = objectMapper.writeValueAsString(responseMap);
+
+        response.getWriter().write(json);
 
 //        String token = tokenInfo.getToken();
 //        int maxAge = (int)(tokenInfo.getExpirationMs() / 1000);

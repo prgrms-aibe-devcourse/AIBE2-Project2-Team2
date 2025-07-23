@@ -182,4 +182,103 @@ public class GlobalExceptionHandler {
                 null
         );
     }
+    // 전문가 권한이 없을 때 핸들링
+    @ExceptionHandler(NotExpertException.class)
+    public ResponseEntity<Map<String, Object>> handleNotExpert(NotExpertException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.FORBIDDEN,
+                "NOT_EXPERT",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 전문가 프로필이 없을 때 핸들링
+    @ExceptionHandler(ExpertProfileNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleExpertProfileNotFound(ExpertProfileNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "EXPERT_PROFILE_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 해당 포트폴리오가 없을 때 핸들링
+    @ExceptionHandler(PortfolioNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePortfolioNotFound(PortfolioNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "PORTFOLIO_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 포트폴리오 이미지를 등록/수정 할 때 이미지가 유효하지 않을 때 핸들링
+    @ExceptionHandler(InvalidPortfolioImageException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidPortfolioImage(InvalidPortfolioImageException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "INVALID_PORTFOLIO_IMAGE",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 썸네일 이미지 인덱스가 잘못되었을 때 핸들링
+    @ExceptionHandler(InvalidThumbnailIndexException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidThumbnailIndex(InvalidThumbnailIndexException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "INVALID_THUMBNAIL_INDEX",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 결제 정보가 없는 경우 핸들링
+    @ExceptionHandler(PaymentNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePaymentInfoNotFound(PaymentNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "PAYMENT_INFO_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 견적 정보가 없는 경우 핸들링
+    @ExceptionHandler(EstimateRecordNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleEstimateNotFound(EstimateRecordNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "ESTIMATE_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 결제 상태가 잘못된 경우 핸들링
+    @ExceptionHandler(InvalidPaymentStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidPaymentStatus(InvalidPaymentStatusException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "INVALID_PAYMENT_STATUS",
+                ex.getMessage(),
+                null
+        );
+    }
+    // 매칭 상태가 잘못된 경우 핸들링
+    @ExceptionHandler(InvalidMatchingStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidMatchingStatus(InvalidMatchingStatusException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "INVALID_MATCHING_STATUS",
+                ex.getMessage(),
+                null
+        );
+    }
 }
