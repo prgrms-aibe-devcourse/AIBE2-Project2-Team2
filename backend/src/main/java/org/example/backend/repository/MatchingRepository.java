@@ -5,7 +5,7 @@ import org.example.backend.entity.Matching;
 import org.example.backend.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface MatchingRepository extends JpaRepository<Matching, Long> {
+public interface MatchingRepository extends JpaRepository<Matching, Long>, MatchingRepositoryCustom {
 
     boolean existsByMemberAndContent(Member member, Content content);
 }

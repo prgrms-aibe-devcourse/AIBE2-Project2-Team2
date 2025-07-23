@@ -23,13 +23,17 @@ public class PortfolioImage {
     @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
-    @Column(name = "sort_order", nullable = false)
-    private Integer sortOrder;
+    @Column(name = "thumbnail_check", nullable = false)
+    private boolean thumbnailCheck;
 
-    public PortfolioImage(Portfolio portfolio, String imageUrl, Integer sortOrder) {
+    public PortfolioImage(Portfolio portfolio, String imageUrl, boolean thumbnailCheck) {
         this.portfolio = portfolio;
         this.imageUrl = imageUrl;
-        this.sortOrder = sortOrder;
+        this.thumbnailCheck = thumbnailCheck;
+    }
+
+    public void setThumbnailCheck(Boolean thumbnailCheck) {
+        this.thumbnailCheck = thumbnailCheck;
     }
 
 }

@@ -17,7 +17,7 @@ public class EstimateRecord extends BaseTimeEntity{
     @Column(name = "estimate_record_id")
     private Long EstimateRecordId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "matching_id", nullable = false)
     private Matching matching;
 
@@ -26,4 +26,5 @@ public class EstimateRecord extends BaseTimeEntity{
 
     @OneToMany(mappedBy = "estimateRecord", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SelectedProduct> selectedProducts = new ArrayList<>();
+
 }

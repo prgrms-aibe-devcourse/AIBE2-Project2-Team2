@@ -1,6 +1,7 @@
 package org.example.backend.entity;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.example.backend.constant.Status;
 import org.threeten.bp.LocalDateTime;
 
@@ -11,6 +12,7 @@ import java.util.List;
 @Entity
 @Getter
 @Table(name = "content")
+@NoArgsConstructor
 public class Content extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,4 +37,13 @@ public class Content extends BaseEntity {
 
     @OneToMany(mappedBy = "content", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Matching> matchingList = new ArrayList<>();
+
+    public Content(Member member, String title, String description, Long budget, Status status, String category) {
+        this.member = member;
+        this.title = title;
+        this.description = description;
+        this.budget = budget;
+        this.status = status;
+        this.category = category;
+    }
 }
