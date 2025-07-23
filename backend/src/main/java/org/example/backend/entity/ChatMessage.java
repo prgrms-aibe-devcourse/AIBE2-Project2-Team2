@@ -21,7 +21,9 @@ public class ChatMessage extends BaseTimeEntity {
     @JoinColumn(name = "chatroom_id")
     private ChatRoom chatRoom;
 
-    private Long senderId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id", nullable = false)
+    private Member sender;
 
     @Column(columnDefinition = "TEXT")
     private String message;
@@ -30,11 +32,16 @@ public class ChatMessage extends BaseTimeEntity {
     private LocalDateTime sendAt;
 
     @Builder
-    public ChatMessage(ChatRoom chatRoom, String message, Long senderId) {
+    public ChatMessage(ChatRoom chatRoom, String message, Member sender) {
         this.chatRoom = chatRoom;
         this.message = message;
-        this.senderId = senderId;
+        this.sender = sender;
         this.isRead = false;
         this.sendAt = LocalDateTime.now();
+        chatRoom.setLastMessageTime(this.sendAt);
+    }
+
+    public void setRead(Boolean isRead) {
+        this.isRead = isRead;
     }
 }

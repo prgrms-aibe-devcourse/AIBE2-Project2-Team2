@@ -17,8 +17,8 @@ public class CustomHandshakeHandler extends DefaultHandshakeHandler {
             WebSocketHandler wsHandler,
             Map<String, Object> attributes) {
 
-        //  JwtHandshakeInterceptor에서 저장한 userEmail을 꺼내기
-        String email = (String) attributes.get("userEmail");
+        //  JwtHandshakeInterceptor에서 저장한 memberId을 꺼내기
+        String email = (String) attributes.get("memberEmail");
 
         if (email != null) {
             log.info("✅ Handshake에서 Principal 등록: {}", email);

@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import org.example.backend.entity.ChatRoom;
 
+import java.time.LocalDateTime;
+
 @Getter
 @AllArgsConstructor
 @Builder
@@ -25,6 +27,11 @@ public class ChatRoomDto {
 
     @Schema(description = "두 번째 사용자 닉네임", example = "홍길동")
     private String member2Name;
+
+    // ✅ 선택적으로 최근 메시지 정보도 추가 가능
+    private String lastMessage;
+    private Boolean lastMessageRead;
+    private LocalDateTime lastMessageTime;
 
     public static ChatRoomDto from(ChatRoom room) {
         return ChatRoomDto.builder()

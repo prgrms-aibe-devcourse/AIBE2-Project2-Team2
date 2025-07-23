@@ -8,6 +8,7 @@ import lombok.Getter;
 import org.example.backend.entity.ChatMessage;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Getter
 @AllArgsConstructor
@@ -20,11 +21,6 @@ public class ChatMessageRespondDto {
     @Schema(description = "채팅방 ID", example = "3")
     private Long roomId;
 
-    @Schema(description = "보낸 사람 ID", example = "5")
-    private Long senderId;
-
-    private String senderName;
-
     @Schema(description = "메시지 내용", example = "안녕하세요!")
     private String message;
 
@@ -35,14 +31,19 @@ public class ChatMessageRespondDto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime sendAt;
 
-    public static ChatMessageRespondDto from(ChatMessage msg, String senderName) {
+    private String senderName;
+    private String senderEmail;
+    private String senderProfileImage; // 선택
+
+    public static ChatMessageRespondDto from(ChatMessage msg) {
         return ChatMessageRespondDto.builder()
                 .messageId(msg.getChatId())
                 .roomId(msg.getChatRoom().getChatroomId())
-                .senderId(msg.getSenderId())
-                .senderName(senderName)
+                .senderName(msg.getSender().getNickname())
+                .senderEmail(msg.getSender().getEmail())
+                .senderProfileImage(msg.getSender().getProfileImageUrl())
                 .message(msg.getMessage())
-                .read(msg.getIsRead())
+                .read(Optional.ofNullable(msg.getIsRead()).orElse(false))
                 .sendAt(msg.getSendAt())
                 .build();
     }

@@ -1,169 +1,142 @@
 package org.example.backend.chat.api;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.backend.chat.dto.ChatMessageRequestDto;
 import org.example.backend.chat.dto.ChatMessageRespondDto;
+import org.example.backend.chat.dto.MemberDto;
+import org.example.backend.chat.service.ChatRoomService;
 import org.example.backend.entity.ChatMessage;
-import org.example.backend.entity.ChatRoom;
-import org.example.backend.entity.Member;
-import org.example.backend.repository.ChatMessageRepository;
 import org.example.backend.repository.ChatRoomRepository;
 import org.example.backend.repository.MemberRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.user.SimpUserRegistry;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/chat")
 @Tag(name = "ChatMessage", description = "채팅 메시지 API")
 public class ChatMessageApiController {
 
-    private final ChatRoomRepository chatRoomRepository;
-    private final ChatMessageRepository chatMessageRepository;
     private final MemberRepository memberRepository;
+    private final ChatRoomService chatRoomService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final ChatRoomRepository chatRoomRepository;
+
+    @Autowired
+    private SimpUserRegistry simpUserRegistry;
 
     /**
-     *  채팅 메시지 전송
+     * ✅ 임시 로그인: 전체 채팅 멤버 조회
      */
-    @Operation(
-            summary = "채팅 메시지 전송",
-            description = "특정 채팅방(roomId)에 메시지를 전송합니다."
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "메시지 전송 성공",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ChatMessageRespondDto.class),
-                            examples = @ExampleObject(
-                                    value = "{ \"messageId\": 1, \"roomId\": 3, \"senderId\": 5, \"message\": \"안녕하세요!\", \"isRead\": false, \"sendAt\": \"2025-07-17T15:30:00\" }"
-                            )
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "해당 방의 멤버가 아님",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "채팅방을 찾을 수 없음",
-                    content = @Content(mediaType = "application/json")
-            )
-    })
-    @PostMapping("/rooms/{roomId}/send")
-    public ResponseEntity<ChatMessageRespondDto> sendMessage(
-            @PathVariable Long roomId,
-            @RequestParam String message
-    ) {
-        String myEmail = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
-        if (myEmail == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증 정보가 없습니다.");
-        }
-        Member sender = memberRepository.findByEmail(myEmail)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
-
-        ChatRoom room = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."));
-
-        //  사용자가 이 방의 멤버인지 검증
-        validateRoomMember(room, sender);
-
-        ChatMessage savedMessage = chatMessageRepository.save(
-                ChatMessage.builder()
-                        .chatRoom(room)
-                        .senderId(
-                                Optional.ofNullable(sender.getMemberId())
-                                        .orElseThrow(() -> new IllegalStateException("SenderId is null!"))
-                        )
-                        .message(message)
-                        .build()
-        );
-
-        return ResponseEntity.ok(ChatMessageRespondDto.from(savedMessage, sender.getNickname()));
+    @GetMapping("/members")
+    public ResponseEntity<List<MemberDto>> getChatMembers() {
+        List<MemberDto> members = memberRepository.findAll()
+                .stream()
+                .map(MemberDto::from)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(members);
     }
 
     /**
-     *  채팅 메시지 조회
+     * ✅ 채팅 메시지 전송
      */
-    @Operation(
-            summary = "채팅 메시지 조회",
-            description = "특정 채팅방(roomId)의 모든 메시지를 시간순으로 조회합니다."
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "메시지 목록 조회 성공",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ChatMessageRespondDto.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "해당 방의 멤버가 아님",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "채팅방을 찾을 수 없음",
-                    content = @Content(mediaType = "application/json")
-            )
-    })
-    @GetMapping("/rooms/{roomId}/messages")
-    public ResponseEntity<List<ChatMessageRespondDto>> getMessages(
-            @Parameter(description = "채팅방 ID", example = "1") @PathVariable Long roomId
-    ) {
-        String myEmail = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
-        if (myEmail == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증 정보가 없습니다.");
+    @MessageMapping("/chat/{roomId}.send")
+    public void sendMessage(
+            @DestinationVariable Long roomId,
+            @Payload ChatMessageRespondDto dto,
+            Principal principal) {
+
+        log.info("📩 STOMP MESSAGE 수신: roomId={}, payload={}, principal={}", roomId, dto, principal);
+
+        String myEmail = principal.getName();
+
+        // 1) 채팅방 멤버 이메일 가져오기
+        List<String> roomMembers = chatRoomService.getRoomMembers(roomId);
+
+        // 2) 상대 이메일만 추출
+        String opponentEmail = roomMembers.stream()
+                .filter(email -> !email.equals(myEmail))
+                .findFirst()
+                .orElse(null);
+
+        boolean isOtherInRoom = simpUserRegistry.getUsers().stream()
+                // ✅ 상대 이메일과 일치하는 사용자만 필터링
+                .filter(user -> user.getName().equals(opponentEmail))
+                .flatMap(user -> user.getSessions().stream())
+                .flatMap(session -> session.getSubscriptions().stream())
+                .anyMatch(sub -> sub.getDestination().equals("/sub/chatroom/" + roomId));
+        
+        // 1) DB 저장
+        ChatMessage saved = chatRoomService.saveMessage(dto.getRoomId(), myEmail, dto.getMessage());
+        ChatMessageRespondDto response = ChatMessageRespondDto.from(saved);
+
+        // 2) 채팅방 구독자에게 메시지 broadcast
+        messagingTemplate.convertAndSend("/sub/chatroom/" + roomId, response);
+
+
+        if (isOtherInRoom) {
+            // 상대가 채팅방에 있다면 자동 읽음 처리
+            chatRoomService.markAsRead(roomId, myEmail);
+
+            // 읽음 이벤트 broadcast
+            messagingTemplate.convertAndSend("/sub/chatroom/" + roomId + "/read", "상대가 읽음");
+            log.info("✅ 상대가 방에 있으므로 자동 읽음 처리됨!");
         }
-        Member requester = memberRepository.findByEmail(myEmail)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+        else {
+            log.info("📩 상대가 방에 없으므로 단순 전송!");
+        }
+    }
 
-        ChatRoom room = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."));
-
-        // 사용자가 이 방의 멤버인지 검증
-        validateRoomMember(room, requester);
-
-        List<ChatMessageRespondDto> messages = chatMessageRepository.findByChatRoomOrderBySendAtAsc(room)
-                .stream()
-                .map(msg -> {
-                    Long senderId = msg.getSenderId();
-                    if (senderId == null) {
-                        // senderId가 없으면 기본 사용자명으로 반환
-                        return ChatMessageRespondDto.from(msg, "알 수 없는 사용자");
-                    }
-                    return memberRepository.findById(senderId)
-                            .map(sender -> ChatMessageRespondDto.from(msg, sender.getNickname()))
-                            .orElseGet(() -> ChatMessageRespondDto.from(msg, "알 수 없는 사용자"));
-                })
-                .collect(Collectors.toList());
-
+    /**
+     * ✅ 채팅 메시지 조회
+     */
+    @GetMapping("/rooms/{roomId}/messages")
+    public ResponseEntity<List<ChatMessageRespondDto>> getMessages(@PathVariable Long roomId) {
+        List<ChatMessageRespondDto> messages = chatRoomService.getMessages(roomId);
         return ResponseEntity.ok(messages);
     }
 
     /**
-     *  방 멤버 검증 메서드 (공통)
+     * 방의 안읽은 메시지를 모두 읽음 처리
      */
-    private void validateRoomMember(ChatRoom room, Member member) {
-        if (!room.getMember1().equals(member) && !room.getMember2().equals(member)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "이 채팅방에 속하지 않은 사용자입니다.");
+    @PatchMapping("/rooms/{roomId}/read")
+    public ResponseEntity<String> markRoomMessagesAsRead(
+            @PathVariable Long roomId,
+            @RequestParam String myEmail
+    ) {
+        // ✅ targetEmail이 현재 방을 구독 중인지 확인
+        boolean isTargetInRoom = simpUserRegistry.getUsers().stream()
+                .filter(user -> user.getName().equals(myEmail))
+                .flatMap(user -> user.getSessions().stream())
+                .flatMap(session -> session.getSubscriptions().stream())
+                .anyMatch(sub -> sub.getDestination().equals("/sub/chatroom/" + roomId));
+
+        if (!isTargetInRoom) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .body("상대방이 현재 방에 없음 → 읽음 처리 안 함");
         }
+        else {
+            chatRoomService.markAsRead(roomId, myEmail);
+        }
+
+        messagingTemplate.convertAndSend("/sub/chatroom/" + roomId + "/read", myEmail);
+
+        return ResponseEntity.ok("메시지를 읽음 처리했습니다.");
     }
 }

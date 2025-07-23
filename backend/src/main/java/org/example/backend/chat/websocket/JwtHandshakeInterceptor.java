@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
@@ -26,21 +27,32 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
                                    WebSocketHandler wsHandler,
                                    Map<String, Object> attributes) {
 
-        if (request instanceof ServletServerHttpRequest) {
-            ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
-            HttpServletRequest httpRequest = servletRequest.getServletRequest();
-            String token = httpRequest.getParameter("token");
+        HttpServletRequest servletRequest = ((ServletServerHttpRequest) request).getServletRequest();
 
-            if (token == null || !jwtUtil.validateToken(token)) {
-                log.warn("❌ WebSocket 인증 실패");
-                return false;
+        // ✅ 1) 먼저 쿠키에서 토큰 확인
+        String jwt = null;
+        if (servletRequest.getCookies() != null) {
+            for (Cookie cookie : servletRequest.getCookies()) {
+                if ("token".equals(cookie.getName())) {
+                    jwt = cookie.getValue();
+                    break;
+                }
             }
+        }
 
-            String email = jwtUtil.getUsername(token);
-            attributes.put("userEmail", email);
-            log.info("✅ WebSocket 인증 성공: {}", email);
+        // ✅ 2) 쿠키가 없으면 쿼리 파라미터에서 token 추출
+        if (jwt == null) {
+            jwt = servletRequest.getParameter("token");
+        }
+
+        if (jwt != null && jwtUtil.validateToken(jwt)) {
+            String email = jwtUtil.getUsername(jwt);
+            attributes.put("memberEmail", email);
+            log.info("✅ WebSocket 인증 성공 (email={})", email);
             return true;
         }
+
+        log.warn("❌ WebSocket 인증 실패 (쿠키/쿼리 파라미터 없음 or 검증 실패)");
         return false;
     }
 

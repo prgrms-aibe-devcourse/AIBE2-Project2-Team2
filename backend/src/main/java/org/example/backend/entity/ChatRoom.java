@@ -1,13 +1,12 @@
 package org.example.backend.entity;
 
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -31,6 +30,15 @@ public class ChatRoom {
         this.member1 = member1;
         this.member2 = member2;
     }
+
+    /** ✅ 1:N 관계 매핑 (ChatRoom → ChatMessage) */
+    @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sendAt ASC") // 메시지를 보낸 순서대로 정렬
+    private List<ChatMessage> messages = new ArrayList<>();
+
+    @Column(name = "last_message_time")
+    @Setter(AccessLevel.PUBLIC)
+    private LocalDateTime lastMessageTime;
 
     private LocalDate reg_date;
     private LocalDate update_date;
