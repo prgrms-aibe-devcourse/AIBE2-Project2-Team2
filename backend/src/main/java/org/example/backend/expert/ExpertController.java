@@ -164,27 +164,46 @@ public class ExpertController {
                             mediaType = "application/json",
                             schema = @Schema(implementation = ExpertProfileDto.class),
                             examples = @ExampleObject(value = "{\n" +
+                                    "  \"profileImageUrl\": \"http://profile.image.url\",\n" +
                                     "  \"nickname\": \"tester\",\n" +
                                     "  \"introduction\": \"자기소개\",\n" +
                                     "  \"region\": \"서울\",\n" +
                                     "  \"totalCareerYears\": 5,\n" +
+                                    "  \"education\": \"서울대학교 디자인학과\",\n" +
+                                    "  \"employeeCount\": 10,\n" +
                                     "  \"websiteUrl\": \"https://site.com\",\n" +
                                     "  \"facebookUrl\": \"https://facebook.com\",\n" +
                                     "  \"instagramUrl\": \"https://instagram.com\",\n" +
                                     "  \"xUrl\": \"https://x.com\",\n" +
                                     "  \"reviewCount\": 10,\n" +
                                     "  \"averageScore\": 4.5,\n" +
-                                    "  \"fields\": [\n" +
-                                    "    { \"specialtyName\": \"디자인\", \"detailFieldName\": \"웹/모바일 디자인\" }\n" +
+                                    "  \"specialties\": [\n" +
+                                    "    {\n" +
+                                    "      \"specialty\": \"디자인\",\n" +
+                                    "      \"detailFields\": [\"웹/모바일 디자인\", \"캐릭터/일러스트\"]\n" +
+                                    "    }\n" +
                                     "  ],\n" +
                                     "  \"skills\": [\n" +
-                                    "    { \"skillCategoryName\": \"IT/프로그래밍\", \"skillName\": \"Java\" }\n" +
+                                    "    {\n" +
+                                    "      \"category\": \"IT/프로그래밍\",\n" +
+                                    "      \"name\": \"Java\"\n" +
+                                    "    }\n" +
+                                    "  ],\n" +
+                                    "  \"careers\": [\"ABC 회사에서 3년 근무\", \"XYZ 디자인 프로젝트 참여\"],\n" +
+                                    "  \"contents\": [\n" +
+                                    "    {\n" +
+                                    "      \"contentId\": 1,\n" +
+                                    "      \"thumbnailUrl\": \"https://thumbnail.url/content1.jpg\",\n" +
+                                    "      \"title\": \"컨텐츠 제목\",\n" +
+                                    "      \"category\": \"디자인\"\n" +
+                                    "    }\n" +
                                     "  ],\n" +
                                     "  \"portfolios\": [\n" +
-                                    "    { \"title\": \"포트폴리오 제목\", \"thumbnailUrl\": \"https://thumbnail.url/portfolio1.jpg\" }\n" +
-                                    "  ],\n" +
-                                    "  \"contents\": [\n" +
-                                    "    { \"title\": \"컨텐츠 제목\", \"thumbnailUrl\": \"https://thumbnail.url/content1.jpg\" }\n" +
+                                    "    {\n" +
+                                    "      \"portfolioId\": 1,\n" +
+                                    "      \"thumbnailUrl\": \"https://thumbnail.url/portfolio1.jpg\",\n" +
+                                    "      \"title\": \"포트폴리오 제목\"\n" +
+                                    "    }\n" +
                                     "  ]\n" +
                                     "}")
                     )
