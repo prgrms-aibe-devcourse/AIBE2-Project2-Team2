@@ -1,54 +1,49 @@
-import { useState } from "react";
-import { ChevronLeft, ChevronRight, X, Star, Eye, Edit2, Trash2 } from "lucide-react";
-import { create } from "zustand";
-
-const useUserInfoStore = create((set) => ({
-    userInfo: { userId: "user123", nickname: "expertUser" },
-    setUserInfo: (info) => set({ userInfo: info }),
-    clearUserInfo: () => set({ userInfo: null }),
-}));
-
-const mockPortfolio = {
-    portfolioId: 123,
-    title: "웹사이트 개발 프로젝트",
-    content: "이 프로젝트는 React와 Node.js를 사용하여 개발한 풀스택 웹 애플리케이션입니다. 사용자 친화적인 인터페이스와 효율적인 백엔드 구조를 구현했습니다.",
-    viewCount: 150,
-    workingYear: 3,
-    category: "웹/모바일 개발",
-    images: [
-        {
-            id: 2,
-            url: "https://firebasestorage.googleapis.com/v0/b/team2maldive.firebasestorage.app/o/portfolio%2Fuser123_portfolio_image_1_1-52af1745-9ff4-4554-8d40-afee7a9b8592.png?alt=media",
-        },
-        {
-            id: 3,
-            url: "https://firebasestorage.googleapis.com/v0/b/team2maldive.firebasestorage.app/o/portfolio%2Fuser123_portfolio_image_1_2-a5bd9e68-edc2-4980-b975-70478e258586.png?alt=media",
-        },
-    ],
-    thumbnailImage: {
-        id: 1,
-        url: "https://firebasestorage.googleapis.com/v0/b/team2maldive.firebasestorage.app/o/portfolio%2Fuser123_portfolio_image_1_0-d514dfb2-9aab-4357-ba9a-e8d07d49796a.png?alt=media",
-    },
-    reviewCount: 25,
-    rating: 4.8,
-    expertNickname: "expertUser",
-    expertProfileImageUrl: "https://profile.image.url",
-};
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import axiosInstance from "../../../lib/axios.js";
+import {
+    ChevronLeft, ChevronRight, X, Star, Eye, Edit2, Trash2
+} from "lucide-react";
+import {useUserInfoStore} from "../../../store/userInfo.js";
 
 export default function Portfolio() {
+    const { id } = useParams(); // /portfolio/:id
     const { userInfo } = useUserInfoStore();
+    const [portfolio, setPortfolio] = useState(null);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchPortfolio = async () => {
+            try {
+                const response = await axiosInstance.get(`/api/expert/portfolio/${id}`);
+                setPortfolio(response.data);
+            } catch (error) {
+                console.error("포트폴리오 조회 실패:", error);
+            }
+        };
+        fetchPortfolio();
+    }, [id]);
+
+    if (!portfolio) {
+        return <div className="p-10 text-center">로딩 중...</div>;
+    }
 
     const imagesWithThumbnail = (() => {
-        if (!mockPortfolio.thumbnailImage) return mockPortfolio.images;
-        const exists = mockPortfolio.images.some(
-            (img) => img.id === mockPortfolio.thumbnailImage.id
-        );
-        if (exists) return mockPortfolio.images;
-        return [mockPortfolio.thumbnailImage, ...mockPortfolio.images];
+        if (!portfolio.thumbnailImage) return portfolio.images;
+
+        // 썸네일 ID 기준으로 정렬
+        const sortedImages = [...portfolio.images].sort((a, b) => {
+            if (a.id === portfolio.thumbnailImage.id) return -1;
+            if (b.id === portfolio.thumbnailImage.id) return 1;
+            return 0;
+        });
+
+        return sortedImages;
     })();
 
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const isOwner = userInfo && userInfo.nickname === mockPortfolio.expertNickname;
+    const isOwner = userInfo && userInfo.nickname === portfolio.expertNickname;
 
     const nextImage = () => {
         setCurrentImageIndex((prev) => (prev + 1) % imagesWithThumbnail.length);
@@ -62,66 +57,58 @@ export default function Portfolio() {
 
     const handleEdit = () => {
         console.log("수정하기");
+        // 수정 페이지로 이동하는 로직 필요
+        navigate(`/expert/portfolio/edit/${id}`);
+
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (confirm("정말로 삭제하시겠습니까?")) {
-            console.log("삭제하기");
+            try {
+                await axiosInstance.delete(`/api/expert/portfolio/${id}`);
+                alert("삭제 완료");
+                // 원하는 경로로 이동 처리 필요 시 추가
+            } catch (error) {
+                console.error("삭제 실패:", error);
+                alert("삭제에 실패했습니다.");
+            }
         }
     };
 
     return (
         <div className="bg-gray-50 flex overflow-hidden">
-            {/* Left Side - Image Slider */}
+            {/* 좌측 - 이미지 슬라이더 */}
             <div className="flex-1 p-2 flex flex-col min-w-0">
                 <div
                     className="relative bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex items-center justify-center"
-                    style={{
-                        height: '550px',
-                        maxWidth: '100%'
-                    }}
+                    style={{ height: '550px', maxWidth: '100%' }}
                 >
                     <img
                         src={imagesWithThumbnail[currentImageIndex].url}
                         alt="포트폴리오 이미지"
                         className="max-w-full max-h-full object-contain"
                     />
-
                     {imagesWithThumbnail.length > 1 && (
                         <>
-                            <button
-                                onClick={prevImage}
-                                className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow hover:bg-white transition-all duration-200"
-                                aria-label="이전 이미지"
-                            >
+                            <button onClick={prevImage} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow hover:bg-white transition-all duration-200">
                                 <ChevronLeft className="w-4 h-4 text-gray-700" />
                             </button>
-                            <button
-                                onClick={nextImage}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow hover:bg-white transition-all duration-200"
-                                aria-label="다음 이미지"
-                            >
+                            <button onClick={nextImage} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow hover:bg-white transition-all duration-200">
                                 <ChevronRight className="w-4 h-4 text-gray-700" />
                             </button>
                         </>
                     )}
-
                     <div className="absolute bottom-3 right-3 bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-full text-white text-xs select-none">
                         {currentImageIndex + 1} / {imagesWithThumbnail.length}
                     </div>
                 </div>
-
                 {imagesWithThumbnail.length > 1 && (
                     <div className="flex justify-center pt-4 space-x-2">
                         {imagesWithThumbnail.map((_, idx) => (
                             <button
                                 key={idx}
                                 onClick={() => setCurrentImageIndex(idx)}
-                                className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                                    idx === currentImageIndex
-                                        ? "bg-indigo-600 w-5"
-                                        : "bg-gray-300 hover:bg-gray-400"
-                                }`}
+                                className={`w-2 h-2 rounded-full transition-all duration-200 ${idx === currentImageIndex ? "bg-indigo-600 w-5" : "bg-gray-300 hover:bg-gray-400"}`}
                                 aria-label={`이미지 ${idx + 1} 선택`}
                             />
                         ))}
@@ -129,16 +116,15 @@ export default function Portfolio() {
                 )}
             </div>
 
-            {/* Right Side - Information Panel */}
+            {/* 우측 - 정보 패널 */}
             <div className="w-60 bg-white border-l border-gray-200 flex flex-col">
-                {/* 헤더 */}
                 <div className="p-4 border-b border-gray-100 flex items-start justify-between">
                     <h1 className="text-lg font-semibold text-gray-900 leading-tight">
-                        {mockPortfolio.title}
+                        {portfolio.title}
                     </h1>
                     <button
                         className="text-gray-400 hover:text-gray-600 transition-colors"
-                        aria-label="포트폴리오 닫기"
+                        aria-label="닫기"
                     >
                         <X className="w-4 h-4" />
                     </button>
@@ -147,28 +133,28 @@ export default function Portfolio() {
                 <div className="p-0 px-4 mb-4 flex items-center space-x-3 text-xs text-gray-500">
                     <div className="flex items-center space-x-1">
                         <Eye className="w-3 h-3" />
-                        <span>조회 {mockPortfolio.viewCount.toLocaleString()}</span>
+                        <span>조회 {portfolio.viewCount.toLocaleString()}</span>
                     </div>
                 </div>
 
                 <div className="p-4 border-b border-gray-100 flex items-center space-x-2">
                     <img
-                        src={mockPortfolio.expertProfileImageUrl}
+                        src={portfolio.expertProfileImageUrl}
                         alt="전문가 프로필"
                         className="w-10 h-10 rounded-full object-cover"
                     />
                     <div className="flex-1">
                         <p className="font-semibold text-gray-900 text-sm">
-                            {mockPortfolio.expertNickname}
+                            {portfolio.expertNickname}
                         </p>
                         <div className="flex items-center space-x-1 mt-1">
                             <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
                             <span className="text-xs font-medium text-gray-700">
-                {mockPortfolio.rating}
-              </span>
+                                {portfolio.rating}
+                            </span>
                             <span className="text-xs text-gray-500">
-                ({mockPortfolio.reviewCount})
-              </span>
+                                ({portfolio.reviewCount})
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -176,16 +162,16 @@ export default function Portfolio() {
                 <div className="flex-1 p-4 space-y-3 text-xs overflow-hidden">
                     <div>
                         <p className="font-medium text-gray-500 mb-1">서비스 종류</p>
-                        <p className="text-gray-900">{mockPortfolio.category}</p>
+                        <p className="text-gray-900">{portfolio.category}</p>
                     </div>
                     <div>
                         <p className="font-medium text-gray-500 mb-1">작업년도</p>
-                        <p className="text-gray-900">{mockPortfolio.workingYear}</p>
+                        <p className="text-gray-900">{portfolio.workingYear}</p>
                     </div>
                     <div>
                         <p className="font-medium text-gray-500 mb-2">프로젝트 설명</p>
                         <div className="text-gray-700 leading-relaxed">
-                            {mockPortfolio.content}
+                            {portfolio.content}
                         </div>
                     </div>
                 </div>
