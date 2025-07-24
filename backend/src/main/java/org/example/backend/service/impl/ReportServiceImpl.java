@@ -29,6 +29,23 @@ public class ReportServiceImpl implements ReportService {
     private final MemberRepository memberRepository;
     private final ReportRepository reportRepository;
 
+    // ✅ 닉네임 기반 신고 등록 추가
+    @Override
+    public void submitReportByNickname(String reporterEmail, String reportedNickname, String reason) {
+        Member reporter = memberRepository.findByEmail(reporterEmail)
+                .orElseThrow(() -> new MemberNotFoundException("신고자 정보를 찾을 수 없습니다."));
+        Member reported = memberRepository.findByNickname(reportedNickname)
+                .orElseThrow(() -> new MemberNotFoundException("피신고자 정보를 찾을 수 없습니다."));
+
+        Report report = new Report();
+        report.setReporter(reporter);
+        report.setReported(reported);
+        report.setReason(reason);
+        report.setReportStatus(ReportStatus.SUBMITTED);
+
+        reportRepository.save(report);
+    }
+
     @Override
     public void submitReport(Long reporterId, Long reportedId, String reason) {
         Member reporter = memberRepository.findById(reporterId)
@@ -55,19 +72,7 @@ public class ReportServiceImpl implements ReportService {
             reports = reportRepository.findByReportStatus(parsedStatus);
         }
 
-        return reports.stream().map(report -> ReportResponse.builder()
-                .id(report.getId())
-                .reporterId(report.getReporter().getMemberId())
-                .reporterNickname(report.getReporter().getNickname())
-                .reportedId(report.getReported().getMemberId())
-                .reportedNickname(report.getReported().getNickname())
-                .reason(report.getReason())
-                .status(report.getReportStatus())
-                .resolverNickname(report.getResolver() != null ? report.getResolver().getNickname() : null)
-                .resolvedAt(report.getResolvedAt())
-                .resolverComment(report.getResolverComment())
-                .build()
-        ).collect(Collectors.toList());
+        return reports.stream().map(this::convertToResponse).collect(Collectors.toList());
     }
 
     @Override
@@ -105,18 +110,7 @@ public class ReportServiceImpl implements ReportService {
         Report report = reportRepository.findById(id)
                 .orElseThrow(() -> new ReportNotFoundException("해당 신고가 존재하지 않습니다."));
 
-        return ReportResponse.builder()
-                .id(report.getId())
-                .reporterId(report.getReporter().getMemberId())
-                .reporterNickname(report.getReporter().getNickname())
-                .reportedId(report.getReported().getMemberId())
-                .reportedNickname(report.getReported().getNickname())
-                .reason(report.getReason())
-                .status(report.getReportStatus())
-                .resolvedAt(report.getResolvedAt())
-                .resolverNickname(report.getResolver() != null ? report.getResolver().getNickname() : null)
-                .resolverComment(report.getResolverComment())  // ✅ 여기 추가됨
-                .build();
+        return convertToResponse(report);
     }
 
     @Override
@@ -127,20 +121,7 @@ public class ReportServiceImpl implements ReportService {
 
         List<Report> reports = reportRepository.findByReporterEmail(email);
 
-        return reports.stream()
-                .map(report -> ReportResponse.builder()
-                        .id(report.getId())
-                        .reporterId(report.getReporter().getMemberId())
-                        .reporterNickname(report.getReporter().getNickname())
-                        .reportedId(report.getReported().getMemberId())
-                        .reportedNickname(report.getReported().getNickname())
-                        .reason(report.getReason())
-                        .status(report.getReportStatus())
-                        .resolverNickname(report.getResolver() != null ? report.getResolver().getNickname() : null)
-                        .resolvedAt(report.getResolvedAt())
-                        .resolverComment(report.getResolverComment())
-                        .build())
-                .collect(Collectors.toList());
+        return reports.stream().map(this::convertToResponse).collect(Collectors.toList());
     }
 
     private ReportStatus parseStatus(String statusStr) {
@@ -165,5 +146,20 @@ public class ReportServiceImpl implements ReportService {
 
             report.setResolver(resolver);
         }
+    }
+
+    private ReportResponse convertToResponse(Report report) {
+        return ReportResponse.builder()
+                .id(report.getId())
+                .reporterId(report.getReporter().getMemberId())
+                .reporterNickname(report.getReporter().getNickname())
+                .reportedId(report.getReported().getMemberId())
+                .reportedNickname(report.getReported().getNickname())
+                .reason(report.getReason())
+                .status(report.getReportStatus())
+                .resolvedAt(report.getResolvedAt())
+                .resolverNickname(report.getResolver() != null ? report.getResolver().getNickname() : null)
+                .resolverComment(report.getResolverComment())
+                .build();
     }
 }

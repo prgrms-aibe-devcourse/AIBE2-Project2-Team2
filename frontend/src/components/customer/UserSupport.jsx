@@ -40,15 +40,21 @@ const UserSupport = () => {
             setReportedNickname("");
             setCategory("");
             setCustomReason("");
-            fetchMyReports();
+            await fetchMyReports();
             window.scrollTo({ top: 0, behavior: "smooth" });
         } catch (err) {
             console.error(err);
-            alert("신고 등록에 실패했습니다.");
-        } finally {
+            if (err.response?.data?.errorCode === "MEMBER_NOT_FOUND") {
+                alert(err.response.data.message); // 예: "존재하지 않는 닉네임입니다."
+            } else {
+                alert("신고 등록에 실패했습니다.");
+            }
+        }
+        finally {
             setLoading(false);
         }
     };
+
 
     const fetchMyReports = async () => {
         try {

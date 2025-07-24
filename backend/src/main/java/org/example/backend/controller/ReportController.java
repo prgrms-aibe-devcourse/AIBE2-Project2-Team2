@@ -1,10 +1,6 @@
 package org.example.backend.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.backend.dto.ReportRequest;
-import org.example.backend.dto.ReportResponse;
-import org.example.backend.dto.ReportStatusUpdateRequest;
-import org.example.backend.dto.ReportUpdateRequest;
 import org.example.backend.service.ReportService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,6 +12,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
+import java.util.Map;
+
+import org.example.backend.dto.ReportResponse;
+import org.example.backend.dto.ReportStatusUpdateRequest;
+import org.example.backend.dto.ReportUpdateRequest;
 
 @Tag(name = "신고 관리 API", description = "신고 등록, 조회, 상태 변경, 삭제 등 신고 관련 기능 제공")
 @RestController
@@ -25,11 +26,7 @@ public class ReportController {
 
     private final ReportService reportService;
 
-    /**
-     * 신고 등록 API
-     * User, Admin 모두 접근 가능
-     */
-    @Operation(summary = "신고 등록", description = "신고자 ID와 피신고자 ID, 사유를 받아 새로운 신고를 등록합니다.")
+    @Operation(summary = "신고 등록 (닉네임 기반)", description = "신고자의 이메일과 피신고자의 닉네임, 신고 사유를 받아 신고를 등록합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "신고 등록 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 또는 유효하지 않은 사용자 ID"),
@@ -37,19 +34,16 @@ public class ReportController {
             @ApiResponse(responseCode = "500", description = "서버 내부 오류")
     })
     @PostMapping
-    public ResponseEntity<Void> reportMember(@RequestBody ReportRequest request) {
-        reportService.submitReport(
-                request.getReporterId(),
-                request.getReportedMemberId(),
-                request.getReason()
-        );
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> reportByNickname(@RequestBody Map<String, String> request) {
+        String reportedNickname = request.get("reportedNickname");
+        String reason = request.get("reason");
+        String reporterEmail = org.example.backend.config.SecurityUtil.getCurrentUsername();
+
+        reportService.submitReportByNickname(reporterEmail, reportedNickname, reason);
         return ResponseEntity.ok().build();
     }
 
-    /**
-     * 내가 신고한 목록 조회 API
-     * 로그인된 사용자 기준으로 본인이 작성한 신고 내역을 조회
-     */
     @Operation(summary = "내가 신고한 목록 조회", description = "현재 로그인한 사용자가 신고한 모든 신고 목록을 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -63,10 +57,6 @@ public class ReportController {
         return ResponseEntity.ok(reports);
     }
 
-    /**
-     * 신고 목록 조회 (관리자 전용)
-     * 상태(status) 파라미터로 필터링 가능
-     */
     @Operation(summary = "신고 목록 조회", description = "신고 상태(status)에 따라 필터링된 신고 목록을 조회합니다. status 값이 없으면 전체 조회됩니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -81,9 +71,6 @@ public class ReportController {
         return ResponseEntity.ok(reports);
     }
 
-    /**
-     * 신고 상세 조회 (관리자 전용)
-     */
     @Operation(summary = "신고 상세 조회", description = "신고 ID를 기반으로 해당 신고의 상세 정보를 조회합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -98,10 +85,6 @@ public class ReportController {
         return ResponseEntity.ok(report);
     }
 
-    /**
-     * 신고 상태 변경 (관리자 전용)
-     * 'COMPLETED'로 변경 시 처리자, 처리시간 기록
-     */
     @Operation(summary = "신고 상태 변경", description = "신고 ID를 기준으로 신고 상태를 변경합니다. 상태가 'COMPLETED'일 경우, 처리자와 처리시간도 함께 기록됩니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "상태 변경 성공"),
@@ -120,9 +103,6 @@ public class ReportController {
         return ResponseEntity.ok().build();
     }
 
-    /**
-     * 신고 삭제 (관리자 전용)
-     */
     @Operation(summary = "신고 삭제", description = "지정한 신고 ID의 신고를 삭제합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "삭제 성공"),
@@ -146,8 +126,4 @@ public class ReportController {
         reportService.updateStatusAndComment(id, request.getStatus(), request.getResolverComment());
         return ResponseEntity.ok().build();
     }
-
-
-
-
 }

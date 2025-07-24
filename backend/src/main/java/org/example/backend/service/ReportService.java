@@ -17,4 +17,7 @@ public interface ReportService {
     ReportResponse getReportById(Long id);
 
     List<ReportResponse> getReportsByCurrentUser();
+
+    void submitReportByNickname(String reporterEmail, String reportedNickname, String reason);
+
 }
