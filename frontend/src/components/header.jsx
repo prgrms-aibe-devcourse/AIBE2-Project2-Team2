@@ -44,7 +44,9 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex-1 md:flex md:items-center md:gap-12">
             <Link className="block text-teal-600" to="/">
-              <span className="text-2xl font-bold">Logo</span>
+
+              {/* 로고 영역 (좌상단) */}
+              <span className="text-2xl font-bold">고수의 민족</span>
             </Link>
           </div>
 
