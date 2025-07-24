@@ -16,14 +16,14 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "content")
-@NoArgsConstructor
 public class Content extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "content_id")
     private Long contentId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_Id", nullable = false)
+    @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
     private String title;
@@ -36,11 +36,15 @@ public class Content extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    @Column(nullable = false)
-    private String category;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
     @OneToMany(mappedBy = "content", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Matching> matchingList = new ArrayList<>();
+    private List<Question> questions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "content", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ContentImage> images = new ArrayList<>();
 
     // Status 설정 메서드
     public void setStatus(Status status) {
@@ -48,10 +52,19 @@ public class Content extends BaseEntity {
     }
 
     // Content 수정 메서드
-    public void updateContent(String title, String description, Long budget, String category) {
+    public void updateContent(String title, String description, Long budget, Category category) {
         this.title = title;
         this.description = description;
         this.budget = budget;
         this.category = category;
+    }
+
+    public void setQuestions(List<Question> questions) {
+        this.questions = questions;
+        if (questions != null) {
+            for (Question q : questions) {
+                q.setContent(this);
+            }
+        }
     }
 }

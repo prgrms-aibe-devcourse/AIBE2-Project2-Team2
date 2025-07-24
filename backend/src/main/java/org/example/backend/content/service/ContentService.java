@@ -2,11 +2,12 @@ package org.example.backend.content.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.backend.constant.Role;
+import org.example.backend.content.dto.ContentDetailResponseDto;
 import org.example.backend.content.dto.ContentRequestDto;
 import org.example.backend.content.dto.ContentResponseDto;
 import org.example.backend.constant.Status;
-import org.example.backend.entity.Content;
-import org.example.backend.entity.Member;
+import org.example.backend.entity.*;
+import org.example.backend.repository.CategoryRepository;
 import org.example.backend.repository.ContentRepository;
 import org.example.backend.exception.customException.ContentNotFoundException;
 import org.example.backend.exception.customException.NoContentPermissionException;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class ContentService {
     private final ContentRepository contentRepository;
+    private final CategoryRepository categoryRepository;
 
     // 작성자 확인
     private void verifyContentPermission(Content content, Member member){
@@ -34,15 +36,30 @@ public class ContentService {
 
     // 컨텐츠 등록
     public ContentResponseDto createContent(ContentRequestDto requestDto, Member member) {
+        Category category = categoryRepository.findById(requestDto.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("카테고리 없음"));
+
         Content content = Content.builder()
                 .member(member)
                 .title(requestDto.getTitle())
                 .description(requestDto.getDescription())
                 .budget(requestDto.getBudget())
-                .category(requestDto.getCategory())
+                .category(category)
                 .status(Status.ACTIVE) // 생성 시 ACTIVE로 설정
                 .build();
-        
+
+        List<Question> questions = requestDto.getQuestions().stream()
+                .map(qDto -> {
+                    Question question = new Question(content, qDto.getQuestionText(), qDto.isMultipleChoice());
+                    List<QuestionOption> options = qDto.getOptions().stream()
+                            .map(oDto -> new QuestionOption(oDto.getOptionText(), oDto.getAdditionalPrice()))
+                            .collect(Collectors.toList());
+                    options.forEach(question::addOption);
+                    return question;
+                }).collect(Collectors.toList());
+
+        content.setQuestions(questions);
+
         Content savedContent = contentRepository.save(content);
         return toResponseDto(savedContent);
     }
@@ -68,14 +85,19 @@ public class ContentService {
         Content content = contentRepository.findById(id)
                 .orElseThrow(() -> new ContentNotFoundException("컨텐츠를 찾을 수 없습니다."));
         
-        // 작성자 확인
+        // 작성자(권한) 확인
         verifyContentPermission(content, member);
-        
+
+        //카테고리 엔티티 조회
+        Category category = categoryRepository.findById(requestDto.getCategoryId())
+                .orElseThrow(() -> new IllegalArgumentException("카테고리가 존재하지 않습니다."));
+
+        //컨텐츠 값들 업데이트
         content.updateContent(
                 requestDto.getTitle(),
                 requestDto.getDescription(),
                 requestDto.getBudget(),
-                requestDto.getCategory()
+                category
         );
         
         Content updatedContent = contentRepository.save(content);
@@ -104,18 +126,79 @@ public class ContentService {
 
     // 엔티티 → DTO 변환 (컨트롤러에서 사용 가능하도록 public)
     public ContentResponseDto toResponseDto(Content content) {
+        List<String> imageUrls = content.getImages() != null
+                ? content.getImages().stream().map(ContentImage::getImageUrl).collect(Collectors.toList())
+                : List.of();
+
+        // 대표 이미지(썸네일) URL 추출
+        String contentUrl = null;
+        if (content.getImages() != null && !content.getImages().isEmpty()) {
+            contentUrl = content.getImages().stream()
+                    .filter(ContentImage::isThumbnail)
+                    .map(ContentImage::getImageUrl)
+                    .findFirst()
+                    .orElse(content.getImages().get(0).getImageUrl());
+        }
+
+        Category category = content.getCategory();  // null 방지
+        Long categoryId = category != null ? category.getCategoryId() : null;
+        String categoryName = category != null ? category.getName() : null;
+
         return ContentResponseDto.builder()
                 .contentId(content.getContentId())
                 .memberId(content.getMember().getMemberId())
                 .title(content.getTitle())
                 .description(content.getDescription())
                 .budget(content.getBudget())
-                .status(content.getStatus().name())
-                .regTime(content.getRegTime().toString())
-                .updateTime(content.getUpdateTime().toString())
+                .status(content.getStatus() != null ? content.getStatus().name() : null)
+                .regTime(content.getRegTime() != null ? content.getRegTime().toString() : null)
+                .updateTime(content.getUpdateTime() != null ? content.getUpdateTime().toString() : null)
                 .createdBy(content.getCreatedBy())
                 .modifiedBy(content.getModifiedBy())
-                .category(content.getCategory())
+                .categoryId(categoryId)
+                .categoryName(categoryName)
+                .imageUrls(imageUrls)
+                .contentUrl(contentUrl)
                 .build();
     }
+    public ContentDetailResponseDto toDetailResponseDto(Content content) {
+        List<ContentDetailResponseDto.QuestionDto> questionDtos = content.getQuestions().stream()
+                .map(question -> {
+                    List<ContentDetailResponseDto.QuestionDto.OptionDto> optionDtos = question.getOptions().stream()
+                            .map(option -> ContentDetailResponseDto.QuestionDto.OptionDto.builder()
+                                    .optionId(option.getId())
+                                    .optionText(option.getOptionText())
+                                    .additionalPrice(option.getAdditionalPrice())
+                                    .build())
+                            .collect(Collectors.toList());
+
+                    return ContentDetailResponseDto.QuestionDto.builder()
+                            .questionId(question.getId())
+                            .questionText(question.getQuestionText())
+                            .isMultipleChoice(question.isMultipleChoice())
+                            .options(optionDtos)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        // 대표 이미지(썸네일) URL 추출
+        String contentUrl = null;
+        if (content.getImages() != null && !content.getImages().isEmpty()) {
+            contentUrl = content.getImages().stream()
+                    .filter(ContentImage::isThumbnail)
+                    .map(ContentImage::getImageUrl)
+                    .findFirst()
+                    .orElse(content.getImages().get(0).getImageUrl());
+        }
+
+        return ContentDetailResponseDto.builder()
+                .contentId(content.getContentId())
+                .title(content.getTitle())
+                .description(content.getDescription())
+                .budget(content.getBudget())
+                .questions(questionDtos)
+                .contentUrl(contentUrl)
+                .build();
+    }
+
 }
