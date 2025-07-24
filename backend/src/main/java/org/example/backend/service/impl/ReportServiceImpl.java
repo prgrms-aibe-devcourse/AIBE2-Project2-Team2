@@ -3,17 +3,19 @@ package org.example.backend.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.config.SecurityUtil;
 import org.example.backend.constant.Role;
+import org.example.backend.constant.ReportStatus;
+import org.example.backend.dto.ReportResponse;
 import org.example.backend.entity.Member;
 import org.example.backend.entity.Report;
-import org.example.backend.constant.ReportStatus;
+import org.example.backend.exception.customException.InvalidReportStatusException;
+import org.example.backend.exception.customException.MemberNotFoundException;
+import org.example.backend.exception.customException.ReportNotFoundException;
 import org.example.backend.repository.MemberRepository;
 import org.example.backend.repository.ReportRepository;
 import org.example.backend.service.ReportService;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.example.backend.dto.ReportResponse;
 import org.springframework.transaction.annotation.Transactional;
-import org.example.backend.exception.customException.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -49,12 +51,7 @@ public class ReportServiceImpl implements ReportService {
         if (status == null || status.isBlank()) {
             reports = reportRepository.findAll();
         } else {
-            ReportStatus parsedStatus;
-            try {
-                parsedStatus = ReportStatus.valueOf(status.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new InvalidReportStatusException("유효하지 않은 신고 상태입니다: " + status);
-            }
+            ReportStatus parsedStatus = parseStatus(status);
             reports = reportRepository.findByReportStatus(parsedStatus);
         }
 
@@ -68,6 +65,7 @@ public class ReportServiceImpl implements ReportService {
                 .status(report.getReportStatus())
                 .resolverNickname(report.getResolver() != null ? report.getResolver().getNickname() : null)
                 .resolvedAt(report.getResolvedAt())
+                .resolverComment(report.getResolverComment())
                 .build()
         ).collect(Collectors.toList());
     }
@@ -77,30 +75,23 @@ public class ReportServiceImpl implements ReportService {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ReportNotFoundException("해당 신고가 존재하지 않습니다."));
 
-        ReportStatus status;
-        try {
-            status = ReportStatus.valueOf(newStatus.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new InvalidReportStatusException("유효하지 않은 신고 상태입니다: " + newStatus);
-        }
-
+        ReportStatus status = parseStatus(newStatus);
         report.setReportStatus(status);
 
-        if (status == ReportStatus.COMPLETED) {
-            report.setResolvedAt(LocalDateTime.now());
-
-            String email = SecurityUtil.getCurrentUsername();
-            Member resolver = memberRepository.findByEmail(email)
-                    .orElseThrow(() -> new MemberNotFoundException("현재 로그인된 사용자 정보를 찾을 수 없습니다."));
-
-            if (resolver.getRole() != Role.ADMIN) {
-                throw new AccessDeniedException("신고 처리는 관리자만 할 수 있습니다.");
-            }
-
-            report.setResolver(resolver);
-        }
+        handleAdminResolutionIfNeeded(report, status);
     }
 
+    @Override
+    public void updateStatusAndComment(Long reportId, String statusStr, String resolverComment) {
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new ReportNotFoundException("해당 신고가 존재하지 않습니다."));
+
+        ReportStatus status = parseStatus(statusStr);
+        report.setReportStatus(status);
+        report.setResolverComment(resolverComment);
+
+        handleAdminResolutionIfNeeded(report, status);
+    }
 
     @Override
     public void deleteReport(Long reportId) {
@@ -124,6 +115,7 @@ public class ReportServiceImpl implements ReportService {
                 .status(report.getReportStatus())
                 .resolvedAt(report.getResolvedAt())
                 .resolverNickname(report.getResolver() != null ? report.getResolver().getNickname() : null)
+                .resolverComment(report.getResolverComment())  // ✅ 여기 추가됨
                 .build();
     }
 
@@ -146,9 +138,32 @@ public class ReportServiceImpl implements ReportService {
                         .status(report.getReportStatus())
                         .resolverNickname(report.getResolver() != null ? report.getResolver().getNickname() : null)
                         .resolvedAt(report.getResolvedAt())
+                        .resolverComment(report.getResolverComment())
                         .build())
                 .collect(Collectors.toList());
     }
 
-// End
+    private ReportStatus parseStatus(String statusStr) {
+        try {
+            return ReportStatus.valueOf(statusStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new InvalidReportStatusException("유효하지 않은 신고 상태입니다: " + statusStr);
+        }
+    }
+
+    private void handleAdminResolutionIfNeeded(Report report, ReportStatus status) {
+        if (status == ReportStatus.IN_PROGRESS || status == ReportStatus.COMPLETED) {
+            report.setResolvedAt(LocalDateTime.now());
+
+            String email = SecurityUtil.getCurrentUsername();
+            Member resolver = memberRepository.findByEmail(email)
+                    .orElseThrow(() -> new MemberNotFoundException("현재 로그인된 사용자 정보를 찾을 수 없습니다."));
+
+            if (resolver.getRole() != Role.ADMIN) {
+                throw new AccessDeniedException("신고 처리는 관리자만 할 수 있습니다.");
+            }
+
+            report.setResolver(resolver);
+        }
+    }
 }

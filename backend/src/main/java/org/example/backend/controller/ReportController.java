@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.backend.dto.ReportRequest;
 import org.example.backend.dto.ReportResponse;
 import org.example.backend.dto.ReportStatusUpdateRequest;
+import org.example.backend.dto.ReportUpdateRequest;
 import org.example.backend.service.ReportService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -135,6 +136,17 @@ public class ReportController {
         reportService.deleteReport(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateReport(
+            @PathVariable Long id,
+            @RequestBody ReportUpdateRequest request
+    ) {
+        reportService.updateStatusAndComment(id, request.getStatus(), request.getResolverComment());
+        return ResponseEntity.ok().build();
+    }
+
 
 
 

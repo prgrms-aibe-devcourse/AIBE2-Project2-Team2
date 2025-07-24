@@ -41,4 +41,8 @@ public class Report extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resolver_id")
     private Member resolver;
+
+    @Column(columnDefinition = "TEXT")
+    private String resolverComment;
+
 }

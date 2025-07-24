@@ -16,7 +16,7 @@ public class ReportResponse {
     private String reportedNickname;
     private String reason;
     private ReportStatus status;
-
     private String resolverNickname;
+    private String resolverComment;
     private LocalDateTime resolvedAt;
 }

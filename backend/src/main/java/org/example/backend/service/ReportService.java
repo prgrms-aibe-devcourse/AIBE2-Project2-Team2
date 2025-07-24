@@ -10,12 +10,11 @@ public interface ReportService {
 
     void updateReportStatus(Long reportId, String newStatus);
 
+    void updateStatusAndComment(Long reportId, String status, String resolverComment); // ✅ 추가
+
     void deleteReport(Long reportId);
 
     ReportResponse getReportById(Long id);
 
     List<ReportResponse> getReportsByCurrentUser();
-
-
-
 }
