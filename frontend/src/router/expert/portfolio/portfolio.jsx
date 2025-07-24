@@ -67,7 +67,7 @@ export default function Portfolio() {
             try {
                 await axiosInstance.delete(`/api/expert/portfolio/${id}`);
                 alert("삭제 완료");
-                // 원하는 경로로 이동 처리 필요 시 추가
+                navigate("/expert/profile"); // 삭제 후 프로필 페이지로 이동
             } catch (error) {
                 console.error("삭제 실패:", error);
                 alert("삭제에 실패했습니다.");
