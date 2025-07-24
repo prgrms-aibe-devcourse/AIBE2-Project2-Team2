@@ -33,7 +33,6 @@ export default function PortfolioCreate() {
             try {
                 const response = await axiosInstance.get("/api/expert/meta");
                 setMetaData(response.data);
-                setMetaData(dummyData);
             } catch (err) {
                 console.error("메타데이터 로딩 실패", err);
             }
