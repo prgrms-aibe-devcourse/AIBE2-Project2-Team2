@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import axiosInstance from "./lib/axios.js";
 import { useUserInfoStore } from "./store/userInfo.js";
 import MyPage from "./router/mypage/mypage.jsx";
+import Expert from "./router/expert/expert.jsx";
 
 //api/me
 // {
@@ -46,6 +47,7 @@ function App() {
           <Route path="/auth/*" element={<Auth />} />
           <Route path="/about" element={<h2>About Page</h2>} />
           <Route path="/mypage/*" element={<MyPage />} />
+          <Route path="/expert/*" element={<Expert />} />
         </Routes>
         <Modal />
       </div>

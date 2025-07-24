@@ -17,12 +17,12 @@ export default function Header() {
   ];
 
   const profileMenuList = [
-    { name: "프로필 관리", path: "/profile" },
+    { name: "전문가 프로필 관리", path: "/expert/profile" },
     { name: "내 정보 관리", path: "/mypage/my-info" },
     { name: "결제 내역", path: "/mypage/pay-history" },
+    { name: "매칭 내역", path: "/mypage/matching-history" },
     { name: "고객센터", path: "/customer-support" },
-    { name: "전문가 등록", path: "/register-expert" },
-    { name: "비즈계정 신청", path: "/apply-business-account" },
+    { name: "전문가 등록", path: "/expert/register" },
     { name: "로그아웃", path: "/logout" },
   ];
 
