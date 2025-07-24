@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom"; // ✅ 추가
 
 const categories = [
     { label: "디자인", emoji: "🎨" },
@@ -25,13 +26,13 @@ const categories = [
 const MainPage = () => {
     const [expanded, setExpanded] = useState(false);
     const categoryRef = useRef(null);
+    const navigate = useNavigate(); // ✅ 추가
 
     const defaultCategories = categories.slice(0, 6);
     const extraCategories = categories.slice(6);
 
     const handleToggle = () => {
         if (expanded) {
-            // Collapse 후 스크롤 이동
             setTimeout(() => {
                 categoryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
             }, 400);
@@ -39,15 +40,17 @@ const MainPage = () => {
         setExpanded((prev) => !prev);
     };
 
+    const handleCategoryClick = (label) => {
+        navigate(`/category/${label}`);
+    };
+
     return (
         <div className="min-h-screen px-4 py-40 bg-white text-center">
-            {/* 메인 제목 */}
             <h1 className="text-3xl sm:text-4xl font-bold mb-6 leading-relaxed">
                 으악이 필요한 순간,<br className="hidden sm:block" />
                 딱 맞는 으아악을 찾아보세요
             </h1>
 
-            {/* 검색 바 */}
             <div className="flex justify-center mt-6 gap-3">
                 <input
                     type="text"
@@ -59,7 +62,6 @@ const MainPage = () => {
                 </button>
             </div>
 
-            {/* 추천 키워드 */}
             <div className="flex flex-wrap justify-center mt-4 gap-2 text-sm">
                 {["홈페이지 신규 제작", "홈페이지제작", "홈페이지", "카페24", "워드프레스", "블로그"].map((keyword, i) => (
                     <button
@@ -79,6 +81,7 @@ const MainPage = () => {
                 {defaultCategories.map(({ label, emoji }) => (
                     <div
                         key={label}
+                        onClick={() => handleCategoryClick(label)} // ✅ 클릭 이벤트 연결
                         className="bg-gray-100 h-[84px] px-3 py-4 rounded shadow-sm hover:bg-gray-200 cursor-pointer flex flex-col items-center justify-center"
                     >
                         <span className="text-xl mb-1">{emoji}</span>
@@ -87,7 +90,7 @@ const MainPage = () => {
                 ))}
             </div>
 
-            {/* 추가 카테고리 (토글 시 보임) */}
+            {/* 추가 카테고리 */}
             <AnimatePresence>
                 {expanded && (
                     <motion.div
@@ -101,6 +104,7 @@ const MainPage = () => {
                             {extraCategories.map(({ label, emoji }) => (
                                 <div
                                     key={label}
+                                    onClick={() => handleCategoryClick(label)} // ✅ 클릭 이벤트 연결
                                     className="bg-gray-100 h-[84px] px-3 py-4 rounded shadow-sm hover:bg-gray-200 cursor-pointer flex flex-col items-center justify-center"
                                 >
                                     <span className="text-xl mb-1">{emoji}</span>
@@ -112,7 +116,6 @@ const MainPage = () => {
                 )}
             </AnimatePresence>
 
-            {/* 전체보기 버튼 */}
             <div className="mt-8">
                 <button
                     onClick={handleToggle}

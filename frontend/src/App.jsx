@@ -12,13 +12,8 @@ import CustomerSupport from "./pages/CustomerSupport";
 // 메인 페이지 import
 import MainPage from "./pages/MainPage";
 
-// 예시 응답 구조:
-// {
-//   "nickname": "홍길동",
-//   "profileImageUrl": "https://cdn.example.com/profile.jpg",
-//   "email": "hong@example.com",
-//   "joinType": "KAKAO"
-// }
+// 카테고리별 상품 리스트 페이지 import
+import CategoryPage from "./pages/CategoryPage"; // ✅ 추가
 
 function App() {
   const setUserInfo = useUserInfoStore((state) => state.setUserInfo);
@@ -48,6 +43,7 @@ function App() {
             <Route path="/auth/*" element={<Auth />} />
             <Route path="/about" element={<h2>About Page</h2>} />
             <Route path="/customer-support" element={<CustomerSupport />} />
+            <Route path="/category/:categoryName" element={<CategoryPage />} /> {/* ✅ 추가 */}
           </Routes>
           <Modal />
         </div>
