@@ -164,7 +164,6 @@ public class MatchingHistoryController {
                                                             "      \"contentTitle\": \"로고 디자인\",\n" +
                                                             "      \"contentThumbnailUrl\": \"https://example.com/thumb.png\",\n" +
                                                             "      \"expertName\": \"홍길동\",\n" +
-                                                            "      \"expertProfileImageUrl\": \"https://example.com/profile.png\",\n" +
                                                             "      \"expertPhone\": \"010-1234-5678\",\n" +
                                                             "      \"matchingStatus\": \"ACCEPTED\",\n" +
                                                             "      \"workStartDate\": \"2024-07-01\",\n" +
