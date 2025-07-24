@@ -29,7 +29,6 @@ public class ReportServiceImpl implements ReportService {
     private final MemberRepository memberRepository;
     private final ReportRepository reportRepository;
 
-    // ✅ 닉네임 기반 신고 등록 추가
     @Override
     public void submitReportByNickname(String reporterEmail, String reportedNickname, String reason) {
         Member reporter = memberRepository.findByEmail(reporterEmail)
@@ -37,13 +36,23 @@ public class ReportServiceImpl implements ReportService {
         Member reported = memberRepository.findByNickname(reportedNickname)
                 .orElseThrow(() -> new MemberNotFoundException("피신고자 정보를 찾을 수 없습니다."));
 
+        String category = parseCategoryFromReason(reason);
+
         Report report = new Report();
         report.setReporter(reporter);
         report.setReported(reported);
         report.setReason(reason);
+        report.setCategory(category);
         report.setReportStatus(ReportStatus.SUBMITTED);
 
         reportRepository.save(report);
+    }
+
+    private String parseCategoryFromReason(String reason) {
+        if (reason != null && reason.contains(":")) {
+            return reason.split(":")[0].trim();
+        }
+        return "기타";
     }
 
     @Override
@@ -156,6 +165,8 @@ public class ReportServiceImpl implements ReportService {
                 .reportedId(report.getReported().getMemberId())
                 .reportedNickname(report.getReported().getNickname())
                 .reason(report.getReason())
+                .category(report.getCategory())
+                .createdAt(report.getRegTime())
                 .status(report.getReportStatus())
                 .resolvedAt(report.getResolvedAt())
                 .resolverNickname(report.getResolver() != null ? report.getResolver().getNickname() : null)

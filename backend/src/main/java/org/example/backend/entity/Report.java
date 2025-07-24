@@ -2,16 +2,14 @@ package org.example.backend.entity;
 
 import lombok.Getter;
 import lombok.Setter;
-import java.time.LocalDateTime;
-
-import net.bytebuddy.asm.Advice;
 import org.example.backend.constant.ReportStatus;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Setter
-@Entity
 @Getter
+@Entity
 @Table(name = "report")
 public class Report extends BaseTimeEntity {
 
@@ -29,6 +27,9 @@ public class Report extends BaseTimeEntity {
 
     @Column(columnDefinition = "TEXT")
     private String reason;
+
+    @Column(length = 50)
+    private String category;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "report_status", nullable = false)
