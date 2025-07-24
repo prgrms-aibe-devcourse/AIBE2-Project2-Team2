@@ -44,7 +44,7 @@ function App() {
           <Header />
           <div className="h-30"></div>
           <Routes>
-            <Route path="/" element={<MainPage />} /> {/* ✅ 교체된 부분 */}
+            <Route path="/" element={<MainPage />} />
             <Route path="/auth/*" element={<Auth />} />
             <Route path="/about" element={<h2>About Page</h2>} />
             <Route path="/customer-support" element={<CustomerSupport />} />

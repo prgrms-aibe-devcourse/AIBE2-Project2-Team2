@@ -31,12 +31,11 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public void submitReportByNickname(String reporterEmail, String reportedNickname, String reason) {
-        Member reporter = memberRepository.findByEmail(reporterEmail)
-                .orElseThrow(() -> new MemberNotFoundException("신고자 정보를 찾을 수 없습니다."));
+        Member reporter = findMemberByEmail(reporterEmail);
         Member reported = memberRepository.findByNickname(reportedNickname)
                 .orElseThrow(() -> new MemberNotFoundException("피신고자 정보를 찾을 수 없습니다."));
 
-        String category = parseCategoryFromReason(reason);
+        String category = extractCategory(reason);
 
         Report report = new Report();
         report.setReporter(reporter);
@@ -48,19 +47,10 @@ public class ReportServiceImpl implements ReportService {
         reportRepository.save(report);
     }
 
-    private String parseCategoryFromReason(String reason) {
-        if (reason != null && reason.contains(":")) {
-            return reason.split(":")[0].trim();
-        }
-        return "기타";
-    }
-
     @Override
     public void submitReport(Long reporterId, Long reportedId, String reason) {
-        Member reporter = memberRepository.findById(reporterId)
-                .orElseThrow(() -> new MemberNotFoundException("신고자 정보를 찾을 수 없습니다."));
-        Member reported = memberRepository.findById(reportedId)
-                .orElseThrow(() -> new MemberNotFoundException("피신고자 정보를 찾을 수 없습니다."));
+        Member reporter = findMemberById(reporterId);
+        Member reported = findMemberById(reportedId);
 
         Report report = new Report();
         report.setReporter(reporter);
@@ -73,66 +63,59 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<ReportResponse> getReportsByStatus(String status) {
-        List<Report> reports;
-        if (status == null || status.isBlank()) {
-            reports = reportRepository.findAll();
-        } else {
-            ReportStatus parsedStatus = parseStatus(status);
-            reports = reportRepository.findByReportStatus(parsedStatus);
-        }
+        List<Report> reports = (status == null || status.isBlank())
+                ? reportRepository.findAll()
+                : reportRepository.findByReportStatus(parseStatus(status));
 
-        return reports.stream().map(this::convertToResponse).collect(Collectors.toList());
-    }
-
-    @Override
-    public void updateReportStatus(Long reportId, String newStatus) {
-        Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new ReportNotFoundException("해당 신고가 존재하지 않습니다."));
-
-        ReportStatus status = parseStatus(newStatus);
-        report.setReportStatus(status);
-
-        handleAdminResolutionIfNeeded(report, status);
-    }
-
-    @Override
-    public void updateStatusAndComment(Long reportId, String statusStr, String resolverComment) {
-        Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new ReportNotFoundException("해당 신고가 존재하지 않습니다."));
-
-        ReportStatus status = parseStatus(statusStr);
-        report.setReportStatus(status);
-        report.setResolverComment(resolverComment);
-
-        handleAdminResolutionIfNeeded(report, status);
-    }
-
-    @Override
-    public void deleteReport(Long reportId) {
-        Report report = reportRepository.findById(reportId)
-                .orElseThrow(() -> new ReportNotFoundException("해당 신고가 존재하지 않습니다."));
-        reportRepository.delete(report);
+        return reports.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
     public ReportResponse getReportById(Long id) {
         Report report = reportRepository.findById(id)
                 .orElseThrow(() -> new ReportNotFoundException("해당 신고가 존재하지 않습니다."));
-
         return convertToResponse(report);
+    }
+
+    @Override
+    public void updateReportStatus(Long reportId, String newStatus) {
+        Report report = getReportEntity(reportId);
+        ReportStatus status = parseStatus(newStatus);
+        report.setReportStatus(status);
+
+        handleResolutionMetadata(report, status);
+    }
+
+    @Override
+    public void updateStatusAndComment(Long reportId, String statusStr, String resolverComment) {
+        Report report = getReportEntity(reportId);
+        ReportStatus status = parseStatus(statusStr);
+
+        report.setReportStatus(status);
+        report.setResolverComment(resolverComment);
+
+        handleResolutionMetadata(report, status);
+    }
+
+    @Override
+    public void deleteReport(Long reportId) {
+        Report report = getReportEntity(reportId);
+        reportRepository.delete(report);
     }
 
     @Override
     public List<ReportResponse> getReportsByCurrentUser() {
         String email = SecurityUtil.getCurrentUsername();
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new MemberNotFoundException("사용자 정보를 찾을 수 없습니다."));
+        Member member = findMemberByEmail(email);
 
-        List<Report> reports = reportRepository.findByReporterEmail(email);
-
-        return reports.stream().map(this::convertToResponse).collect(Collectors.toList());
+        return reportRepository.findByReporterEmail(email).stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 
+    /** 신고 상태 문자열 → Enum 변환 */
     private ReportStatus parseStatus(String statusStr) {
         try {
             return ReportStatus.valueOf(statusStr.toUpperCase());
@@ -141,13 +124,21 @@ public class ReportServiceImpl implements ReportService {
         }
     }
 
-    private void handleAdminResolutionIfNeeded(Report report, ReportStatus status) {
+    /** 신고 사유에서 카테고리 추출 */
+    private String extractCategory(String reason) {
+        if (reason != null && reason.contains(":")) {
+            return reason.split(":")[0].trim();
+        }
+        return "기타";
+    }
+
+    /** 관리자 처리자 정보, 처리 시간 기록 */
+    private void handleResolutionMetadata(Report report, ReportStatus status) {
         if (status == ReportStatus.IN_PROGRESS || status == ReportStatus.COMPLETED) {
             report.setResolvedAt(LocalDateTime.now());
 
             String email = SecurityUtil.getCurrentUsername();
-            Member resolver = memberRepository.findByEmail(email)
-                    .orElseThrow(() -> new MemberNotFoundException("현재 로그인된 사용자 정보를 찾을 수 없습니다."));
+            Member resolver = findMemberByEmail(email);
 
             if (resolver.getRole() != Role.ADMIN) {
                 throw new AccessDeniedException("신고 처리는 관리자만 할 수 있습니다.");
@@ -157,6 +148,25 @@ public class ReportServiceImpl implements ReportService {
         }
     }
 
+    /** 신고 엔티티 조회 */
+    private Report getReportEntity(Long id) {
+        return reportRepository.findById(id)
+                .orElseThrow(() -> new ReportNotFoundException("해당 신고가 존재하지 않습니다."));
+    }
+
+    /** 회원 ID 기반 조회 */
+    private Member findMemberById(Long id) {
+        return memberRepository.findById(id)
+                .orElseThrow(() -> new MemberNotFoundException("회원 정보를 찾을 수 없습니다."));
+    }
+
+    /** 회원 이메일 기반 조회 */
+    private Member findMemberByEmail(String email) {
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new MemberNotFoundException("회원 정보를 찾을 수 없습니다."));
+    }
+
+    /** Entity → DTO 변환 */
     private ReportResponse convertToResponse(Report report) {
         return ReportResponse.builder()
                 .id(report.getId())
