@@ -15,6 +15,7 @@ import org.example.backend.exception.customException.InvalidMatchingStatusExcept
 import org.example.backend.matchinghistory.dto.request.MatchingSearchCondition;
 import org.example.backend.matchinghistory.dto.response.MatchingSummaryExpertDto;
 import org.example.backend.matchinghistory.dto.response.MatchingSummaryUserDto;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -64,9 +65,30 @@ public class MatchingHistoryController {
                                     "    \"selectedItems\": [\n" +
                                     "      {\"itemName\": \"서비스 A\", \"itemPrice\": 30000},\n" +
                                     "      {\"itemName\": \"서비스 B\", \"itemPrice\": 20000}\n" +
-                                    "    ]\n" +
-                                    "  }\n" +
-                                    "]")
+                                    "      ]\n" +
+                                    "    }\n" +
+                                    "  ],\n" +
+                                    "  \"pageable\": {\n" +
+                                    "    \"pageNumber\": 0,\n" +
+                                    "    \"pageSize\": 5,\n" +
+                                    "    \"offset\": 0,\n" +
+                                    "    \"paged\": true,\n" +
+                                    "    \"unpaged\": false\n" +
+                                    "  },\n" +
+                                    "  \"totalPages\": 1,\n" +
+                                    "  \"totalElements\": 1,\n" +
+                                    "  \"last\": true,\n" +
+                                    "  \"size\": 5,\n" +
+                                    "  \"number\": 0,\n" +
+                                    "  \"sort\": {\n" +
+                                    "    \"sorted\": true,\n" +
+                                    "    \"unsorted\": false,\n" +
+                                    "    \"empty\": false\n" +
+                                    "  },\n" +
+                                    "  \"numberOfElements\": 1,\n" +
+                                    "  \"first\": true,\n" +
+                                    "  \"empty\": false\n" +
+                                    "}")
                     )
             ),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 (매칭상태 값 오류 등)"),
@@ -74,7 +96,7 @@ public class MatchingHistoryController {
             @ApiResponse(responseCode = "403", description = "권한 없음")
     })
     @GetMapping("/expert")
-    public ResponseEntity<List<MatchingSummaryUserDto>> getExpertMatchingHistories(
+    public ResponseEntity<Page<MatchingSummaryUserDto>> getExpertMatchingHistories(
             Principal principal,
             @Parameter(description = "매칭 상태 필터링 (예: ACCEPTED, IN_PROGRESS, null 등)", example = "ACCEPTED")
             @RequestParam(required = false) String matchingStatusStr,
@@ -111,7 +133,7 @@ public class MatchingHistoryController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "matchingId"));  // 최신순 고정
 
         String email = principal.getName();
-        List<MatchingSummaryUserDto> result = matchingHistoryService.getExpertMatchingHistories(email, condition, pageable);
+        Page<MatchingSummaryUserDto> result = matchingHistoryService.getExpertMatchingHistories(email, condition, pageable);
         return ResponseEntity.ok(result);
     }
 
@@ -141,9 +163,30 @@ public class MatchingHistoryController {
                                     "    \"selectedItems\": [\n" +
                                     "      {\"itemName\": \"서비스 A\", \"itemPrice\": 30000},\n" +
                                     "      {\"itemName\": \"서비스 B\", \"itemPrice\": 20000}\n" +
-                                    "    ]\n" +
-                                    "  }\n" +
-                                    "]")
+                                    "      ]\n" +
+                                    "    }\n" +
+                                    "  ],\n" +
+                                    "  \"pageable\": {\n" +
+                                    "    \"pageNumber\": 0,\n" +
+                                    "    \"pageSize\": 5,\n" +
+                                    "    \"offset\": 0,\n" +
+                                    "    \"paged\": true,\n" +
+                                    "    \"unpaged\": false\n" +
+                                    "  },\n" +
+                                    "  \"totalPages\": 1,\n" +
+                                    "  \"totalElements\": 1,\n" +
+                                    "  \"last\": true,\n" +
+                                    "  \"size\": 5,\n" +
+                                    "  \"number\": 0,\n" +
+                                    "  \"sort\": {\n" +
+                                    "    \"sorted\": true,\n" +
+                                    "    \"unsorted\": false,\n" +
+                                    "    \"empty\": false\n" +
+                                    "  },\n" +
+                                    "  \"numberOfElements\": 1,\n" +
+                                    "  \"first\": true,\n" +
+                                    "  \"empty\": false\n" +
+                                    "}")
                     )
             ),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 (매칭상태 값 오류 등)"),
@@ -151,7 +194,7 @@ public class MatchingHistoryController {
             @ApiResponse(responseCode = "403", description = "권한 없음")
     })
     @GetMapping("/user")
-    public ResponseEntity<List<?>> getUserMatchingHistories(
+    public ResponseEntity<Page<?>> getUserMatchingHistories(
             Principal principal,
             @Parameter(description = "매칭 상태 필터링 (예: ACCEPTED, IN_PROGRESS, null 등)", example = "ACCEPTED")
             @RequestParam(required = false) String matchingStatusStr,
@@ -188,7 +231,7 @@ public class MatchingHistoryController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "matchingId"));
 
         String email = principal.getName();
-        List<MatchingSummaryExpertDto> result = matchingHistoryService.getUserMatchingHistories(email, condition, pageable);
+        Page<MatchingSummaryExpertDto> result = matchingHistoryService.getUserMatchingHistories(email, condition, pageable);
         return ResponseEntity.ok(result);
     }
 
