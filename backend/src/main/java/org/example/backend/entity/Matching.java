@@ -65,8 +65,15 @@ public class Matching extends BaseTimeEntity {
         this.rejectedReason = reason;
     }
     public void changeStatus(MatchingStatus status) { this.status = status; }
-    public void startWork() { this.status = MatchingStatus.IN_PROGRESS; }
-    public void completeWork() { this.status = MatchingStatus.WORK_COMPLETED; }
+    public void startWork() {
+        this.status = MatchingStatus.IN_PROGRESS;
+        this.startDate = LocalDate.now(); // 작업 시작 날짜 저장
+    }
+    public void completeWork() {
+        this.status = MatchingStatus.WORK_COMPLETED;
+        this.endDate = LocalDate.now(); // 작업 완료 날짜 저장
+    }
+
     public void confirmCompletion() { this.status = MatchingStatus.CONFIRMED; }
     public String getRejectedReason() { return this.rejectedReason; }
 }
