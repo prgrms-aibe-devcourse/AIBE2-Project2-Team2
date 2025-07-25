@@ -5,14 +5,17 @@ import { Modal } from "./components/modal/Modal.jsx";
 import { useEffect } from "react";
 import axiosInstance from "./lib/axios.js";
 import { useUserInfoStore } from "./store/userInfo.js";
-import MatchingRouter from "./router/matching/matching.jsx"; // matching 라우터 import
 import ContentCreateStepperPage from "./router/content/ContentCreateStepperPage";
 import ContentDetailPage from "./router/content/ContentDetailPage";
 import { ContentEditStepperPage } from "./router/content";
 import PaymentPage from "./router/content/PaymentPage";
 import MyPage from "./router/mypage/mypage.jsx";
 import Expert from "./router/expert/expert.jsx";
-import ChatPage from "./router/chat/ChatPage.jsx"
+import ChatPage from "./router/chat/ChatPage.jsx";
+import MatchingClientDetailPage from "./pages/matching/MatchingClientDetailPage.jsx";
+import CustomerSupport from "./pages/CustomerSupport.jsx";
+import CategoryPage from "./pages/CategoryPage.jsx";
+import MainPage from "./pages/MainPage.jsx";
 
 //api/me
 // {
@@ -49,7 +52,7 @@ function App() {
         <Header />
         <div className="h-30"></div>
         <Routes>
-          <Route path="/" element={<h2>Home Page</h2>} />
+          <Route path="/" element={<MainPage />} />
           <Route path="/auth/*" element={<Auth />} />
           <Route path="/about" element={<h2>About Page</h2>} />
           <Route path="/content/create" element={<ContentCreateStepperPage />} />
@@ -59,7 +62,9 @@ function App() {
           <Route path="/mypage/*" element={<MyPage />} />
           <Route path="/expert/*" element={<Expert />} />
           <Route path="/chat" element={<ChatPage />} />
-          <Route path="/*" element={<MatchingRouter />} />
+          <Route path="/client/matchings/:matchingId" element={<MatchingClientDetailPage />} />
+          <Route path="/customer-support" element={<CustomerSupport />} />
+          <Route path="/category/:categoryName" element={<CategoryPage />} />
         </Routes>
         <Modal />
       </div>

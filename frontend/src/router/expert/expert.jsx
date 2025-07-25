@@ -5,6 +5,7 @@ import Profile from "./profile/profile.jsx";
 import PortfolioCreate from "./portfolio/portfolioCreate.jsx";
 import PortfolioEdit from "./portfolio/portfolioEdit.jsx";
 import EditProfile from "./register/edit/editProfile.jsx";
+import MatchingDetailPage from "./matching/MatchingDetailPage.jsx";
 
 export default function Expert() {
   return (
@@ -16,6 +17,7 @@ export default function Expert() {
         <Route path="/portfolio/:id" element={<Portfolio />} />
         <Route path="/portfolio/create" element={<PortfolioCreate />} />
         <Route path="/portfolio/edit" element={<PortfolioEdit />} />
+        <Route path="/matchings/:matchingId" element={<MatchingDetailPage />} />
       </Routes>
     </>
   );
