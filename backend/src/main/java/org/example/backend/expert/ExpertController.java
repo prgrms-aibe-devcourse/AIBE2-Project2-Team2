@@ -203,6 +203,7 @@ public class ExpertController {
                                     "      \"portfolioId\": 1,\n" +
                                     "      \"thumbnailUrl\": \"https://thumbnail.url/portfolio1.jpg\",\n" +
                                     "      \"title\": \"포트폴리오 제목\"\n" +
+                                    "      \"category\": \"디자인\"\n" +
                                     "    }\n" +
                                     "  ]\n" +
                                     "}")

@@ -100,7 +100,8 @@ public class ExpertProfileRepositoryImpl implements ExpertProfileRepositoryCusto
                 .select(new QExpertPortfolioDto(
                         portfolio.portfolioId,
                         portfolioImage.imageUrl,
-                        portfolio.title
+                        portfolio.title,
+                        portfolio.category
                 ))
                 .from(portfolio)
                 .leftJoin(portfolio.images, portfolioImage)
