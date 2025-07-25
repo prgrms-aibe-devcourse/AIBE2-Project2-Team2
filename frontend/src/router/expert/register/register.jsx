@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Trash2, User, MapPin, GraduationCap, Users, Globe, Facebook, Instagram, Twitter, Briefcase, Code, AlertCircle, Plus, ChevronDown, ChevronRight } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../lib/axios";
 
 // Form Components
@@ -277,7 +277,7 @@ export default function Register() {
     skills: [],
     careers: [""],
   });
-
+  const navigate = useNavigate();
   const [errors, setErrors] = useState({});
   const [meta, setMeta] = useState({ detailFields: [], skills: [], regions: [] });
 
@@ -415,7 +415,8 @@ export default function Register() {
     try {
       console.log("전문가 등록 데이터:", form);
       alert("전문가 등록이 완료되었습니다!");
-      // 실제 사용시: await axiosInstance.post("/api/expert/upgrade", form);
+      await axiosInstance.post("/api/expert/upgrade", form);
+      navigate("/expert/profile"); // 등록 후 프로필 페이지로 이동
     } catch (error) {
       console.error("등록 실패:", error);
       alert("등록에 실패했습니다. 다시 시도해 주세요.");

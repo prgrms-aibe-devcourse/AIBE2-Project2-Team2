@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../../../lib/axios";
+import { useUserInfoStore } from "../../../store/userInfo.js";
 
 export default function PortfolioEdit() {
     const { id } = useParams();
     const navigate = useNavigate();
+
+    // 유저 정보 가져오기
+    const { userInfo } = useUserInfoStore();
 
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
@@ -13,6 +17,7 @@ export default function PortfolioEdit() {
     const [images, setImages] = useState([]);
     const [selectedThumbnailIndex, setSelectedThumbnailIndex] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [portfolioData, setPortfolioData] = useState(null); // 포트폴리오 데이터 저장
 
     const currentYear = new Date().getFullYear();
     const yearOptions = [];
@@ -44,12 +49,22 @@ export default function PortfolioEdit() {
         fetchMetaData();
     }, []);
 
-    // 포트폴리오 데이터 로딩
+    // 포트폴리오 데이터 로딩 및 권한 체크
     useEffect(() => {
         const fetchPortfolio = async () => {
             try {
                 const response = await axiosInstance.get(`/api/expert/portfolio/${id}`);
                 const data = response.data;
+
+                // 포트폴리오 데이터 저장
+                setPortfolioData(data);
+
+                // 권한 체크: 현재 로그인한 사용자가 작성자인지 확인
+                if (!userInfo || !data.author || userInfo.id !== data.author.id) {
+                    alert("본인이 작성한 포트폴리오만 수정 가능합니다.");
+                    navigate(`/expert/portfolio/${id}`);
+                    return;
+                }
 
                 setTitle(data.title);
                 setContent(data.content);
@@ -79,15 +94,28 @@ export default function PortfolioEdit() {
                 setLoading(false);
             } catch (error) {
                 console.error("포트폴리오 조회 실패:", error);
-                alert("포트폴리오를 불러올 수 없습니다.");
+                if (error.response && error.response.status === 403) {
+                    alert("수정 권한이 없습니다.");
+                } else if (error.response && error.response.status === 404) {
+                    alert("존재하지 않는 포트폴리오입니다.");
+                } else {
+                    alert("포트폴리오를 불러올 수 없습니다.");
+                }
                 navigate("/expert/profile");
             }
         };
 
+        // 로그인 상태 체크
+        if (!userInfo) {
+            alert("로그인이 필요합니다.");
+            navigate("/login");
+            return;
+        }
+
         if (id) {
             fetchPortfolio();
         }
-    }, [id, navigate]);
+    }, [id, navigate, userInfo]);
 
     // 메타데이터 로딩 후 전문분야 설정
     useEffect(() => {
@@ -206,6 +234,12 @@ export default function PortfolioEdit() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // 다시 한 번 권한 체크 (안전장치)
+        if (!userInfo || !portfolioData || userInfo.id !== portfolioData.author.id) {
+            alert("수정 권한이 없습니다.");
+            return;
+        }
+
         // 에러 상태 초기화
         setErrors({});
         const newErrors = {};
@@ -269,9 +303,26 @@ export default function PortfolioEdit() {
             navigate(`/expert/portfolio/${id}`);
         } catch (error) {
             console.error("수정 실패", error);
-            alert("수정 실패");
+            if (error.response && error.response.status === 403) {
+                alert("수정 권한이 없습니다.");
+            } else {
+                alert("수정 실패");
+            }
         }
     };
+
+    // 로그인하지 않은 경우 처리
+    if (!userInfo) {
+        return (
+            <div className="bg-gradient-to-br from-slate-50 to-blue-50 py-8 px-4">
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center py-20">
+                        <p className="text-gray-600">로그인이 필요합니다.</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (loading) {
         return (
@@ -292,6 +343,11 @@ export default function PortfolioEdit() {
                 <div className="text-center mb-6">
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">포트폴리오 수정</h1>
                     <p className="text-gray-600">작품 정보를 수정하세요</p>
+                    {portfolioData && (
+                        <p className="text-sm text-gray-500 mt-2">
+                            작성자: {portfolioData.author.name} ({portfolioData.author.email})
+                        </p>
+                    )}
                 </div>
 
                 <div className="bg-white rounded-2xl shadow-xl backdrop-blur-sm border border-white/20 overflow-hidden">
