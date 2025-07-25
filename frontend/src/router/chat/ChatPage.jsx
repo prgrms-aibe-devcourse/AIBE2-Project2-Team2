@@ -3,6 +3,9 @@ import { useParams } from "react-router-dom";
 import { Client } from "@stomp/stompjs";
 import '../../style/ChatPage.css';
 
+import axiosInstance from "../../lib/axios.js";
+import {useUserInfoStore} from "../../store/userInfo.js";
+
 /*
 
     // ✅ Content!! 에서 채팅방 생성하는 함수
@@ -23,29 +26,6 @@ import '../../style/ChatPage.css';
     };
 */
 
-// src/api/axiosInstance.js
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: "http://localhost:8080/api",
-  withCredentials: true, // ✅ HttpOnly 쿠키 자동 전송
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// ✅ 인증 만료(401) 시 처리
-api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    if (err.response?.status === 401) {
-      console.warn("세션 만료 → 로그인 필요");
-      // TODO: 로그인 페이지로 자동 이동할 수 있음
-    }
-    return Promise.reject(err);
-  }
-);
-
 const ChatPage = () => {
   const { roomId: initialRoomId } = useParams();
   const [rooms, setRooms] = useState([]);
@@ -56,6 +36,7 @@ const ChatPage = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [myEmail, setMyEmail] = useState(null);
 
+  const { userInfo } = useUserInfoStore();
   const messagesEndRef = useRef(null);
 
   // ✅ 스크롤 최신 메시지로 이동
@@ -70,23 +51,17 @@ const ChatPage = () => {
   }, [messages]);
 
   useEffect(() => {
-    const storedEmail = sessionStorage.getItem("myEmail");
-    if (!storedEmail) {
-      const fallbackEmail = localStorage.getItem("myEmail");
-      if (fallbackEmail) {
-        sessionStorage.setItem("myEmail", fallbackEmail);
-        setMyEmail(fallbackEmail);
-      } else {
-        console.warn("⚠️ No email found in sessionStorage or localStorage");
-      }
+    // ✅ 사용자 이메일 가져오기
+    if (userInfo && userInfo.email) {
+      setMyEmail(userInfo.email);
     } else {
-      setMyEmail(storedEmail);
+      console.error("❌ 사용자 정보가 없습니다.");
     }
-  }, []);
+  }, [userInfo]);
 
   const fetchChatRooms = useCallback(async () => {
     try {
-      const res = await api.get("/chat/rooms");
+      const res = await axiosInstance.get("/chat/rooms");
       setRooms(res.data);
     } catch (err) {
       console.error("❌ 채팅방 리스트 불러오기 실패:", err);
@@ -96,7 +71,7 @@ const ChatPage = () => {
   const fetchMessages = useCallback(async (roomId) => {
     if (!roomId || roomId === "undefined" || isNaN(Number(roomId))) return;
     try {
-      const res = await api.get(`/chat/rooms/${roomId}/messages`);
+      const res = await axiosInstance.get(`/chat/rooms/${roomId}/messages`);
       setMessages(res.data);
     } catch (err) {
       console.error("❌ 메시지 불러오기 실패:", err);

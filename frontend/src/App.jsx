@@ -7,6 +7,7 @@ import axiosInstance from "./lib/axios.js";
 import { useUserInfoStore } from "./store/userInfo.js";
 import MyPage from "./router/mypage/mypage.jsx";
 import Expert from "./router/expert/expert.jsx";
+import ChatPage from "./router/chat/ChatPage.jsx";
 
 //api/me
 // {
@@ -48,6 +49,7 @@ function App() {
           <Route path="/about" element={<h2>About Page</h2>} />
           <Route path="/mypage/*" element={<MyPage />} />
           <Route path="/expert/*" element={<Expert />} />
+          <Route path="/chat" element={<ChatPage />} />
         </Routes>
         <Modal />
       </div>
