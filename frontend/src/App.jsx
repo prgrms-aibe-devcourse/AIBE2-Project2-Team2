@@ -13,7 +13,7 @@ import CustomerSupport from "./pages/CustomerSupport";
 import MainPage from "./pages/MainPage";
 
 // 카테고리별 상품 리스트 페이지 import
-import CategoryPage from "./pages/CategoryPage"; // ✅ 추가
+import CategoryPage from "./pages/CategoryPage";
 
 function App() {
   const setUserInfo = useUserInfoStore((state) => state.setUserInfo);
@@ -43,7 +43,7 @@ function App() {
             <Route path="/auth/*" element={<Auth />} />
             <Route path="/about" element={<h2>About Page</h2>} />
             <Route path="/customer-support" element={<CustomerSupport />} />
-            <Route path="/category/:categoryName" element={<CategoryPage />} /> {/* ✅ 추가 */}
+            <Route path="/category/:categoryName" element={<CategoryPage />} />
           </Routes>
           <Modal />
         </div>
