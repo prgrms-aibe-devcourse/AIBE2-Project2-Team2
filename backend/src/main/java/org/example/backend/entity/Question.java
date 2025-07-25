@@ -32,4 +32,18 @@ public class Question extends BaseTimeEntity{
     @JsonManagedReference
     private List<QuestionOption> options = new ArrayList<>();
 
+    public Question(Content content, String questionText, boolean isMultipleChoice) {
+        this.content = content;
+        this.questionText = questionText;
+        this.isMultipleChoice = isMultipleChoice;
+    }
+
+    public void addOption(QuestionOption option) {
+        options.add(option);
+        option.setQuestion(this);
+    }
+
+    public void setContent(Content content) {
+        this.content = content;
+    }
 }
