@@ -37,7 +37,6 @@ public class Portfolio {
     private String category;        //DetailField에 속한 내용으로 이름만 가져온다.
 
     @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderColumn(name = "sort_order")
     private List<PortfolioImage> images = new ArrayList<>();
 
     public Portfolio(ExpertProfile expertProfile, String title, String content, Integer workingYear, String category) {

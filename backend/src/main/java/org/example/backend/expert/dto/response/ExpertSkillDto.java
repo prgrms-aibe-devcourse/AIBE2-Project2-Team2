@@ -9,13 +9,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ExpertSkillDto {
     // 기술 카테고리 이름
-    private String skillCategoryName;
-    // 기술 이름
-    private String skillName;
+    private String category;
+    private String name;
 
     @QueryProjection
-    public ExpertSkillDto(String skillCategoryName, String skillName) {
-        this.skillCategoryName = skillCategoryName;
-        this.skillName = skillName;
+    public ExpertSkillDto(String  category, String name) {
+        this.category = category;
+        this.name = name;
     }
 }

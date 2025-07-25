@@ -14,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -161,15 +162,21 @@ class ExpertProfileRepositoryImplTest {
         assertEquals(10L, dto.getReviewCount());
         assertEquals(4.5, dto.getAverageScore());
 
-        assertTrue(dto.getFields().stream().anyMatch(f -> "디자인".equals(f.getSpecialtyName())));
-        assertTrue(dto.getFields().stream().anyMatch(f -> "웹/모바일 디자인".equals(f.getDetailFieldName())));
+        // specialties 변경 반영
+        assertTrue(dto.getSpecialties().stream().anyMatch(s -> "디자인".equals(s.getSpecialty())));
+        assertTrue(dto.getSpecialties().stream()
+                .flatMap(s -> s.getDetailFields().stream())
+                        .anyMatch(df -> Objects.equals(df, "웹/모바일 디자인")));
 
-        assertTrue(dto.getSkills().stream().anyMatch(s -> "IT/프로그래밍".equals(s.getSkillCategoryName())));
-        assertTrue(dto.getSkills().stream().anyMatch(s -> "Java".equals(s.getSkillName())));
+        // skills 변경 반영
+        assertTrue(dto.getSkills().stream().anyMatch(s -> "IT/프로그래밍".equals(s.getCategory())));
+        assertTrue(dto.getSkills().stream().anyMatch(s -> "Java".equals(s.getName())));
 
+        // portfolios 확인
         assertTrue(dto.getPortfolios().stream().anyMatch(p -> "포트폴리오 제목".equals(p.getTitle())));
         assertTrue(dto.getPortfolios().stream().anyMatch(p -> "https://thumbnail.url/portfolio1.jpg".equals(p.getThumbnailUrl())));
 
+        // contents 확인
         assertTrue(dto.getContents().stream().anyMatch(c -> "컨텐츠 제목".equals(c.getTitle())));
         assertTrue(dto.getContents().stream().anyMatch(c -> "https://thumbnail.url/content1.jpg".equals(c.getThumbnailUrl())));
     }
