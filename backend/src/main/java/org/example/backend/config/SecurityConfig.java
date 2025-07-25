@@ -103,7 +103,10 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "http://localhost:8080",  // Swagger UI origin
                 "http://localhost:5173",  // Vite 개발 서버 등
-                "https://localhost:5173"
+                "https://localhost:5173",
+                "http://localhost:5174",  // Vite 개발 서버 등
+                "https://localhost:5174"
+
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
