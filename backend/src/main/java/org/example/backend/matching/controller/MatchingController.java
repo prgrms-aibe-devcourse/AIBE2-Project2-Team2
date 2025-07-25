@@ -39,7 +39,7 @@ public class MatchingController {
      * @param requestDto 매칭 요청에 필요한 회원 ID, 콘텐츠 ID, 견적 항목 및 금액이 포함된 DTO
      * @return 생성된 매칭 정보 (WAITING_PAYMENT 상태)
      */
-    @Operation(summary = "매칭 요청 생성", description = "클라이언트가 전문가의 콘텐츠에 대해 매칭을 요청합니다.")
+    @Operation(summary = "매칭 생성", description = "클라이언트가 전문가의 콘텐츠에 대해 매칭을 요청합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "매칭 생성 성공",
                     content = @Content(mediaType = "application/json",
@@ -181,13 +181,19 @@ public class MatchingController {
                     content = @Content(schema = @Schema(implementation = MatchingResponseDto.class),
                             examples = @ExampleObject(value = "{\n" +
                                     "  \"matchingId\": 3,\n" +
-                                    "  \"memberId\": 1,\n" +
-                                    "  \"contentId\": 2,\n" +
+                                    "  \"memberEmail\": \"client@example.com\",\n" +
+                                    "  \"contentTitle\": \"EXAMPLE\",\n" +
+                                    "  \"expertEmail\": \"expert@example.com\",\n" +
+                                    "  \"expertId\": 10,\n" +
                                     "  \"status\": \"IN_PROGRESS\",\n" +
                                     "  \"startDate\": \"2025-07-25\",\n" +
                                     "  \"endDate\": \"2025-07-28\",\n" +
                                     "  \"rejectedReason\": null,\n" +
-                                    "  \"totalPrice\": 300000\n" +
+                                    "  \"totalPrice\": 300000,\n" +
+                                    "  \"items\": [\n" +
+                                    "    { \"name\": \"항목 1\", \"price\": 100000 },\n" +
+                                    "    { \"name\": \"항목 2\", \"price\": 200000 }\n" +
+                                    "  ]\n" +
                                     "}")
                     )
             ),
