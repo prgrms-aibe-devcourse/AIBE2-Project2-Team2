@@ -5,6 +5,7 @@ import { Modal } from "./components/modal/Modal.jsx";
 import { useEffect } from "react";
 import axiosInstance from "./lib/axios.js";
 import { useUserInfoStore } from "./store/userInfo.js";
+import MatchingRouter from "./router/matching/matching.jsx"; // matching 라우터 import
 
 //api/me
 // {
@@ -36,18 +37,19 @@ function App() {
   }, []);
 
   return (
-    <>
-      <div className="w-dvw h-dvh flex flex-col justify-start items-center">
-        <Header />
-        <div className="h-30"></div>
-        <Routes>
-          <Route path="/" element={<h2>Home Page</h2>} />
-          <Route path="/auth/*" element={<Auth />} />
-          <Route path="/about" element={<h2>About Page</h2>} />
-        </Routes>
-        <Modal />
-      </div>
-    </>
+      <>
+        <div className="w-dvw h-dvh flex flex-col justify-start items-center">
+          <Header />
+          <div className="h-30"></div>
+          <Routes>
+            <Route path="/" element={<h2>Home Page</h2>} />
+            <Route path="/auth/*" element={<Auth />} />
+            <Route path="/about" element={<h2>About Page</h2>} />
+            <Route path="/*" element={<MatchingRouter />} />
+          </Routes>
+          <Modal />
+        </div>
+      </>
   );
 }
 

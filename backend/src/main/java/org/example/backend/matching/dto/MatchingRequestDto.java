@@ -1,21 +1,32 @@
 package org.example.backend.matching.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class MatchingRequestDto {
 
-    @NotNull(message = "컨텐츠 ID는 필수입니다.")
+    @NotNull(message = "회원 ID는 필수입니다.")
+    private Long memberId;
+
+    @NotNull(message = "콘텐츠 ID는 필수입니다.")
     private Long contentId;
 
-    @NotNull(message = "의뢰자 ID는 필수입니다.")
-    private Long clientId;
+    @NotEmpty(message = "견적 항목은 하나 이상 선택해야 합니다.")
+    private List<EstimateItemDto> items;
 
-    private String estimateUrl; // 견적서 링크 (선택)
-
-    private String message; // 의뢰 내용 또는 요청 메시지
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class EstimateItemDto {
+        private String name;
+        private Long price;
+    }
 }
