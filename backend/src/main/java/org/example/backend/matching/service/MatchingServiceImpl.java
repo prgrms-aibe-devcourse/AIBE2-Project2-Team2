@@ -11,8 +11,10 @@ import org.example.backend.repository.ContentRepository;
 import org.example.backend.repository.EstimateRecordRepository;
 import org.example.backend.repository.MatchingRepository;
 import org.example.backend.repository.MemberRepository;
-// [이메일 알림 서비스 import]
 import org.example.backend.notification.service.MailService;
+import org.springframework.security.access.AccessDeniedException; // ✅ 추가
+import org.springframework.security.core.Authentication; // ✅ 추가
+import org.springframework.security.core.context.SecurityContextHolder; // ✅ 추가
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,8 +30,6 @@ public class MatchingServiceImpl implements MatchingService {
     private final MemberRepository memberRepository;
     private final ContentRepository contentRepository;
     private final EstimateRecordRepository estimateRecordRepository;
-
-    // [이메일 알림 서비스 주입]
     private final MailService mailService;
 
     /**
@@ -57,13 +57,11 @@ public class MatchingServiceImpl implements MatchingService {
                 .mapToLong(MatchingRequestDto.EstimateItemDto::getPrice)
                 .sum();
 
-        // EstimateRecord + SelectedProduct 생성
         EstimateRecord estimate = EstimateRecord.builder()
                 .matching(saved)
                 .totalPrice(totalPrice)
                 .build();
 
-        // 견적 상품 저장
         List<SelectedProduct> products = requestDto.getItems().stream()
                 .map(item -> SelectedProduct.builder()
                         .estimateRecord(estimate)
@@ -87,6 +85,8 @@ public class MatchingServiceImpl implements MatchingService {
         Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new NoSuchElementException("매칭을 찾을 수 없습니다."));
 
+        validateExpertAccess(matching); // ✅ 전문가만 접근 허용
+
         MatchingStatus newStatus = statusDto.getStatus();
         String reason = statusDto.getReason();
 
@@ -103,7 +103,6 @@ public class MatchingServiceImpl implements MatchingService {
 
         // [이메일 알림 추가]
         if (newStatus == MatchingStatus.ACCEPTED) {
-            // 전문가에게 견적 요청 알림
             Member expert = matching.getContent().getMember();
             String expertEmail = expert.getEmail();
             mailService.sendSimpleMail(
@@ -112,7 +111,6 @@ public class MatchingServiceImpl implements MatchingService {
                     "견적 요청이 왔습니다."
             );
         } else if (newStatus == MatchingStatus.WORK_COMPLETED) {
-            // 의뢰자에게 작업 완료 알림
             Member client = matching.getMember();
             String clientEmail = client.getEmail();
             mailService.sendSimpleMail(
@@ -136,6 +134,8 @@ public class MatchingServiceImpl implements MatchingService {
         Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new NoSuchElementException("매칭을 찾을 수 없습니다."));
 
+        validateExpertAccess(matching); // ✅ 전문가만 접근 허용
+
         if (matching.getStatus() != MatchingStatus.ACCEPTED) {
             throw new IllegalStateException("작업은 ACCEPTED 상태에서만 시작할 수 있습니다.");
         }
@@ -152,6 +152,8 @@ public class MatchingServiceImpl implements MatchingService {
     public MatchingResponseDto completeWork(Long matchingId) {
         Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new NoSuchElementException("매칭을 찾을 수 없습니다."));
+
+        validateExpertAccess(matching); // ✅ 전문가만 접근 허용
 
         if (matching.getStatus() != MatchingStatus.IN_PROGRESS) {
             throw new IllegalStateException("작업 완료는 IN_PROGRESS 상태에서만 가능합니다.");
@@ -170,6 +172,8 @@ public class MatchingServiceImpl implements MatchingService {
         Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new NoSuchElementException("매칭을 찾을 수 없습니다."));
 
+        validateClientAccess(matching); // ✅ 클라이언트만 접근 허용
+
         if (matching.getStatus() != MatchingStatus.WORK_COMPLETED) {
             throw new IllegalStateException("작업 승인 처리는 WORK_COMPLETED 상태에서만 가능합니다.");
         }
@@ -180,7 +184,6 @@ public class MatchingServiceImpl implements MatchingService {
 
     /**
      * 결제 결과에 따라 매칭 상태를 자동으로 변경합니다.
-     * 결제 성공 시 PAID → ACCEPTED, 실패 시 FAILED or CANCELLED → CANCELLED.
      */
     @Override
     @Transactional
@@ -212,6 +215,14 @@ public class MatchingServiceImpl implements MatchingService {
         Matching matching = matchingRepository.findById(matchingId)
                 .orElseThrow(() -> new NoSuchElementException("매칭을 찾을 수 없습니다."));
 
+        // ✅ 전문가 또는 클라이언트 중 본인만 조회 가능
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String loginEmail = auth.getName();
+        if (!loginEmail.equals(matching.getMember().getEmail()) &&
+                !loginEmail.equals(matching.getContent().getMember().getEmail())) {
+            throw new AccessDeniedException("해당 매칭에 접근할 수 없습니다.");
+        }
+
         EstimateRecord estimate = matching.getEstimateRecord();
 
         return buildMatchingResponse(matching, estimate);
@@ -219,7 +230,6 @@ public class MatchingServiceImpl implements MatchingService {
 
     /**
      * 공통 응답 DTO를 생성합니다.
-     * EstimateRecord와 SelectedProduct까지 DTO로 매핑.
      */
     private MatchingResponseDto buildMatchingResponse(Matching matching, EstimateRecord estimate) {
         List<MatchingResponseDto.EstimateItem> items = null;
@@ -234,8 +244,10 @@ public class MatchingServiceImpl implements MatchingService {
 
         return MatchingResponseDto.builder()
                 .matchingId(matching.getMatchingId())
-                .memberId(matching.getMember().getMemberId())
-                .contentId(matching.getContent().getContentId())
+                .memberEmail(matching.getMember().getEmail())
+                .contentTitle(matching.getContent().getTitle())
+                .expertEmail(matching.getContent().getMember().getEmail())
+                .expertId(matching.getContent().getMember().getMemberId())
                 .status(matching.getStatus())
                 .startDate(matching.getStartDate())
                 .endDate(matching.getEndDate())
@@ -243,5 +255,23 @@ public class MatchingServiceImpl implements MatchingService {
                 .totalPrice(estimate != null ? estimate.getTotalPrice() : null)
                 .items(items)
                 .build();
+    }
+
+    // ✅ 로그인 사용자가 클라이언트인지 확인
+    private void validateClientAccess(Matching matching) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        if (!email.equals(matching.getMember().getEmail())) {
+            throw new AccessDeniedException("클라이언트만 접근할 수 있습니다.");
+        }
+    }
+
+    // ✅ 로그인 사용자가 전문가인지 확인
+    private void validateExpertAccess(Matching matching) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        if (!email.equals(matching.getContent().getMember().getEmail())) {
+            throw new AccessDeniedException("전문가만 접근할 수 있습니다.");
+        }
     }
 }

@@ -16,8 +16,12 @@ import java.util.List;
 public class MatchingResponseDto {
 
     private Long matchingId;
-    private Long memberId;
-    private Long contentId;
+    private String memberEmail;
+    private String contentTitle;
+
+    private String expertEmail;
+    private Long expertId;
+
     private MatchingStatus status;
     private String rejectedReason;
     private LocalDate startDate;
