@@ -69,7 +69,7 @@ public class ExpertProfileRepositoryImpl implements ExpertProfileRepositoryCusto
                         content.contentId,
                         contentImage.imageUrl,  // 첫번째 이미지 URL
                         content.title,
-                        content.category
+                        content.category.name // 카테고리 이름만 나오도록 수정
                 ))
                 .from(content)
                 .leftJoin(contentImage)
