@@ -11,16 +11,19 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.backend.entity.Member;
 import org.example.backend.expert.dto.request.ExpertRequestDto;
 import org.example.backend.expert.dto.response.ExpertProfileDto;
 import org.example.backend.expert.dto.response.ExpertSignupMetaDto;
 import org.example.backend.expert.dto.response.PortfolioDetailResponseDto;
+import org.example.backend.login.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.security.Principal;
 import java.util.List;
@@ -32,6 +35,7 @@ import java.util.List;
 @Tag(name = "Expert", description = "전문가 관련 API")
 public class ExpertController {
     private final ExpertService expertService;
+    private final AuthService authService;
 
     /**
      * 일반유저에서 전문가로 전환하는 API
@@ -75,11 +79,18 @@ public class ExpertController {
     @PostMapping("/upgrade")
     public ResponseEntity<?> upgradeExpert(
             @Valid @RequestBody ExpertRequestDto expertRequestDto,
-            Principal principal
-    ){
+            Principal principal,
+            HttpServletResponse response // ✅ 쿠키 설정을 위해 추가
+    ) {
         String email = principal.getName();
         log.info("전문가 전환 요청: {}", expertRequestDto);
-        expertService.upgradeToExpert(email, expertRequestDto);
+
+        // 전문가 전환 및 변경된 member 리턴
+        Member member = expertService.upgradeToExpert(email, expertRequestDto);
+
+        // 기존 토큰 블랙리스트 처리 + 새 토큰 발급 및 쿠키 설정
+        authService.issueNewTokenAndSetCookie(member, response);
+
         return ResponseEntity.noContent().build();
     }
 

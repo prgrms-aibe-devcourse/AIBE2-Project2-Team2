@@ -42,15 +42,15 @@ public class ExpertService {
     private final FirebaseImageService firebaseImageService;
 
     // 전문가로 전환하는 메소드 - 포트폴리오는 제외하고 나머지 정보들 등록
-    public void upgradeToExpert(String email, ExpertRequestDto dto) {
-        // 1. 이메일로 회원 조회 및 권한 확인
+    public Member upgradeToExpert(String email, ExpertRequestDto dto) {
+        // 1. 회원 조회 및 권한 확인
         Member member = findMemberByEmailAndCheckNotExpert(email);
 
         // 2. 전문가로 전환
         member.changeRole(Role.EXPERT);
         memberRepository.save(member);
 
-        // 3. ExpertProfile 조회 또는 새로 생성
+        // 3. 전문가 프로필 조회 또는 생성
         ExpertProfile profile = expertProfileRepository.findByMember(member)
                 .orElseGet(() -> ExpertProfile.createExpertProfile(
                         member,
@@ -70,21 +70,18 @@ public class ExpertService {
                 dto.getXUrl(),
                 dto.getInstagramUrl()
         );
-        expertProfileRepository.save(profile); // 프로필 저장
-
-        // 5. 전문 분야 및 상세 분야 저장
-        saveSpecialtyDetails(profile, dto.getSpecialties());
-
-        // 6. 기술 스킬 저장
-        saveSkills(profile, dto.getSkills());
-
-        // 7. 경력 저장
-        saveCareers(profile, dto.getCareers());
-
-        // 변경된 내용 최종 저장
         expertProfileRepository.save(profile);
 
+        // 5. 전문 분야, 기술 스킬, 경력 저장
+        saveSpecialtyDetails(profile, dto.getSpecialties());
+        saveSkills(profile, dto.getSkills());
+        saveCareers(profile, dto.getCareers());
+
+        expertProfileRepository.save(profile); // 최종 저장
+
         log.info("사용자 {}가 전문가로 성공적으로 전환되었습니다.", email);
+
+        return member; // ✅ 토큰 재발급을 위해 member 반환
     }
 
     private void saveSpecialtyDetails(ExpertProfile profile, List<SpecialtyDetailRequestDto> specialtyDetailDtos) {
