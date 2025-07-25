@@ -254,14 +254,14 @@ export default function Profile() {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <label className="block font-semibold text-gray-700">콘텐츠 ({userInfo.contents.length})</label>
-                  <Link to="/content/register" className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline transition">
+                  <Link to="/content/create" className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline transition">
                     <Plus size={14} />
                     등록하기
                   </Link>
                 </div>
                 <div className="space-y-3">
                   {userInfo.contents.length === 0 ? (
-                    <Link to="/expert/content/register" className="bg-white rounded-lg border-2 p-6 flex flex-col items-center justify-center border-dashed border-gray-200 text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-all duration-200 cursor-pointer">
+                    <Link to="/content/create" className="bg-white rounded-lg border-2 p-6 flex flex-col items-center justify-center border-dashed border-gray-200 text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-all duration-200 cursor-pointer">
                       <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                       </svg>
@@ -271,7 +271,7 @@ export default function Profile() {
                   ) : (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {userInfo.contents.map((content) => (
-                        <div key={content.contentId} className="relative rounded-lg overflow-hidden group aspect-[4/3] bg-black">
+                        <Link to={`/content/${content.contentId}`} key={content.contentId} className="relative rounded-lg overflow-hidden group aspect-[4/3] bg-black">
                           <img src={content.thumbnailUrl} alt={content.title} className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105" />
                           {/* Overlay for readability */}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
@@ -280,7 +280,7 @@ export default function Profile() {
                             <span className="text-lg font-semibold text-white mb-1 truncate drop-shadow-lg truncate">{content.title}</span>
                             <span className="text-sm text-blue-200 font-medium drop-shadow-lg truncate">{content.category}</span>
                           </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   )}

@@ -7,14 +7,8 @@ import axiosInstance from "../lib/axios.js";
 export default function Header() {
   const { userInfo } = useUserInfoStore();
   // 메뉴
-  const menuList = [
-    { name: "About", path: "/about" },
-    { name: "Careers", path: "/careers" },
-    { name: "History", path: "/history" },
-    { name: "Services", path: "/services" },
-    { name: "Projects", path: "/projects" },
-    { name: "Blog", path: "/blog" },
-  ];
+  // '컨텐츠 등록하기'는 전문가만 노출
+  const menuList = [...(userInfo?.role === "EXPERT" ? [{ name: "컨텐츠 등록하기", path: "/content/create", icon: "xi-file-add xi-x" }] : []), { name: "채팅", path: "/chat", icon: "xi-forum xi-x" }];
 
   const profileMenuList = [
     { name: "전문가 프로필 관리", path: "/expert/profile" },
@@ -53,7 +47,7 @@ export default function Header() {
                 {menuList.map((menu) => (
                   <li key={menu.name}>
                     <Link className="text-gray-500 transition hover:text-gray-500/75" to={menu.path}>
-                      {menu.name}
+                      <i className={menu.icon}></i>
                     </Link>
                   </li>
                 ))}

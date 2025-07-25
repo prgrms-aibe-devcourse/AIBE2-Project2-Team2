@@ -5,7 +5,6 @@ import { Modal } from "./components/modal/Modal.jsx";
 import { useEffect } from "react";
 import axiosInstance from "./lib/axios.js";
 import { useUserInfoStore } from "./store/userInfo.js";
-import ContentCreateStepperPage from "./router/content/ContentCreateStepperPage";
 import ContentDetailPage from "./router/content/ContentDetailPage";
 import { ContentEditStepperPage } from "./router/content";
 import PaymentPage from "./router/content/PaymentPage";
@@ -16,6 +15,7 @@ import MatchingClientDetailPage from "./pages/matching/MatchingClientDetailPage.
 import CustomerSupport from "./pages/CustomerSupport.jsx";
 import CategoryPage from "./pages/CategoryPage.jsx";
 import MainPage from "./pages/MainPage.jsx";
+import ContentCreateStepperPage from "./router/content/create/ContentCreateStepperPage.jsx";
 
 //api/me
 // {
