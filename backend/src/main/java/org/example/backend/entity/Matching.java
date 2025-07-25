@@ -76,7 +76,6 @@ public class Matching extends BaseTimeEntity {
 
     public void confirmCompletion() { this.status = MatchingStatus.CONFIRMED; }
     public String getRejectedReason() { return this.rejectedReason; }
-}
     public void setStatus(MatchingStatus status) {
         this.status = status;
     }
