@@ -1,50 +1,34 @@
 package org.example.backend.chat.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.example.backend.entity.ChatMessage;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
+// ✅ 서버가 응답할 때
 @Getter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class ChatMessageRespondDto {
+    private Long chatId;          // 메시지 PK
+    private Long roomId;          // 채팅방 ID
+    private String senderEmail;   // 보낸 사람 이메일
+    private String senderName;    // 보낸 사람 닉네임
+    private String message;       // 메시지 내용
+    private LocalDateTime sendAt; // 보낸 시각
 
-    @Schema(description = "메시지 ID", example = "1")
-    private Long messageId;
-
-    @Schema(description = "채팅방 ID", example = "3")
-    private Long roomId;
-
-    @Schema(description = "메시지 내용", example = "안녕하세요!")
-    private String message;
-
-    @Schema(description = "읽음 여부", example = "false")
-    private boolean read;
-
-    @Schema(description = "전송 시각", example = "2025-07-17 15:30:00")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime sendAt;
-
-    private String senderName;
-    private String senderEmail;
-    private String senderProfileImage; // 선택
-
-    public static ChatMessageRespondDto from(ChatMessage msg) {
+    public static ChatMessageRespondDto from(ChatMessage chatMessage) {
         return ChatMessageRespondDto.builder()
-                .messageId(msg.getChatId())
-                .roomId(msg.getChatRoom().getChatroomId())
-                .senderName(msg.getSender().getNickname())
-                .senderEmail(msg.getSender().getEmail())
-                .senderProfileImage(msg.getSender().getProfileImageUrl())
-                .message(msg.getMessage())
-                .read(Optional.ofNullable(msg.getIsRead()).orElse(false))
-                .sendAt(msg.getSendAt())
+                .chatId(chatMessage.getChatId())
+                .roomId(chatMessage.getChatRoom().getChatroomId())
+                .senderEmail(chatMessage.getSender().getEmail())
+                .senderName(chatMessage.getSender().getNickname())
+                .message(chatMessage.getMessage())
+                .sendAt(chatMessage.getSendAt())
                 .build();
     }
 }

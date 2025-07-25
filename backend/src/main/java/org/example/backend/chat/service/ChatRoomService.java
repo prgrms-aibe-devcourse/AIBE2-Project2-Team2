@@ -2,12 +2,13 @@ package org.example.backend.chat.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.backend.chat.dto.ChatMessageRespondDto;
-import org.example.backend.chat.dto.ChatRoomDto;
+import org.example.backend.chat.dto.ChatRoomListDto;
 import org.example.backend.entity.ChatMessage;
 import org.example.backend.entity.ChatRoom;
+import org.example.backend.entity.ChatRoomMember;
 import org.example.backend.entity.Member;
 import org.example.backend.repository.ChatMessageRepository;
+import org.example.backend.repository.ChatRoomMemberRepository;
 import org.example.backend.repository.ChatRoomRepository;
 import org.example.backend.repository.MemberRepository;
 import org.springframework.stereotype.Service;
@@ -22,121 +23,72 @@ import java.util.stream.Collectors;
 public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
-    private final ChatMessageRepository chatMessageRepository;
     private final MemberRepository memberRepository;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
+    private final ChatMessageRepository chatMessageRepository;
 
     /**
      * ✅ 기존 채팅방이 있으면 조회, 없으면 생성
      */
     @Transactional
-    public ChatRoomDto findOrCreateChatRoomByEmail(String myEmail, Long targetId) {
-        Member me = memberRepository.findByEmail(myEmail)
-                .orElseThrow(() -> new IllegalArgumentException("로그인된 사용자를 찾을 수 없습니다.\""));
-        Member target = memberRepository.findById(targetId)
-                .orElseThrow(() -> new IllegalArgumentException("상대 정보를 찾을 수 없습니다."));
+    public ChatRoom findOrCreateChatRoomByEmail(String myEmail, String targetEmail) {
+        Member me = findMemberByEmail(myEmail);
+        Member target = findMemberByEmail(targetEmail);
 
-        ChatRoom chatRoom = chatRoomRepository.findRoomBetween(
+        return chatRoomRepository.findRoomBetween(
                 me.getMemberId(),
                 target.getMemberId()
         ).orElseGet(() -> {
+            // 1️⃣ ChatRoom 먼저 생성 후 저장
             ChatRoom newRoom = ChatRoom.builder()
                     .member1(me)
                     .member2(target)
                     .build();
-            return chatRoomRepository.save(newRoom);
+            ChatRoom savedRoom = chatRoomRepository.save(newRoom);
+
+            // 2️⃣ 저장된 ChatRoom을 참조해서 ChatRoomMember 생성
+            ChatRoomMember myMember = new ChatRoomMember(savedRoom, me);
+            ChatRoomMember targetMember = new ChatRoomMember(savedRoom, target);
+
+            // 3️⃣ ChatRoomMember 저장
+            chatRoomMemberRepository.save(myMember);
+            chatRoomMemberRepository.save(targetMember);
+
+            return savedRoom;
         });
-
-        return ChatRoomDto.from(chatRoom);
-    }
-
-    /**
-     * ✅ 메시지 저장
-     */
-    @Transactional
-    public ChatMessage saveMessage(Long roomId, String senderEmail, String messageContent) {
-        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
-
-        Member sender = memberRepository.findByEmail(senderEmail)
-                .orElseThrow(() -> new IllegalArgumentException("로그인된 사용자를 찾을 수 없습니다.\""));
-
-        ChatMessage message = ChatMessage.builder()
-                .chatRoom(chatRoom)
-                .sender(sender)
-                .message(messageContent)
-                .build();
-
-        return chatMessageRepository.save(message);
-    }
-
-    /**
-     * ✅ 특정 채팅방 메시지 조회
-     */
-    @Transactional(readOnly = true)
-    public List<ChatMessageRespondDto> getMessages(Long chatRoomId) {
-        chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
-        return chatMessageRepository.findAllByChatRoom_ChatroomIdOrderBySendAtAsc(chatRoomId)
-                .stream()
-                .map(ChatMessageRespondDto::from)
-                .collect(Collectors.toList());
     }
 
     /**
      * ✅ 내가 속한 모든 채팅방 조회
      */
     @Transactional(readOnly = true)
-    public List<ChatRoomDto> getMyChatRooms(String myEmail) {
-        Member me = memberRepository.findByEmail(myEmail)
-                .orElseThrow(() -> new IllegalArgumentException("로그인된 사용자를 찾을 수 없습니다.\""));
+    public List<ChatRoomListDto> getMyChatRooms(String myEmail) {
+        Member me = findMemberByEmail(myEmail);
+        List<ChatRoom> myRooms = chatRoomRepository.findAllByMemberIdOrderByLastMessageDesc(me.getMemberId());
 
-        // member1 또는 member2가 나인 모든 방 조회
-        List<ChatRoom> myRooms = chatRoomRepository.findAllByMember(me.getMemberId());
+        return myRooms.stream().map(room -> {
+            // 상대방 이름 구하기
+            String opponentName = room.getMember1().getEmail().equals(myEmail)
+                    ? room.getMember2().getNickname()
+                    : room.getMember1().getNickname();
 
-        return myRooms.stream()
-                .map(ChatRoomDto::from)
-                .collect(Collectors.toList());
-    }
+            // 가장 최근 메시지 가져오기
+            ChatMessage lastMessage = chatMessageRepository.findTop1ByChatRoom_ChatroomIdOrderBySendAtDesc(room.getChatroomId())
+                    .orElse(null);
+            String lastMessageText = lastMessage != null ? lastMessage.getMessage() : null;
 
-    /**
-     * ✅ 특정 채팅방 상세 조회
-     */
-    @Transactional(readOnly = true)
-    public ChatRoomDto getChatRoomDetail(Long chatRoomId, String myEmail) {
-        // 사용자 검증
-        Member me = memberRepository.findByEmail(myEmail)
-                .orElseThrow(() -> new IllegalArgumentException("로그인된 사용자를 찾을 수 없습니다."));
+            // 읽지 않은 메시지 개수
+            ChatRoomMember crmMe =  chatRoomMemberRepository.findByChatRoomAndMember(room, me)
+                    .orElse(null);
 
-        // 채팅방 검증
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
+            int hasUnread = (crmMe != null) ? crmMe.getUnreadCount() : 0;
 
-        // ✅ 본인이 속한 방인지 확인
-        if (!chatRoom.getMember1().getMemberId().equals(me.getMemberId()) &&
-                !chatRoom.getMember2().getMemberId().equals(me.getMemberId())) {
-            throw new IllegalArgumentException("본인이 속한 채팅방이 아님");
-        }
-
-        return ChatRoomDto.from(chatRoom);
-    }
-
-    /**
-     * ✅ 채팅방 메시지 읽음 처리
-     * - 내가 보낸 메세지를 전부 읽음 처리
-     */
-    @Transactional
-    public void markAsRead(Long chatRoomId, String myEmail) {
-        // 사용자 검증
-        Member me = memberRepository.findByEmail(myEmail)
-                .orElseThrow(() -> new IllegalArgumentException("로그인된 사용자 없음"));
-
-        // 채팅방 검증
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new IllegalArgumentException("채팅방 없음"));
-
-        Long myId = me.getMemberId();
-
-        chatMessageRepository.markMessagesAsRead(chatRoomId, myId);
+            return new ChatRoomListDto(
+                    room.getChatroomId(),
+                    opponentName,
+                    lastMessageText
+            );
+        }).collect(Collectors.toList());
     }
 
     /**
@@ -144,13 +96,31 @@ public class ChatRoomService {
      */
     @Transactional(readOnly = true)
     public List<String> getRoomMembers(Long chatRoomId) {
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
-
-        // 방에 있는 두 명의 이메일 반환
+        ChatRoom chatRoom = findChatRoomById(chatRoomId);
         return List.of(
                 chatRoom.getMember1().getEmail(),
                 chatRoom.getMember2().getEmail()
         );
+    }
+
+    // ✅ 공통 로직 (중복 제거)
+    private Member findMemberByEmail(String email) {
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("로그인된 사용자를 찾을 수 없습니다."));
+    }
+
+    private Member findMemberById(Long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("상대 정보를 찾을 수 없습니다."));
+    }
+
+    private ChatRoom findChatRoomById(Long chatRoomId) {
+        return chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new IllegalArgumentException("채팅방을 찾을 수 없습니다."));
+    }
+
+    private boolean isMemberInRoom(ChatRoom chatRoom, Long memberId) {
+        return chatRoom.getMember1().getMemberId().equals(memberId) ||
+                chatRoom.getMember2().getMemberId().equals(memberId);
     }
 }

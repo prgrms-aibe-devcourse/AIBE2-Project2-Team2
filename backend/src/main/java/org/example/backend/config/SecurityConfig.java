@@ -68,7 +68,7 @@ public class SecurityConfig {
                 .antMatchers(
                         "/api/auth/login",
                         "/api/auth/signup",
-                        "/api/chat/members",  // ✅ 채팅용 api 추가 - 김기현 -
+                        "/api/chat/**",  // ✅ 채팅용 api 추가 - 김기현 -
                         "/ws/**", // ✅ WebSocket 경로 추가 - 김기현 -
                         "/main/**",
                         "/",

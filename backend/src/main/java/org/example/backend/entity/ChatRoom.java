@@ -3,16 +3,14 @@ package org.example.backend.entity;
 import lombok.*;
 
 import javax.persistence.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter
-@Table(name = "chatRoom")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChatRoom {
+public class ChatRoom extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long chatroomId;
@@ -39,7 +37,4 @@ public class ChatRoom {
     @Column(name = "last_message_time")
     @Setter(AccessLevel.PUBLIC)
     private LocalDateTime lastMessageTime;
-
-    private LocalDate reg_date;
-    private LocalDate update_date;
 }
