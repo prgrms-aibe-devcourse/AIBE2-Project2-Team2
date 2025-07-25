@@ -151,13 +151,13 @@ export default function EditProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-slate-50 to-zinc-100 py-8 px-4">
+    <div className="py-8 px-4">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-10">
           <h1 className="text-5xl font-bold bg-gradient-to-r from-slate-800 via-zinc-700 to-gray-800 bg-clip-text text-transparent mb-4">전문가 정보 수정</h1>
           <p className="text-xl text-gray-600 mb-4">전문가 정보를 수정하세요.</p>
         </div>
-        <div className="bg-white/90 backdrop-blur-xl rounded-3xl border border-gray-200/50 shadow-2xl p-10 space-y-10">
+        <div className="bg-white/90 backdrop-blur-xl rounded-3xl border border-gray-200/50 shadow-xl p-10 space-y-10">
           {/* 전문분야 */}
           <InputGroup label="전문분야" icon={Briefcase} required error={errors.specialties}>
             <div className="space-y-6">

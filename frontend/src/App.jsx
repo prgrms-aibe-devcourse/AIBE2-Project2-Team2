@@ -39,7 +39,7 @@ function App() {
 
   return (
     <>
-      <div className="w-dvw flex flex-col justify-start items-center">
+      <div className="flex flex-col justify-start items-center">
         <Header />
         <div className="h-30"></div>
         <Routes>

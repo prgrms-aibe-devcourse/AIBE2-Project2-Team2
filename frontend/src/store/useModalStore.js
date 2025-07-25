@@ -9,8 +9,8 @@ export const useModalStore = create((set) => ({
     if (ref?.current) {
       const rect = ref.current.getBoundingClientRect();
       finalPosition = {
-        top: rect.top + window.scrollY + rect.height + (position?.top ?? 0),
-        left: rect.left + window.scrollX + (position?.left ?? 0),
+        top: rect.top + rect.height + (position?.top ?? 0),
+        left: rect.left + (position?.left ?? 0),
       };
     } else if (position) {
       finalPosition = position;
