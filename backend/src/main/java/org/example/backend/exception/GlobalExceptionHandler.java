@@ -317,4 +317,28 @@ public class GlobalExceptionHandler {
                 null
         );
     }
+
+    // 콘텐츠를 찾을 수 없을 때 핸들링
+    @ExceptionHandler(ContentNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleContentNotFound(ContentNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "CONTENT_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+
+    // 콘텐츠 접근 권한이 없을 때 핸들링
+    @ExceptionHandler(NoContentPermissionException.class)
+    public ResponseEntity<Map<String, Object>> handleNoContentPermission(NoContentPermissionException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.FORBIDDEN,
+                "NO_CONTENT_PERMISSION",
+                ex.getMessage(),
+                null
+        );
+    }
 }
