@@ -97,17 +97,10 @@ public class ContentController {
     @Operation(summary = "컨텐츠 상세 조회", description = "특정 컨텐츠의 상세 정보를 조회합니다.")
     @GetMapping("/{id}")
     public ResponseEntity<ContentDetailResponseDto> getContent(@PathVariable Long id, Principal principal) {
-        Member member = null;
-        if (principal != null) {
-            member = getAuthenticatedMember(principal);
-        }
         Content content = contentService.getContentEntity(id);
-        // 로그인 사용자는 권한 체크, 비로그인 사용자는 권한 체크 없이 조회 허용
-        if (member != null && !hasContentAccess(member, content)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
         return ResponseEntity.ok(contentService.toDetailResponseDto(content));
     }
+
 
     @Operation(summary = "컨텐츠 수정", description = "특정 컨텐츠의 정보를 수정합니다.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(

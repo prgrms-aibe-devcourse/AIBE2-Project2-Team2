@@ -84,7 +84,7 @@ public class ContentService {
     public ContentResponseDto updateContent(Long id, ContentRequestDto requestDto, Member member) {
         Content content = contentRepository.findById(id)
                 .orElseThrow(() -> new ContentNotFoundException("컨텐츠를 찾을 수 없습니다."));
-        
+
         // 작성자(권한) 확인
         verifyContentPermission(content, member);
 
@@ -99,7 +99,7 @@ public class ContentService {
                 requestDto.getBudget(),
                 category
         );
-        
+
         Content updatedContent = contentRepository.save(content);
         return toResponseDto(updatedContent);
     }
@@ -108,7 +108,7 @@ public class ContentService {
     public void deleteContent(Long id, Member member) {
         Content content = contentRepository.findById(id)
                 .orElseThrow(() -> new ContentNotFoundException("컨텐츠를 찾을 수 없습니다."));
-        
+
         // 작성자 확인
         verifyContentPermission(content, member);
 
@@ -191,13 +191,42 @@ public class ContentService {
                     .orElse(content.getImages().get(0).getImageUrl());
         }
 
+        Category category = content.getCategory();
+        Long categoryId = category != null ? category.getCategoryId() : null;
+        Long expertId = content.getMember() != null ? content.getMember().getMemberId() : null;
+
+        // 포트폴리오 썸네일/제목 리스트 생성
+        List<ContentDetailResponseDto.SimplePortfolioDto> portfolioDtos = null;
+        if (content.getMember() != null && content.getMember().getExpertProfile() != null) {
+            portfolioDtos = content.getMember().getExpertProfile().getPortfolios().stream()
+                    .map(p -> {
+                        String thumbnailUrl = null;
+                        if (p.getImages() != null && !p.getImages().isEmpty()) {
+                            thumbnailUrl = p.getImages().stream()
+                                    .filter(img -> img.isThumbnailCheck())
+                                    .map(PortfolioImage::getImageUrl)
+                                    .findFirst()
+                                    .orElse(p.getImages().get(0).getImageUrl());
+                        }
+                        return ContentDetailResponseDto.SimplePortfolioDto.builder()
+                                .portfolioId(p.getPortfolioId())
+                                .title(p.getTitle())
+                                .thumbnailUrl(thumbnailUrl)
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+        }
+
         return ContentDetailResponseDto.builder()
                 .contentId(content.getContentId())
                 .title(content.getTitle())
                 .description(content.getDescription())
                 .budget(content.getBudget())
+                .categoryId(categoryId)
+                .expertId(expertId)
                 .questions(questionDtos)
                 .contentUrl(contentUrl)
+                .portfolios(portfolioDtos)
                 .build();
     }
 
