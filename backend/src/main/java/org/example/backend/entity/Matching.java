@@ -1,6 +1,8 @@
 package org.example.backend.entity;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.example.backend.constant.MatchingStatus;
 
 import javax.persistence.*;
@@ -10,7 +12,7 @@ import java.util.List;
 
 @Entity
 @Getter
-@Table(name = "Matching")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)@Table(name = "Matching")
 public class Matching extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,5 +47,9 @@ public class Matching extends BaseTimeEntity {
         this.status = status;
         this.startDate = startDate;
         this.endDate = endDate;
+    }
+
+    public void setStatus(MatchingStatus status) {
+        this.status = status;
     }
 }
