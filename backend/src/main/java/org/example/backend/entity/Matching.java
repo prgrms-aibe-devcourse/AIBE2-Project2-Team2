@@ -1,5 +1,6 @@
 package org.example.backend.entity;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -56,7 +57,6 @@ public class Matching extends BaseTimeEntity {
         this.startDate = startDate;
         this.endDate = endDate;
     }
-
     // ----- 상태 전이 및 도메인 메서드 -----
     public void cancel() { this.status = MatchingStatus.CANCELLED; }
     public void accept() { this.status = MatchingStatus.ACCEPTED; }
@@ -76,4 +76,8 @@ public class Matching extends BaseTimeEntity {
 
     public void confirmCompletion() { this.status = MatchingStatus.CONFIRMED; }
     public String getRejectedReason() { return this.rejectedReason; }
+}
+    public void setStatus(MatchingStatus status) {
+        this.status = status;
+    }
 }

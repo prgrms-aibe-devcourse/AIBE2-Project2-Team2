@@ -97,6 +97,12 @@
             <version>5.3.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.httpcomponents.core5</groupId>
+            <artifactId>httpcore5</artifactId>
+            <version>5.2.1</version>
+        </dependency>
+
         <!-- Redis -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -165,6 +171,13 @@
             <artifactId>spring-cloud-starter-openfeign</artifactId>
             <version>3.1.8</version>
         </dependency>
+
+        <!-- **chat ** Spring WebSocket + STOMP 지원 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        
 
     </dependencies>
 

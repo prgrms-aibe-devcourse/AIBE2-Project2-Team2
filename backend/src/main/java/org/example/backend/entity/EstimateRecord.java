@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;     // 추가
 import lombok.Builder;               // 추가
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.List;
 @Entity
 @Table(name = "estimate_record")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor // 추가
 @Builder            // 추가

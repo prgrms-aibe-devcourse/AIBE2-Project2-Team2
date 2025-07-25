@@ -5,7 +5,6 @@ export const useUserInfoStore = create((set) => ({
   setUserInfo: (info) => set({ userInfo: info }),
   clearUserInfo: () => set({ userInfo: null }),
 }));
-
 // Example userInfo object:
 // {
 //   nickname: "홍길동",

@@ -6,6 +6,13 @@ import { useEffect } from "react";
 import axiosInstance from "./lib/axios.js";
 import { useUserInfoStore } from "./store/userInfo.js";
 import MatchingRouter from "./router/matching/matching.jsx"; // matching 라우터 import
+import ContentCreateStepperPage from "./router/content/ContentCreateStepperPage";
+import ContentDetailPage from "./router/content/ContentDetailPage";
+import { ContentEditStepperPage } from "./router/content";
+import PaymentPage from "./router/content/PaymentPage";
+import MyPage from "./router/mypage/mypage.jsx";
+import Expert from "./router/expert/expert.jsx";
+import ChatPage from "./router/chat/ChatPage.jsx"
 
 //api/me
 // {
@@ -37,19 +44,26 @@ function App() {
   }, []);
 
   return (
-      <>
-        <div className="w-dvw h-dvh flex flex-col justify-start items-center">
-          <Header />
-          <div className="h-30"></div>
-          <Routes>
-            <Route path="/" element={<h2>Home Page</h2>} />
-            <Route path="/auth/*" element={<Auth />} />
-            <Route path="/about" element={<h2>About Page</h2>} />
-            <Route path="/*" element={<MatchingRouter />} />
-          </Routes>
-          <Modal />
-        </div>
-      </>
+    <>
+      <div className="flex flex-col justify-start items-center">
+        <Header />
+        <div className="h-30"></div>
+        <Routes>
+          <Route path="/" element={<h2>Home Page</h2>} />
+          <Route path="/auth/*" element={<Auth />} />
+          <Route path="/about" element={<h2>About Page</h2>} />
+          <Route path="/content/create" element={<ContentCreateStepperPage />} />
+          <Route path="/content/:id" element={<ContentDetailPage />} />
+          <Route path="/content/edit/:id" element={<ContentEditStepperPage />} />
+          <Route path="/content/:id/payment" element={<PaymentPage />} />
+          <Route path="/mypage/*" element={<MyPage />} />
+          <Route path="/expert/*" element={<Expert />} />
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/*" element={<MatchingRouter />} />
+        </Routes>
+        <Modal />
+      </div>
+    </>
   );
 }
 

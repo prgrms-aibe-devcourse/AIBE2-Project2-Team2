@@ -1,0 +1,46 @@
+package org.example.backend.content.dto;
+
+import lombok.Builder;
+import lombok.Getter;
+
+import java.util.List;
+
+@Getter
+@Builder
+public class ContentDetailResponseDto {
+    private Long contentId;
+    private String title;
+    private String description;
+    private Long budget;
+    private Long categoryId;
+    private Long expertId;
+    //private Long reviewId;
+    private List<QuestionDto> questions;
+    private String contentUrl; // 대표 이미지 URL
+    private List<SimplePortfolioDto> portfolios;
+
+    @Getter
+    @Builder
+    public static class QuestionDto {
+        private Long questionId;
+        private String questionText;
+        private Boolean isMultipleChoice;
+        private List<OptionDto> options;
+
+        @Getter
+        @Builder
+        public static class OptionDto {
+            private Long optionId;
+            private String optionText;
+            private Long additionalPrice;
+        }
+    }
+
+    @Getter
+    @Builder
+    public static class SimplePortfolioDto {
+        private Long portfolioId;
+        private String title;
+        private String thumbnailUrl;
+    }
+}
