@@ -8,9 +8,7 @@ import { useUserInfoStore } from "./store/userInfo.js";
 import ContentCreateStepperPage from "./router/content/ContentCreateStepperPage";
 import ContentDetailPage from "./router/content/ContentDetailPage";
 import { ContentEditStepperPage } from "./router/content";
-import TestPage from "./router/content/test";
 import PaymentPage from "./router/content/PaymentPage";
-import TestPay from './router/content/testPay';
 import MyPage from "./router/mypage/mypage.jsx";
 import Expert from "./router/expert/expert.jsx";
 import ChatPage from "./router/chat/ChatPage.jsx"
@@ -56,9 +54,7 @@ function App() {
           <Route path="/content/create" element={<ContentCreateStepperPage />} />
           <Route path="/content/:id" element={<ContentDetailPage />} />
           <Route path="/content/edit/:id" element={<ContentEditStepperPage />} />
-          <Route path="/test" element={<TestPage />} />
           <Route path="/content/:id/payment" element={<PaymentPage />} />
-          <Route path="/testpay" element={<TestPay />} />
           <Route path="/mypage/*" element={<MyPage />} />
           <Route path="/expert/*" element={<Expert />} />
           <Route path="/chat" element={<ChatPage />} />
