@@ -25,7 +25,8 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom {
                             member.nickname,
                             member.profileImageUrl,
                             member.email,
-                            member.joinType
+                            member.joinType,
+                            member.phone
                     ))
                     .from(member)
                     .where(member.email.eq(email))

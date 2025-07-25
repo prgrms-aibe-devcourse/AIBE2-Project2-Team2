@@ -15,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -64,18 +65,18 @@ class MatchingHistoryServiceTest {
 
         // 콘텐츠 등록
         Content content = new Content(
-                expert,                         // Member 엔티티 (전문가)
-                "로고 디자인",                  // title
-                "고퀄리티 로고 디자인 제작",     // description
-                500000L,                       // budget (예산)
-                Status.ACTIVE,                 // 상태 (예: 활성 상태)
-                "디자인"                      // category (문자열)
+                expert,
+                "로고 디자인",
+                "고퀄리티 로고 디자인 제작",
+                500000L,
+                Status.ACTIVE,
+                "디자인"
         );
         contentRepository.save(content);
 
         // 매칭 등록
         Matching matching = new Matching(
-                expert,
+                user,  // 신청자(user)
                 content,
                 MatchingStatus.ACCEPTED,
                 LocalDate.of(2025, 7, 1),
@@ -83,21 +84,22 @@ class MatchingHistoryServiceTest {
         );
         matchingRepository.save(matching);
 
-        // 검색 조건
+        // 검색 조건 및 페이지 요청
         MatchingSearchCondition condition = new MatchingSearchCondition();
         PageRequest pageable = PageRequest.of(0, 10);
 
         // 실행
-        List<MatchingSummaryUserDto> result = matchingHistoryService.getExpertMatchingHistories(
+        Page<MatchingSummaryUserDto> result = matchingHistoryService.getExpertMatchingHistories(
                 expert.getEmail(), condition, pageable
         );
 
         // 검증
-        assertThat(result).hasSize(1);
-        MatchingSummaryUserDto dto = result.get(0);
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        MatchingSummaryUserDto dto = result.getContent().get(0);
         assertThat(dto.getContentTitle()).isEqualTo("로고 디자인");
         assertThat(dto.getMatchingStatus()).isEqualTo(MatchingStatus.ACCEPTED);
         assertThat(dto.getWorkStartDate()).isEqualTo(LocalDate.of(2025, 7, 1));
         assertThat(dto.getWorkEndDate()).isEqualTo(LocalDate.of(2025, 7, 15));
     }
+
 }
