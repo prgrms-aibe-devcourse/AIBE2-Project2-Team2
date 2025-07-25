@@ -14,5 +14,4 @@ public class KakaoPayReadyRequest {
     private String approval_url;
     private String cancel_url;
     private String fail_url;
-    // 필요시 추가 필드
 } 

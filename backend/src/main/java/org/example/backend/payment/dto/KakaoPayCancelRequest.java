@@ -10,5 +10,4 @@ public class KakaoPayCancelRequest {
     private int cancel_tax_free_amount;
     private int cancel_vat_amount;
     private String cancel_reason;
-    // 필요시 추가 필드
 } 
