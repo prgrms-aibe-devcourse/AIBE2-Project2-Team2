@@ -2,12 +2,14 @@ package org.example.backend.entity;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 
 @Entity
 @Table(name = "selected_product")
 @Getter
+@Setter
 @NoArgsConstructor
 public class SelectedProduct {
 
