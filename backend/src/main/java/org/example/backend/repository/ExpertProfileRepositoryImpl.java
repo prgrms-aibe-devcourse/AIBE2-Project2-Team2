@@ -2,10 +2,12 @@ package org.example.backend.repository;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import org.example.backend.entity.Career;
 import org.example.backend.entity.ExpertProfile;
 import org.example.backend.expert.dto.response.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.example.backend.entity.QContent.content;
 import static org.example.backend.entity.QContentImage.contentImage;
@@ -37,17 +39,31 @@ public class ExpertProfileRepositoryImpl implements ExpertProfileRepositoryCusto
             return null;
         }
 
-        // 2. 분야 정보
-        List<ExpertFieldDto> fields = queryFactory
-                .select(new QExpertFieldDto(
+        // 2. 분야 정보 (전문 분야별 상세 분야 그룹핑)
+        List<ExpertSpecialtyDto> specialties = queryFactory
+                .select(
                         specialty.name,
                         detailField.name
-                ))
+                )
                 .from(expertProfileSpecialtyDetail)
                 .join(expertProfileSpecialtyDetail.specialty, specialty)
                 .join(expertProfileSpecialtyDetail.detailField, detailField)
                 .where(expertProfileSpecialtyDetail.expertProfile.eq(profile))
-                .fetch();
+                .fetch()
+                .stream()
+                .collect(Collectors.groupingBy(
+                        tuple -> tuple.get(0, String.class), // specialty name
+                        Collectors.mapping(
+                                tuple -> tuple.get(1, String.class), // detail field name
+                                Collectors.toList()
+                        )
+                ))
+                .entrySet().stream()
+                .map(e -> ExpertSpecialtyDto.builder()
+                        .specialty(e.getKey())
+                        .detailFields(e.getValue())
+                        .build())
+                .collect(Collectors.toList());
 
 
         // 3. 기술 정보
@@ -84,7 +100,8 @@ public class ExpertProfileRepositoryImpl implements ExpertProfileRepositoryCusto
                 .select(new QExpertPortfolioDto(
                         portfolio.portfolioId,
                         portfolioImage.imageUrl,
-                        portfolio.title
+                        portfolio.title,
+                        portfolio.category
                 ))
                 .from(portfolio)
                 .leftJoin(portfolio.images, portfolioImage)
@@ -92,22 +109,29 @@ public class ExpertProfileRepositoryImpl implements ExpertProfileRepositoryCusto
                 .where(portfolio.expertProfile.eq(profile))
                 .fetch();
 
+        // 6. 경력 설명 문자열 리스트
+        List<String> careers = profile.getCareers().stream()
+                .map(Career::getDescription)
+                .collect(Collectors.toList());
 
-        // 6. 최종 ExpertProfileDto 생성
+        // 7. 최종 ExpertProfileDto 반환
         return ExpertProfileDto.builder()
                 .profileImageUrl(profile.getMember().getProfileImageUrl())
                 .nickname(profile.getMember().getNickname())
                 .introduction(profile.getIntroduction())
                 .region(profile.getRegion())
                 .totalCareerYears(profile.getTotalCareerYears())
+                .education(profile.getEducation())
+                .employeeCount(profile.getEmployeeCount())
                 .websiteUrl(profile.getWebsiteUrl())
                 .facebookUrl(profile.getFacebookUrl())
-                .instagramUrl(profile.getInstagramUrl())
                 .xUrl(profile.getXUrl())
+                .instagramUrl(profile.getInstagramUrl())
                 .reviewCount(profile.getReviewCount())
                 .averageScore(profile.getRating())
-                .fields(fields)
+                .specialties(specialties)
                 .skills(skills)
+                .careers(careers)
                 .contents(contents)
                 .portfolios(portfolios)
                 .build();

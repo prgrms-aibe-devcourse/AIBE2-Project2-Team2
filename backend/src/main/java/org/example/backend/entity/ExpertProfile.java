@@ -86,6 +86,8 @@ public class ExpertProfile {
         profile.facebookUrl = facebookUrl;
         profile.xUrl = xUrl;
         profile.instagramUrl = instagramUrl;
+        profile.reviewCount = 0L; // 초기 리뷰 수
+        profile.rating = 0.0; // 초기 평점은 0.0
         return profile;
     }
     //업데이트 메서드 (변경용)

@@ -21,4 +21,7 @@ public class MyPageResponseDto {
 
     @Schema(description = "가입 방식 (자체, KAKAO 등)", example = "KAKAO")
     private JoinType joinType;
+
+    @Schema(description = "전화번호", example = "010-1234-5678")
+    private String phone;
 }

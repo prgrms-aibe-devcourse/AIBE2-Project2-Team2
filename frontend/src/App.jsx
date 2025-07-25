@@ -11,6 +11,9 @@ import { ContentEditStepperPage } from "./router/content";
 import TestPage from "./router/content/test";
 import PaymentPage from "./router/content/PaymentPage";
 import TestPay from './router/content/testPay';
+import MyPage from "./router/mypage/mypage.jsx";
+import Expert from "./router/expert/expert.jsx";
+import ChatPage from "./router/chat/ChatPage.jsx"
 
 //api/me
 // {
@@ -43,7 +46,7 @@ function App() {
 
   return (
     <>
-      <div className="w-dvw h-dvh flex flex-col justify-start items-center">
+      <div className="flex flex-col justify-start items-center">
         <Header />
         <div className="h-30"></div>
         <Routes>
@@ -56,6 +59,9 @@ function App() {
           <Route path="/test" element={<TestPage />} />
           <Route path="/content/:id/payment" element={<PaymentPage />} />
           <Route path="/testpay" element={<TestPay />} />
+          <Route path="/mypage/*" element={<MyPage />} />
+          <Route path="/expert/*" element={<Expert />} />
+          <Route path="/chat" element={<ChatPage />} />
         </Routes>
         <Modal />
       </div>

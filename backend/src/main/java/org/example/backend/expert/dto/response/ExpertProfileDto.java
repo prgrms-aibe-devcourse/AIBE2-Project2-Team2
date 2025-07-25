@@ -21,6 +21,11 @@ public class ExpertProfileDto {
     private String introduction;        // 자기소개
     private String region;              // 활동 지역
     private Integer totalCareerYears;   // 경력 연수
+
+    // 전문가 정보 추가
+    private String education;
+    private Integer employeeCount;
+
     private String websiteUrl;          // 웹사이트 URL
     private String facebookUrl;         // 페이스북 URL
     private String instagramUrl;        // 인스타그램 URL
@@ -29,7 +34,7 @@ public class ExpertProfileDto {
     private Double averageScore;        // 평균 평점
 
     // 전문 분야 정보
-    private List<ExpertFieldDto> fields;
+    private List<ExpertSpecialtyDto> specialties;
 
     // 전문가 기술 정보
     private List<ExpertSkillDto> skills;
@@ -40,6 +45,9 @@ public class ExpertProfileDto {
     // 포트폴리오 정보
     private List<ExpertPortfolioDto> portfolios;
 
+    // 경력 설명
+    private List<String> careers;
+
     @QueryProjection
     public ExpertProfileDto(
             String profileImageUrl,
@@ -47,10 +55,12 @@ public class ExpertProfileDto {
             String introduction,
             String region,
             Integer totalCareerYears,
+            String education,
+            Integer employeeCount,
             String websiteUrl,
             String facebookUrl,
-            String instagramUrl,
             String xUrl,
+            String instagramUrl,
             Long reviewCount,
             Double averageScore
     ) {
@@ -59,11 +69,14 @@ public class ExpertProfileDto {
         this.introduction = introduction;
         this.region = region;
         this.totalCareerYears = totalCareerYears;
+        this.education = education;
+        this.employeeCount = employeeCount;
         this.websiteUrl = websiteUrl;
         this.facebookUrl = facebookUrl;
-        this.instagramUrl = instagramUrl;
         this.xUrl = xUrl;
+        this.instagramUrl = instagramUrl;
         this.reviewCount = reviewCount;
         this.averageScore = averageScore;
     }
+
 }
