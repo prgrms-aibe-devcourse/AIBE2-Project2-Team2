@@ -84,7 +84,6 @@ public class SecurityConfig {
                 .antMatchers("/api/auth/logout","/api/common/check","/api/me").hasAnyRole("USER", "ADMIN", "EXPERT")
                 .antMatchers("/api/expert/upgrade","/api/expert/meta").hasAnyRole("USER", "EXPERT")
                 .antMatchers("/api/expert/**").hasRole("EXPERT")
-                //  매칭 API 접근 허용
                 .antMatchers("/api/matchings/**").hasAnyRole("USER", "EXPERT")
                 .anyRequest().authenticated()
                 .and()

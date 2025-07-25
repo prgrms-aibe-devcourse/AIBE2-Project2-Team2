@@ -30,15 +30,6 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws IOException, ServletException {
 
-        // ✅ 예외 처리 경로: Swagger, API Docs, Matching API는 인증 생략
-        String path = request.getRequestURI();
-        if (path.startsWith("/api/matchings")
-                || path.startsWith("/swagger")
-                || path.startsWith("/v3/api-docs")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         try {
             String token = resolveToken(request);
 
