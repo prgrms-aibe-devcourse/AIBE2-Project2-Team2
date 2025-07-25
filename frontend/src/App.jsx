@@ -5,6 +5,7 @@ import { Modal } from "./components/modal/Modal.jsx";
 import { useEffect } from "react";
 import axiosInstance from "./lib/axios.js";
 import { useUserInfoStore } from "./store/userInfo.js";
+import MatchingRouter from "./router/matching/matching.jsx"; // matching 라우터 import
 import ContentCreateStepperPage from "./router/content/ContentCreateStepperPage";
 import ContentDetailPage from "./router/content/ContentDetailPage";
 import { ContentEditStepperPage } from "./router/content";
@@ -58,6 +59,7 @@ function App() {
           <Route path="/mypage/*" element={<MyPage />} />
           <Route path="/expert/*" element={<Expert />} />
           <Route path="/chat" element={<ChatPage />} />
+          <Route path="/*" element={<MatchingRouter />} />
         </Routes>
         <Modal />
       </div>
