@@ -1,0 +1,109 @@
+/* StepperPage 공통 스타일 */
+
+.stepperContainer {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  background: #f9fafb;
+  justify-content: center; /* 중앙 정렬 */
+  align-items: flex-start;
+  gap: 0; /* 여백 제거 */
+}
+
+.stepperSidebar {
+  width: 256px;
+  background: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  padding: 5rem 1.5rem 0 1.5rem;
+  min-height: 100vh;
+  margin-right: 0; /* 여백 제거 */
+}
+
+.stepperSidebarButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  background: none;
+  border: none;
+  transition: background 0.2s;
+  cursor: pointer;
+}
+.stepperSidebarButtonActive {
+  background: #fff;
+  color: #0d9488;
+  border-left: 4px solid #2dd4bf;
+}
+.stepperSidebarButtonInactive {
+  color: #6b7280;
+}
+
+.stepperSidebarStepCircle {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid #d1d5db;
+  font-size: 1rem;
+  font-weight: bold;
+  background: #fff;
+  color: #9ca3af;
+}
+.stepperSidebarStepCircleActive {
+  background: #14b8a6;
+  color: #fff;
+  border-color: #14b8a6;
+}
+
+.stepperMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+  background: #f9fafb;
+  min-height: 100vh;
+  margin-left: 0; /* 여백 제거 */
+}
+
+.stepperCard {
+  width: 100%;
+  max-width: 40rem;
+  background: #fff;
+  border-radius: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 2.5rem;
+  border: 1px solid #f3f4f6;
+}
+
+.stepperButton {
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.stepperButtonPrimary {
+  background: #14b8a6;
+  color: #fff;
+}
+.stepperButtonPrimary:hover {
+  background: #0d9488;
+}
+.stepperButtonSecondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+.stepperButtonSecondary:hover {
+  background: #e5e7eb;
+} 
