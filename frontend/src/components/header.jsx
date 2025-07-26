@@ -14,6 +14,7 @@ export default function Header() {
     { name: "Services", path: "/services" },
     { name: "Projects", path: "/projects" },
     { name: "Blog", path: "/blog" },
+    { name: "Review", path: "/review" }
   ];
 
   const profileMenuList = [
