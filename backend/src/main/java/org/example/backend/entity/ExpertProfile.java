@@ -104,4 +104,26 @@ public class ExpertProfile {
         this.xUrl = xUrl;
         this.instagramUrl = instagramUrl;
     }
+
+    // 리뷰 수 감소 + 평점 재계산
+    public void subRating(Double rating) {
+        if (this.reviewCount <= 1) {
+            this.rating = 0.0;
+            this.reviewCount = 0L;
+        } else {
+            this.rating = ((this.rating * this.reviewCount) - rating) / (this.reviewCount - 1);
+            this.reviewCount--;
+        }
+    }
+
+    // 리뷰 수 증가 + 평점 재계산
+    public void addRating(Double rating) {
+        if (this.reviewCount == 0) {
+            this.rating = rating;
+        } else {
+            this.rating = ((this.rating * this.reviewCount) + rating) / (this.reviewCount + 1);
+        }
+        this.reviewCount++;
+    }
+
 }
