@@ -45,6 +45,7 @@ function App() {
           <Route path="/" element={<h2>Home Page</h2>} />
           <Route path="/auth/*" element={<Auth />} />
           <Route path="/about" element={<h2>About Page</h2>} />
+          <Route path="/review/*" element={<Review />} />
         </Routes>
         <Modal />
       </div>
