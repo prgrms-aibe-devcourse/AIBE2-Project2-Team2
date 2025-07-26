@@ -20,6 +20,7 @@ import org.example.backend.payment.dto.KakaoPayReadyRequest;
 import org.example.backend.payment.dto.KakaoPayReadyResponse;
 import org.example.backend.payment.dto.KakaoPayApproveRequest;
 import org.example.backend.payment.dto.KakaoPayCancelRequest;
+import org.example.backend.matching.service.MatchingService;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +28,7 @@ public class KakaoPayService {
     private final EstimateRecordRepository estimateRecordRepository;
     private final MatchingRepository matchingRepository;
     private final PaymentRepository paymentRepository;
+    private final MatchingService matchingService;
 
     @Value("${kakao.pay.secret-key}")
     private String kakaopaySecretKey;
@@ -51,9 +53,9 @@ public class KakaoPayService {
         requestDto.setQuantity("1");
         requestDto.setTotal_amount(estimate.getTotalPrice().toString());
         requestDto.setTax_free_amount("0");
-        requestDto.setApproval_url("http://localhost:8080/api/payment/kakao/success?matchingId=" + matchingId);
-        requestDto.setCancel_url("http://localhost:8080/api/payment/kakao/cancel");
-        requestDto.setFail_url("http://localhost:8080/api/payment/kakao/fail");
+        requestDto.setApproval_url("http://localhost:5173/mypage/matching/history?matchingId=" + matchingId);
+        requestDto.setCancel_url("http://localhost:5173/mypage/matching/history");
+        requestDto.setFail_url("http://localhost:5173/mypage/matching/history");
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -152,6 +154,8 @@ public class KakaoPayService {
         // 결제 승인 성공 시 상태 변경
         payment.setStatus(PaymentStatus.PAID);
         paymentRepository.save(payment);
+        // 매칭 상태도 ACCEPTED로 변경
+        matchingService.updateMatchingStatusByPaymentResult(matchingId, PaymentStatus.PAID);
         return response;
     }
 
