@@ -1,21 +1,18 @@
 package org.example.backend.entity;
 
-
 import lombok.Getter;
+import lombok.Setter;
 import org.example.backend.constant.JoinType;
 import org.example.backend.constant.Role;
 import org.example.backend.constant.Status;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Getter
+@Getter @Setter
 @Table(name = "members")
 public class Member extends BaseTimeEntity{
 

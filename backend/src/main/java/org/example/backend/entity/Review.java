@@ -1,11 +1,12 @@
 package org.example.backend.entity;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 
 @Entity
-@Getter
+@Getter @Setter
 @Table(name = "review")
 public class Review extends BaseEntity {
     @Id

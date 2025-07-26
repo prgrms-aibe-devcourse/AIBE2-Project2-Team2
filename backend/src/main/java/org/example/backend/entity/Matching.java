@@ -1,6 +1,8 @@
 package org.example.backend.entity;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.example.backend.constant.MatchingStatus;
 
 import javax.persistence.*;
@@ -9,7 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Getter
+@Getter @Setter
+@NoArgsConstructor
 @Table(name = "Matching")
 public class Matching extends BaseTimeEntity {
     @Id
