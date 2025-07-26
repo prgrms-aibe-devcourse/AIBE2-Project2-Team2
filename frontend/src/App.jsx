@@ -5,6 +5,7 @@ import { Modal } from "./components/modal/Modal.jsx";
 import { useEffect } from "react";
 import axiosInstance from "./lib/axios.js";
 import { useUserInfoStore } from "./store/userInfo.js";
+import Review from "./router/review/review.jsx";
 
 //api/me
 // {
