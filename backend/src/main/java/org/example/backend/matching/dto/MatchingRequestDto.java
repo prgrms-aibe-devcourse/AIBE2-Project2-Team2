@@ -13,9 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 public class MatchingRequestDto {
 
-    @NotNull(message = "회원 ID는 필수입니다.")
-    private Long memberId;
-
     @NotNull(message = "콘텐츠 ID는 필수입니다.")
     private Long contentId;
 

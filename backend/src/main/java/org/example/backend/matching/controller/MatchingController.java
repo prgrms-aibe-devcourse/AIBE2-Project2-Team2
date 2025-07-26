@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @Slf4j
 @RestController
@@ -59,8 +60,10 @@ public class MatchingController {
     })
     @PostMapping
     public ResponseEntity<MatchingResponseDto> createMatching(@Valid @RequestBody MatchingRequestDto requestDto) {
-        log.info("[POST] 매칭 생성 요청: memberId={}, contentId={}", requestDto.getMemberId(), requestDto.getContentId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(matchingService.createMatching(requestDto));
+        // 로그인 유저 email 추출
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("[POST] 매칭 생성 요청: email={}, contentId={}", email, requestDto.getContentId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(matchingService.createMatching(requestDto, email));
     }
 
     /**

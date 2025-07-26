@@ -39,8 +39,8 @@ public class MatchingServiceImpl implements MatchingService {
      */
     @Override
     @Transactional
-    public MatchingResponseDto createMatching(MatchingRequestDto requestDto) {
-        Member member = memberRepository.findById(requestDto.getMemberId())
+    public MatchingResponseDto createMatching(MatchingRequestDto requestDto, String email) {
+        Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new NoSuchElementException("회원을 찾을 수 없습니다."));
         Content content = contentRepository.findById(requestDto.getContentId())
                 .orElseThrow(() -> new NoSuchElementException("콘텐츠를 찾을 수 없습니다."));

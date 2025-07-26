@@ -10,7 +10,7 @@ public interface MatchingService {
     /**
      * 매칭 요청 생성 (→ WAITING_PAYMENT)
      */
-    MatchingResponseDto createMatching(MatchingRequestDto requestDto);
+    MatchingResponseDto createMatching(MatchingRequestDto requestDto, String email);
 
     /**
      * 매칭 상태 변경
