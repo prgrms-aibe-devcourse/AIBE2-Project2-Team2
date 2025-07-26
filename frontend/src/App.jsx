@@ -16,6 +16,7 @@ import CustomerSupport from "./pages/CustomerSupport.jsx";
 import CategoryPage from "./pages/CategoryPage.jsx";
 import MainPage from "./pages/MainPage.jsx";
 import ContentCreateStepperPage from "./router/content/create/ContentCreateStepperPage.jsx";
+import ReviewWrite from "./pages/review/ReviewWrite.jsx";
 
 //api/me
 // {
@@ -54,7 +55,6 @@ function App() {
         <Routes>
           <Route path="/" element={<MainPage />} />
           <Route path="/auth/*" element={<Auth />} />
-          <Route path="/about" element={<h2>About Page</h2>} />
           <Route path="/content/create" element={<ContentCreateStepperPage />} />
           <Route path="/content/:id" element={<ContentDetailPage />} />
           <Route path="/content/edit/:id" element={<ContentEditStepperPage />} />
@@ -65,9 +65,10 @@ function App() {
           <Route path="/client/matchings/:matchingId" element={<MatchingClientDetailPage />} />
           <Route path="/customer-support" element={<CustomerSupport />} />
           <Route path="/category/:categoryName" element={<CategoryPage />} />
+          <Route path="/review/write/:id" element={<ReviewWrite />} />
         </Routes>
-        <Modal />
       </div>
+      <Modal />
     </>
   );
 }

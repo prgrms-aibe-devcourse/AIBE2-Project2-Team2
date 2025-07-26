@@ -16,6 +16,8 @@ import java.util.List;
 import static org.example.backend.entity.QReview.review;
 import static org.example.backend.entity.QMatching.matching;
 import static org.example.backend.entity.QMember.member;
+import static org.example.backend.entity.QContent.content;
+import static org.example.backend.entity.QReviewImage.reviewImage;
 
 @Repository
 @RequiredArgsConstructor
@@ -25,30 +27,29 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
 
     @Override
     public Page<Review> findReviewsByExpertMemberId(Long expertMemberId, Pageable pageable) {
-
-        // 리뷰 목록 조회 쿼리
-        // Review -> Matching -> Content -> Member(전문가) 경로로 조회
+        // 리뷰 목록 조회 쿼리 - 필요한 모든 연관 엔티티를 fetchJoin으로 한번에 가져옴
         List<Review> reviews = queryFactory
                 .selectFrom(review)
                 .join(review.matching, matching).fetchJoin()
-                .join(matching.content, QContent.content).fetchJoin()
-                .join(QContent.content.member, member).fetchJoin() // Content의 member가 전문가
-                .join(matching.member, QMember.member).fetchJoin() // Matching의 member가 의뢰인 (리뷰 작성자)
+                .join(matching.content, content).fetchJoin()
+                .join(content.member, member).fetchJoin() // 전문가 정보
+                .join(matching.member, QMember.member).fetchJoin() // 리뷰 작성자 정보
+                .leftJoin(review.reviewImage, reviewImage).fetchJoin() // 리뷰 이미지 (선택적)
                 .where(
                         expertMemberIdEq(expertMemberId),
                         statusActive()
                 )
-                .orderBy(review.regTime.desc()) // BaseTimeEntity의 regTime 필드로 정렬
+                .orderBy(review.regTime.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        // 전체 개수 조회 쿼리 (성능 최적화를 위해 별도 쿼리)
+        // 전체 개수 조회 쿼리 (fetchJoin 없이 count만)
         JPAQuery<Long> countQuery = queryFactory
                 .select(review.count())
                 .from(review)
                 .join(review.matching, matching)
-                .join(matching.content, QContent.content)
+                .join(matching.content, content)
                 .where(
                         expertMemberIdEq(expertMemberId),
                         statusActive()
@@ -58,11 +59,42 @@ public class ReviewRepositoryCustomImpl implements ReviewRepositoryCustom {
     }
 
     /**
+     * 전문가 멤버 ID로 상세 정보와 함께 리뷰 조회
+     */
+    public Page<Review> findReviewsByExpertMemberIdWithDetails(Long expertMemberId, Status status, Pageable pageable) {
+        // 리뷰 목록 조회 - 모든 필요한 연관 엔티티를 한번에 가져옴
+        List<Review> reviews = queryFactory
+                .selectFrom(review)
+                .join(review.matching, matching).fetchJoin()
+                .join(matching.member, QMember.member).fetchJoin() // 리뷰 작성자
+                .leftJoin(review.reviewImage, reviewImage).fetchJoin() // 리뷰 이미지
+                .where(
+                        matching.content.member.memberId.eq(expertMemberId),
+                        review.status.eq(status)
+                )
+                .orderBy(review.regTime.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        // Count 쿼리 (fetchJoin 없이)
+        JPAQuery<Long> countQuery = queryFactory
+                .select(review.count())
+                .from(review)
+                .join(review.matching, matching)
+                .where(
+                        matching.content.member.memberId.eq(expertMemberId),
+                        review.status.eq(status)
+                );
+
+        return PageableExecutionUtils.getPage(reviews, pageable, countQuery::fetchOne);
+    }
+
+    /**
      * 전문가 회원 ID 조건
-     * Content의 member가 전문가이므로 matching.content.member.memberId로 조회
      */
     private BooleanExpression expertMemberIdEq(Long expertMemberId) {
-        return expertMemberId != null ? matching.content.member.memberId.eq(expertMemberId) : null;
+        return expertMemberId != null ? content.member.memberId.eq(expertMemberId) : null;
     }
 
     /**

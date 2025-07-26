@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import axiosInstance from "../../../../lib/axios.js";
 import { useUserInfoStore } from "../../../../store/userInfo.js";
+import { Link, useNavigate } from "react-router-dom";
 
 const statusFilters = [
   { label: "전체", value: null },
   { label: "매칭성사", value: "ACCEPTED" },
   { label: "진행중", value: "IN_PROGRESS" },
-  { label: "완료", value: "COMPLETED" },
+  { label: "전문가 작업 완료", value: "WORK_COMPLETED" },
+  { label: "확인 완료", value: "CONFIRMED" },
   { label: "취소", value: "CANCELLED" },
 ];
 
@@ -17,8 +19,10 @@ const getStatusText = (status) => {
       return "매칭성사";
     case "IN_PROGRESS":
       return "진행중";
-    case "COMPLETED":
-      return "완료";
+    case "WORK_COMPLETED":
+      return "전문가 작업 완료";
+    case "CONFIRMED":
+      return "확인 완료";
     case "CANCELLED":
       return "취소";
     default:
@@ -32,7 +36,9 @@ const getStatusColor = (status) => {
       return "text-blue-600";
     case "IN_PROGRESS":
       return "text-orange-600";
-    case "COMPLETED":
+    case "WORK_COMPLETED":
+      return "text-green-600";
+    case "CONFIRMED":
       return "text-green-600";
     case "CANCELLED":
       return "text-red-600";
@@ -59,7 +65,8 @@ export default function MatchingHistory() {
     nickname: "",
     matchingId: "",
   });
-  const [firstLoad, setFirstLoad] = useState(true);
+
+  const navigate = useNavigate();
 
   // 유저/전문가 선택 - EXPERT만 사용 가능, 일반 USER는 항상 "user" 뷰
   const [viewType, setViewType] = useState(() => {
@@ -132,7 +139,6 @@ export default function MatchingHistory() {
   // 첫 진입 시 전체 출력 (쿼리스트링 없이)
   useEffect(() => {
     fetchMatchings(null, null, true);
-    setFirstLoad(false);
     // 초기 상태 설정
     setInitialFilters({
       status: null,
@@ -204,7 +210,7 @@ export default function MatchingHistory() {
       <div className="mb-6">
         <div className="p-4 bg-gray-50 rounded-lg grid grid-cols-4 gap-4">
           {/* Status Filter Tabs */}
-          <div className="mb-4 col-span-2">
+          <div className="mb-4 col-span-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">매칭 상태</label>
             <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-full">
               {statusFilters.map((filter) => (
@@ -214,11 +220,11 @@ export default function MatchingHistory() {
               ))}
             </div>
           </div>
-          <div className="flex-1 col-span-1">
+          <div className="flex-1 col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">시작 월</label>
             <input type="month" value={searchFilters.fromMonth} onChange={(e) => handleFilterChange("fromMonth", e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
-          <div className="flex-1 col-span-1">
+          <div className="flex-1 col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">종료 월</label>
             <input type="month" value={searchFilters.toMonth} onChange={(e) => handleFilterChange("toMonth", e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
@@ -278,9 +284,7 @@ export default function MatchingHistory() {
                 {/* Date Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold">
-                      {dayjs(matching.workStartDate).format("YYYY.MM.DD")} ~ {dayjs(matching.workEndDate).format("YYYY.MM.DD")}
-                    </span>
+                    <span className="text-lg font-semibold">{matching.workStartDate == null || matching.workEndDate == null ? "날짜 정보 없음" : `${dayjs(matching.workStartDate).format("YYYY.MM.DD")} ~ ${dayjs(matching.workEndDate).format("YYYY.MM.DD")}`}</span>
                     <span className={`text-sm font-medium ${getStatusColor(matching.matchingStatus)}`}>{getStatusText(matching.matchingStatus)}</span>
                   </div>
                   <span className="text-sm text-gray-500">매칭 ID: {matching.matchingId}</span>
@@ -332,11 +336,8 @@ export default function MatchingHistory() {
                       {/* 상세 페이지 이동 버튼 */}
                       <div className="flex gap-2">
                         {/* 리뷰 작성 버튼 - 전문가로 보기 상태에서는 숨김 */}
-                        {viewType !== "expert" && matching.matchingStatus === "COMPLETED" && (
-                          <button
-                            className="px-4 py-1 bg-white text-gray-700 border border-gray-300 rounded hover:bg-green-50 text-sm"
-                            // TODO: onClick={() => navigate(`/review/write/${matching.matchingId}`)}
-                            type="button">
+                        {viewType !== "expert" && matching.matchingStatus === "CONFIRMED" && (
+                          <button className="px-4 py-1 bg-white text-gray-700 border border-gray-300 rounded hover:bg-green-50 text-sm" onClick={() => navigate(`/review/write/${matching.matchingId}`)} type="button">
                             리뷰 작성
                           </button>
                         )}

@@ -45,5 +45,8 @@ public class ReviewResponseDto {
 
         @Schema(description = "리뷰 작성일 (yyyy-MM-dd HH:mm)", example = "2025-07-25 18:23")
         private String createdAt;
+
+        @Schema(description = "리뷰 이미지 URL", example = "https://firebasestorage.googleapis.com/...")
+        private String reviewImageUrl;
     }
 }

@@ -4,13 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.backend.constant.MatchingStatus;
 import org.example.backend.constant.Role;
+import org.example.backend.constant.Status;
 import org.example.backend.entity.*;
 import org.example.backend.exception.customException.MemberNotFoundException;
 import org.example.backend.firebase.FirebaseImageService;
-import org.example.backend.repository.MatchingRepository;
-import org.example.backend.repository.MemberRepository;
-import org.example.backend.repository.ReviewImageRepository;
-import org.example.backend.repository.ReviewRepository;
+import org.example.backend.repository.*;
 import org.example.backend.review.dto.response.ReviewResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -31,6 +30,7 @@ public class ReviewService {
     private final MemberRepository memberRepository;
     private final MatchingRepository matchingRepository;
     private final ReviewImageRepository reviewImageRepository;
+    private final ContentRepository contentRepository;
 
 
     public void createReview(Long matchingId, String comment, Double rating, MultipartFile image, String email) {
@@ -79,37 +79,33 @@ public class ReviewService {
         }
     }
 
-    public ReviewResponseDto getReviewsByMemberId(Long memberId, Pageable pageable) {
-        log.info("리뷰 조회 시작 - 회원 ID: {}", memberId);
+    public ReviewResponseDto getReviewsByContentId(Long contentId, Pageable pageable) {
+        log.info("컨텐츠 ID {}로 리뷰 조회 시작", contentId);
 
-        // 회원 조회 + 전문가 검증
-        Member expert = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberNotFoundException("해당 회원을 찾을 수 없습니다. ID: " + memberId));
+        Content content = contentRepository.findByIdWithExpertProfile(contentId, Role.EXPERT)
+                .orElseThrow(() -> {
+                    log.warn("컨텐츠를 찾을 수 없거나 해당 멤버가 전문가가 아닙니다. Content ID: {}", contentId);
+                    return new IllegalArgumentException("해당 컨텐츠를 찾을 수 없거나 전문가가 아닙니다.");
+                });
 
-        if (!expert.getRole().equals(Role.EXPERT)) {
-            log.info("해당 회원은 전문가가 아닙니다. 회원 ID: {}", memberId);
-            throw new IllegalArgumentException("해당 회원은 전문가가 아닙니다.");
-        }
-
-        // ExpertProfile 존재 여부 확인
+        Member expert = content.getMember();
         ExpertProfile expertProfile = expert.getExpertProfile();
+
         if (expertProfile == null) {
-            log.info("전문가 프로필이 존재하지 않습니다. 회원 ID: {}", memberId);
+            log.warn("전문가 프로필이 존재하지 않습니다. 멤버 ID: {}", expert.getMemberId());
             throw new IllegalArgumentException("전문가 프로필이 존재하지 않습니다.");
         }
 
-        // 전문가 정보에서 총 리뷰 수와 평점
-        Long reviewCount = expertProfile.getReviewCount() != null ? expertProfile.getReviewCount() : 0L;
-        Double averageRating = expertProfile.getRating() != null ? expertProfile.getRating() : 0.0;
+        Long reviewCount = Optional.ofNullable(expertProfile.getReviewCount()).orElse(0L);
+        Double averageRating = Optional.ofNullable(expertProfile.getRating()).orElse(0.0);
 
-        // 해당 전문가에 대한 리뷰 목록 페이징 조회
-        Page<Review> reviewPage = reviewRepository.findReviewsByExpertMemberId(memberId, pageable);
+        Page<Review> reviewPage = reviewRepository.findReviewsByExpertMemberIdWithDetails(
+                expert.getMemberId(), Status.ACTIVE, pageable);
 
-        // Review -> ReviewDetailDto 변환
         Page<ReviewResponseDto.ReviewDetailDto> reviewDetailPage = reviewPage.map(this::convertToReviewDetailDto);
 
-        log.info("리뷰 조회 완료 - 회원 ID: {}, 총 리뷰 수: {}, 현재 페이지 리뷰 수: {}",
-                memberId, reviewCount, reviewDetailPage.getNumberOfElements());
+        log.info("리뷰 조회 완료 - 컨텐츠 ID: {}, 전문가 멤버 ID: {}, 총 리뷰 수: {}, 현재 페이지 리뷰 수: {}",
+                contentId, expert.getMemberId(), reviewCount, reviewDetailPage.getNumberOfElements());
 
         return new ReviewResponseDto(averageRating, reviewCount, reviewDetailPage);
     }
@@ -119,15 +115,20 @@ public class ReviewService {
      * - reviewer: 매칭의 member (리뷰를 작성한 일반 사용자)
      */
     private ReviewResponseDto.ReviewDetailDto convertToReviewDetailDto(Review review) {
-        // 리뷰 작성자는 매칭의 member (의뢰인)
+        // 리뷰 작성자는 매칭의 member (의뢰인) - 이미 JOIN FETCH됨
         Member reviewer = review.getMatching().getMember();
+
+        // 리뷰 이미지 URL (있는 경우만) - 이미 LEFT JOIN FETCH됨
+        String reviewImageUrl = review.getReviewImage() != null ?
+                review.getReviewImage().getImageUrl() : null;
 
         return ReviewResponseDto.ReviewDetailDto.builder()
                 .reviewId(review.getReviewId())
                 .comment(review.getComment())
                 .rating(review.getRating())
-                .reviewerNickname(reviewer.getNickname())
-                .reviewerProfileImageUrl(reviewer.getProfileImageUrl())
+                .reviewerNickname(reviewer.getNickname()) // 추가 쿼리 없음
+                .reviewerProfileImageUrl(reviewer.getProfileImageUrl()) // 추가 쿼리 없음
+                .reviewImageUrl(reviewImageUrl) // 추가 쿼리 없음 (만약 DTO에 이 필드가 있다면)
                 .createdAt(review.getRegTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
                 .build();
     }

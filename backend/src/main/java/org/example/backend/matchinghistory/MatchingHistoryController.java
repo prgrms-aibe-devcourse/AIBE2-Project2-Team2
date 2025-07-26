@@ -169,6 +169,7 @@ public class MatchingHistoryController {
                                                             "      \"workStartDate\": \"2024-07-01\",\n" +
                                                             "      \"workEndDate\": \"2024-07-15\",\n" +
                                                             "      \"totalPrice\": 500000,\n" +
+                                                            "      \"reviewed\": false,\n" +
                                                             "      \"selectedItems\": [\n" +
                                                             "        {\"itemName\": \"서비스 A\", \"itemPrice\": 30000},\n" +
                                                             "        {\"itemName\": \"서비스 B\", \"itemPrice\": 20000}\n" +

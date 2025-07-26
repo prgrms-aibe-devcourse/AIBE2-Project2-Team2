@@ -172,7 +172,7 @@ public class ExpertService {
         return new ExpertSignupMetaDto(detailFields, skills, regions);
     }
 
-    // 전문가 프로필 조회
+    // 본인 전문가 프로필 조회
     @Transactional(readOnly = true)
     public ExpertProfileDto getExpertProfile(String email) {
         ExpertProfileDto profileDto = expertProfileRepository.findExpertProfileByEmail(email);
@@ -180,6 +180,23 @@ public class ExpertService {
             throw new RuntimeException("해당 이메일의 전문가 프로필이 존재하지 않습니다.");  // 필요시 커스텀 예외로 변경 가능
         }
         return profileDto;
+    }
+
+    // 전문가 프로필 조회
+    @Transactional(readOnly = true)
+    public ExpertProfileDto getExpertProfileById(Long expertId) {
+        // 1. 상세페이지에서 전문가 id로 해당 전문가 정보 조회
+        Member member = memberRepository.findById(expertId)
+                .orElseThrow(() -> new MemberNotFoundException("해당 이메일의 사용자가 존재하지 않습니다."));
+
+        String email = member.getEmail();
+
+        // 2. 전문가라고 조회한 유저가 전문가인지 확인
+        if (member.getRole() != Role.EXPERT) {
+            throw new RuntimeException("해당 이메일의 전문가 프로필이 존재하지 않습니다.");
+        }
+
+        return expertProfileRepository.findExpertProfileByEmail(email);
     }
 
     @Transactional

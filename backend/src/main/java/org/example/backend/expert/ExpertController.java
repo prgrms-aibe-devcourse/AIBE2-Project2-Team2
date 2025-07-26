@@ -161,7 +161,7 @@ public class ExpertController {
     /**
      * 전문가 프로필 조회 API
      * 전문가의 프로필 정보를 조회합니다.
-     * GET /api/expert/profile
+     * GET /api/expert/my-profile
      */
     @Operation(
             summary = "전문가 프로필 조회",
@@ -230,13 +230,21 @@ public class ExpertController {
                     )
             )
     })
-    @GetMapping("/profile")
+    @GetMapping("/my-profile")
     public ResponseEntity<?> getExpertProfile(
             Principal principal
     ) {
         String email = principal.getName();
         log.info("전문가 프로필 조회 요청: {}", email);
         ExpertProfileDto profile = expertService.getExpertProfile(email);
+        return ResponseEntity.ok(profile);
+    }
+
+    @GetMapping("/profile/{expertId}")
+    public ResponseEntity<ExpertProfileDto> getExpertProfileById(
+            @PathVariable Long expertId
+    ) {
+        ExpertProfileDto profile = expertService.getExpertProfileById(expertId);
         return ResponseEntity.ok(profile);
     }
 

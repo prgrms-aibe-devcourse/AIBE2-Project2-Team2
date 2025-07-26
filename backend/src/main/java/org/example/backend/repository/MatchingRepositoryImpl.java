@@ -163,6 +163,7 @@ public class MatchingRepositoryImpl implements MatchingRepositoryCustom {
         QContentImage contentImage = QContentImage.contentImage;
         QEstimateRecord estimateRecord = QEstimateRecord.estimateRecord;
         QSelectedProduct selectedProduct = QSelectedProduct.selectedProduct;
+        QReview review = QReview.review;
 
         // 썸네일 이미지 서브쿼리
         JPQLQuery<String> thumbnailSubQuery = JPAExpressions
@@ -182,7 +183,7 @@ public class MatchingRepositoryImpl implements MatchingRepositoryCustom {
                 .and(StringUtils.hasText(condition.getNickname()) ?
                         content.member.nickname.containsIgnoreCase(condition.getNickname()) : null);
 
-        // 데이터 쿼리
+        // 데이터 쿼리 (리뷰 정보 추가)
         JPQLQuery<Tuple> query = queryFactory
                 .select(
                         matching.matchingId,
@@ -195,7 +196,8 @@ public class MatchingRepositoryImpl implements MatchingRepositoryCustom {
                         matching.endDate,
                         estimateRecord.totalPrice,
                         selectedProduct.name,
-                        selectedProduct.price
+                        selectedProduct.price,
+                        review.reviewId.isNotNull() // 리뷰 존재 여부
                 )
                 .from(matching)
                 .join(matching.member, user)
@@ -203,6 +205,7 @@ public class MatchingRepositoryImpl implements MatchingRepositoryCustom {
                 .join(content.member, expert)
                 .leftJoin(matching.estimateRecord, estimateRecord)
                 .leftJoin(estimateRecord.selectedProducts, selectedProduct)
+                .leftJoin(matching.review, review) // 리뷰 테이블 조인
                 .where(where)
                 .orderBy(matching.matchingId.desc())
                 .offset(pageable.getOffset())
@@ -228,6 +231,7 @@ public class MatchingRepositoryImpl implements MatchingRepositoryCustom {
             MatchingSummaryExpertDto dto = dtoMap.get(matchingId);
 
             Long totalPriceLong = t.get(estimateRecord.totalPrice);
+            Boolean hasReview = t.get(review.reviewId.isNotNull()); // 리뷰 존재 여부 가져오기
 
             if (dto == null) {
                 dto = MatchingSummaryExpertDto.builder()
@@ -240,6 +244,7 @@ public class MatchingRepositoryImpl implements MatchingRepositoryCustom {
                         .workStartDate(t.get(matching.startDate))
                         .workEndDate(t.get(matching.endDate))
                         .totalPrice(totalPriceLong != null ? totalPriceLong.intValue() : null)
+                        .reviewed(hasReview != null && hasReview) // 리뷰 존재 여부 설정
                         .selectedItems(new ArrayList<>())
                         .build();
                 dtoMap.put(matchingId, dto);

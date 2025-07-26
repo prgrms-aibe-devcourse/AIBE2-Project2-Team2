@@ -29,7 +29,7 @@ export default function Profile() {
 
   useEffect(() => {
     axiosInstance
-      .get("/api/expert/profile")
+      .get("/api/expert/my-profile")
       .then((res) => {
         setUserInfo(res.data);
       })
