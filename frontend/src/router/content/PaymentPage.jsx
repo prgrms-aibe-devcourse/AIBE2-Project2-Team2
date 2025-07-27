@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import axios from '../../lib/axios';
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import axios from "../../lib/axios";
+import toast from "react-hot-toast";
 
 function PaymentPage() {
   const { id } = useParams();
@@ -19,7 +20,7 @@ function PaymentPage() {
         const contentRes = await axios.get(`/api/content/${id}`);
         setContent(contentRes.data);
       } catch (err) {
-        console.error('API 요청 에러:', err);
+        console.error("API 요청 에러:", err);
       }
       setLoading(false);
     }
@@ -31,16 +32,16 @@ function PaymentPage() {
     const isMulti = !!(q.multipleChoice ?? q.isMultipleChoice ?? q.is_multiple_choice);
     if (isMulti) {
       const key = `${qIdx}-${oIdx}`;
-      setSelectedOptions(prev => ({ ...prev, [key]: !prev[key] }));
+      setSelectedOptions((prev) => ({ ...prev, [key]: !prev[key] }));
     } else {
       if (selectedOptions[qIdx] === oIdx) {
-        setSelectedOptions(prev => {
+        setSelectedOptions((prev) => {
           const next = { ...prev };
           delete next[qIdx];
           return next;
         });
       } else {
-        setSelectedOptions(prev => ({ ...prev, [qIdx]: oIdx }));
+        setSelectedOptions((prev) => ({ ...prev, [qIdx]: oIdx }));
       }
     }
   };
@@ -80,44 +81,44 @@ function PaymentPage() {
     setPayResult(null);
     try {
       // 1. 매칭 생성 (실제 엔티티 구조에 맞게)
-      const matchingRes = await axios.post('/api/matching', {
+      const matchingRes = await axios.post("/api/matching", {
         contentId: id,
-        userId: 'user', // 실제 로그인 유저 ID로 대체
-        status: 'WAITING_PAYMENT', // 예시값, 실제 Enum에 맞게
+        userId: "user", // 실제 로그인 유저 ID로 대체
+        status: "WAITING_PAYMENT", // 예시값, 실제 Enum에 맞게
         startDate: new Date().toISOString().slice(0, 10),
-        endDate: null
+        endDate: null,
       });
       const matchingId = matchingRes.data.matchingId;
-      if (!matchingId) throw new Error('매칭 생성 실패');
+      if (!matchingId) throw new Error("매칭 생성 실패");
 
       // 2. 견적 저장
       await axios.post(`/api/matching/${matchingId}/estimate`, {
-        selectedOptionIds: selectedOptionIds
+        selectedOptionIds: selectedOptionIds,
       });
 
       // 3. 카카오페이 결제 준비 API 호출
       const readyRes = await axios.post(`/api/payment/kakao/ready`, null, {
         params: {
           matchingId: matchingId,
-          userId: 'user' // 실제 서비스에서는 로그인 유저 ID로 대체
-        }
+          userId: "user", // 실제 서비스에서는 로그인 유저 ID로 대체
+        },
       });
       let kakaoRes;
       try {
-        kakaoRes = typeof readyRes.data === 'string' ? JSON.parse(readyRes.data) : readyRes.data;
+        kakaoRes = typeof readyRes.data === "string" ? JSON.parse(readyRes.data) : readyRes.data;
       } catch {
-        alert('카카오페이 결제 준비 응답 파싱 실패');
+        toast.error("카카오페이 결제 준비 실패");
         setPaying(false);
         return;
       }
       if (kakaoRes.next_redirect_pc_url) {
         window.location.href = kakaoRes.next_redirect_pc_url;
       } else {
-        alert('카카오페이 결제 URL이 없습니다.');
+        toast.error("카카오페이 결제 URL이 없습니다.");
       }
     } catch (err) {
       setPayResult({ success: false, error: err });
-      alert('결제 저장 또는 카카오페이 준비에 실패했습니다.\n' + (err?.response?.data?.message || err.message));
+      toast.error("결제 저장 준비에 실패했습니다.");
       setPaying(false);
     }
   };
@@ -149,7 +150,9 @@ function PaymentPage() {
               <div className="font-bold mb-2">기본항목</div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="font-semibold">상업적용도 녹음</span>
-                <span className="text-xs text-gray-400 ml-4">작업일 <b>6일</b></span>
+                <span className="text-xs text-gray-400 ml-4">
+                  작업일 <b>6일</b>
+                </span>
                 <span className="font-bold ml-4">{(content.budget || 0).toLocaleString()}원</span>
               </div>
             </div>
@@ -172,26 +175,15 @@ function PaymentPage() {
                               checked = !!selectedOptions[key];
                             } else {
                               checked = selectedOptions[qIdx] === oIdx;
-                              if (
-                                selectedOptions[qIdx] !== undefined &&
-                                selectedOptions[qIdx] !== oIdx
-                              ) {
+                              if (selectedOptions[qIdx] !== undefined && selectedOptions[qIdx] !== oIdx) {
                                 disabled = true;
                               }
                             }
                             return (
                               <li key={oIdx} className="flex items-center gap-2 mb-1">
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  disabled={disabled}
-                                  onChange={() => handleOptionSelect(qIdx, oIdx, q)}
-                                  className="accent-yellow-400"
-                                />
+                                <input type="checkbox" checked={checked} disabled={disabled} onChange={() => handleOptionSelect(qIdx, oIdx, q)} className="accent-yellow-400" />
                                 <span>{opt.optionText}</span>
-                                {opt.additionalPrice > 0 && (
-                                  <span className="text-blue-500 font-semibold ml-2">{opt.additionalPrice.toLocaleString()}원</span>
-                                )}
+                                {opt.additionalPrice > 0 && <span className="text-blue-500 font-semibold ml-2">{opt.additionalPrice.toLocaleString()}원</span>}
                                 <span className="text-xs text-gray-400 ml-2">작업일 +1일</span>
                               </li>
                             );
@@ -224,18 +216,10 @@ function PaymentPage() {
               </div>
               <div className="text-xs text-gray-400 mt-2">* VAT 포함</div>
             </div>
-            <button
-              className={`w-full bg-yellow-400 py-3 rounded font-bold text-lg ${paying ? 'opacity-60 cursor-not-allowed' : ''}`}
-              onClick={handlePay}
-              disabled={paying}
-            >
-              {paying ? '결제 중...' : '결제하기'}
+            <button className={`w-full bg-yellow-400 py-3 rounded font-bold text-lg ${paying ? "opacity-60 cursor-not-allowed" : ""}`} onClick={handlePay} disabled={paying}>
+              {paying ? "결제 중..." : "결제하기"}
             </button>
-            {payResult && (
-              <div className={`mt-4 text-center text-sm ${payResult.success ? 'text-green-600' : 'text-red-500'}`}>
-                {payResult.success ? '결제 내역이 저장되었습니다.' : '결제 저장 실패'}
-              </div>
-            )}
+            {payResult && <div className={`mt-4 text-center text-sm ${payResult.success ? "text-green-600" : "text-red-500"}`}>{payResult.success ? "결제 내역이 저장되었습니다." : "결제 저장 실패"}</div>}
           </aside>
         </div>
       </div>
@@ -243,4 +227,4 @@ function PaymentPage() {
   );
 }
 
-export default PaymentPage; 
+export default PaymentPage;

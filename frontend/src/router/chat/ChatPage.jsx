@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 import { Client } from "@stomp/stompjs";
-import '../../style/ChatPage.css';
+import "../../style/ChatPage.css";
 
 import axiosInstance from "../../lib/axios.js";
-import {useUserInfoStore} from "../../store/userInfo.js";
+import { useUserInfoStore } from "../../store/userInfo.js";
 
 /*
 
@@ -21,7 +22,7 @@ import {useUserInfoStore} from "../../store/userInfo.js";
         navigate(`/chat/${room.roomId}`); // ✅ 채팅방으로 이동
       } catch (err) {
         console.error("❌ 채팅방 생성 실패:", err);
-        alert("채팅방 생성 실패");
+        toast.error("채팅방 생성 실패");
       }
     };
 */
@@ -153,11 +154,7 @@ const ChatPage = () => {
     msgs.forEach((msg) => {
       const time = new Date(msg.sendAt);
       const timeSlot = `${time.getFullYear()}-${time.getMonth()}-${time.getDate()} ${time.getHours()}:${time.getMinutes()}`;
-      if (
-        !currentGroup ||
-        currentGroup.senderEmail !== msg.senderEmail ||
-        currentGroup.timeSlot !== timeSlot
-      ) {
+      if (!currentGroup || currentGroup.senderEmail !== msg.senderEmail || currentGroup.timeSlot !== timeSlot) {
         if (currentGroup) groups.push(currentGroup);
         currentGroup = {
           senderEmail: msg.senderEmail,
@@ -183,33 +180,19 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="container">
+    <div className="container mb-8">
       {/* ✅ 좌측: 채팅방 리스트 */}
       <div className="sidebar">
         <h2 className="sidebarTitle">내 채팅방</h2>
         <ul className="roomList">
           {rooms.map((room) => (
-            <li
-              key={room.roomId}
-              className={`roomItem${room.roomId === currentRoom ? " activeRoom" : ""}`}
-              onClick={() => handleSelectRoom(room.roomId)}
-            >
-              <img
-                src={room.opponentProfileImage || "/default-profile.png"}
-                alt="상대 프로필"
-                className="roomAvatar"
-              />
+            <li key={room.roomId} className={`roomItem${room.roomId === currentRoom ? " activeRoom" : ""}`} onClick={() => handleSelectRoom(room.roomId)}>
+              <img src={room.opponentProfileImage || "/default-profile.png"} alt="상대 프로필" className="roomAvatar" />
               <div style={{ flex: 1 }}>
-                <div className="roomName">
-                  {room.opponentName || `채팅방 #${room.roomId}`}
-                </div>
-                <div className="roomLastMsg">
-                  {room.lastMessage || "최근 메시지 없음"}
-                </div>
+                <div className="roomName">{room.opponentName || `채팅방 #${room.roomId}`}</div>
+                <div className="roomLastMsg">{room.lastMessage || "최근 메시지 없음"}</div>
               </div>
-              {room.unreadCount > 0 && (
-                <span className="unreadBadge">{room.unreadCount}</span>
-              )}
+              {room.unreadCount > 0 && <span className="unreadBadge">{room.unreadCount}</span>}
             </li>
           ))}
         </ul>
@@ -219,10 +202,7 @@ const ChatPage = () => {
       <div className="chatSection">
         {currentRoom ? (
           <>
-            <div className="chatHeader">
-              {rooms.find((r) => r.roomId === currentRoom)?.opponentName ||
-                `채팅방 #${currentRoom}`}
-            </div>
+            <div className="chatHeader">{rooms.find((r) => r.roomId === currentRoom)?.opponentName || `채팅방 #${currentRoom}`}</div>
             <div className="messagesContainer">
               {groupMessages(messages).map((group, idx) => {
                 const isMine = group.senderEmail === myEmail;
@@ -234,23 +214,15 @@ const ChatPage = () => {
                     style={{
                       alignItems: isMine ? "flex-end" : "flex-start",
                       justifyContent: isMine ? "flex-end" : "flex-start",
-                    }}
-                  >
-                    {!isMine && (
-                      <img
-                        src={opponent?.opponentProfileImage || "/default-profile.png"}
-                        alt="상대 프로필"
-                        className="msgAvatar"
-                      />
-                    )}
+                    }}>
+                    {!isMine && <img src={opponent?.opponentProfileImage || "/default-profile.png"} alt="상대 프로필" className="msgAvatar" />}
                     <div
                       style={{
                         maxWidth: "70%",
                         display: "flex",
                         flexDirection: "column",
                         alignItems: isMine ? "flex-end" : "flex-start",
-                      }}
-                    >
+                      }}>
                       {group.messages.map((m, i) => {
                         const isLast = i === group.messages.length - 1;
                         const time = new Date(m.sendAt).toLocaleTimeString([], {
@@ -265,13 +237,10 @@ const ChatPage = () => {
                                 background: isMine ? "#ffeb33" : "#fff",
                                 borderTopRightRadius: isMine ? "4px" : "16px",
                                 borderTopLeftRadius: isMine ? "16px" : "4px",
-                              }}
-                            >
+                              }}>
                               {m.message}
                             </div>
-                            {isLast && (
-                              <div className="messageTime">{time}</div>
-                            )}
+                            {isLast && <div className="messageTime">{time}</div>}
                           </div>
                         );
                       })}
@@ -282,14 +251,7 @@ const ChatPage = () => {
               <div ref={messagesEndRef} />
             </div>
             <div className="inputContainer">
-              <input
-                type="text"
-                placeholder="메시지를 입력하세요..."
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="inputField"
-              />
+              <input type="text" placeholder="메시지를 입력하세요..." value={inputMessage} onChange={(e) => setInputMessage(e.target.value)} onKeyDown={handleKeyDown} className="inputField" />
               <button onClick={sendMessage} className="sendButton">
                 ✈️
               </button>

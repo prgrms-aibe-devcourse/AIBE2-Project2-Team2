@@ -76,7 +76,8 @@ public class SecurityConfig {
                         "/swagger-ui/**",
                         "/swagger-ui.html",
                         "/api/auth/kakao/callback",
-                        "/error"
+                        "/error",
+                        "/api/categories/**"
                 ).permitAll()
                 .antMatchers("/admin/**").hasRole("ADMIN")
                 .antMatchers("/api/matching-histories/user").hasAnyRole("USER", "EXPERT")

@@ -8,7 +8,7 @@ export default function Header() {
   const { userInfo } = useUserInfoStore();
   // 메뉴
   // '컨텐츠 등록하기'는 전문가만 노출
-  const menuList = [...(userInfo?.role === "EXPERT" ? [{ name: "컨텐츠 등록하기", path: "/content/create", icon: "xi-file-add xi-x" }] : []), { name: "채팅", path: "/chat", icon: "xi-forum xi-x" }];
+  const menuList = [...(userInfo?.role === "EXPERT" ? [{ name: "컨텐츠 등록하기", path: "/content/create" }] : []), { name: "채팅", path: "/chat" }];
 
   const profileMenuList = [
     { name: "전문가 프로필 관리", path: "/expert/profile" },
@@ -37,17 +37,18 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex-1 md:flex md:items-center md:gap-12">
             <Link className="block text-teal-600" to="/">
-              <span className="text-2xl font-bold">Logo</span>
+              <img className="w-12 h-12" src="/logo.png" alt="고수의 민족" />
+              {/* <span className="text-2xl font-bold">고수의 민족</span> */}
             </Link>
           </div>
 
           <div className="md:flex md:items-center md:gap-12">
             <nav aria-label="Global" className="hidden md:block">
-              <ul className="flex items-center gap-6 text-sm">
+              <ul className="flex items-center gap-3 text-sm">
                 {menuList.map((menu) => (
                   <li key={menu.name}>
-                    <Link className="text-gray-500 transition hover:text-gray-500/75" to={menu.path}>
-                      <i className={menu.icon}></i>
+                    <Link className="font-semibold px-4 py-2 rounded transition text-[#3f9389] hover:bg-[#e6f4f2] hover:text-[#2b6e63]" to={menu.path}>
+                      {menu.name}
                     </Link>
                   </li>
                 ))}

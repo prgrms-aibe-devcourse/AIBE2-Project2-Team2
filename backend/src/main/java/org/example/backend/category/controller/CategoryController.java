@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 
 import org.example.backend.category.dto.CategoryTreeDto;
 import org.example.backend.category.service.CategoryService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,5 +41,30 @@ public class CategoryController {
     @GetMapping("/tree")
     public List<CategoryTreeDto> getCategoryTree() {
         return categoryService.getCategoryTree();
+    }
+
+    /**
+     * 특정 카테고리의 모든 최하위(leaf) 카테고리 ID들을 조회
+     * 컨텐츠는 항상 최하위 카테고리에만 연결되므로, 중간 노드는 제외
+     * @param categoryId 상위 카테고리 ID
+     * @return 해당 카테고리 하위의 최하위 카테고리 ID 리스트
+     */
+    @GetMapping("/{categoryId}/leaf-category-ids")
+    public ResponseEntity<List<Long>> getLeafCategoryIds(@PathVariable Long categoryId) {
+        List<Long> leafCategoryIds = categoryService.getAllSubCategoryIds(categoryId);
+        return ResponseEntity.ok(leafCategoryIds);
+    }
+
+    /**
+     * 특정 카테고리로 컨텐츠 조회 (추후 ContentController로 이동 예정)
+     * @param categoryId 카테고리 ID
+     * @return 해당 카테고리와 하위 카테고리의 모든 컨텐츠
+     */
+    @GetMapping("/{categoryId}/contents")
+    public ResponseEntity<String> getContentsByCategory(@PathVariable Long categoryId) {
+        List<Long> categoryIds = categoryService.getAllSubCategoryIds(categoryId);
+
+        // TODO: ContentService.getContentsByCategoryIds(categoryIds) 호출
+        return ResponseEntity.ok("카테고리 ID들: " + categoryIds.toString() + " 로 컨텐츠 조회 예정");
     }
 }

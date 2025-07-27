@@ -1,6 +1,6 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../lib/axios.js";
 
 // --- MOCK DATA ---
 // const mockCategoryContentResponse = {
@@ -59,7 +59,7 @@ const CategoryPage = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axios.get("/api/categories/tree");
+        const res = await axiosInstance.get("/api/categories/tree");
         setCategoryTree(res.data);
       } catch (err) {
         console.error("카테고리 트리 불러오기 실패:", err);
@@ -84,7 +84,7 @@ const CategoryPage = () => {
       try {
         // MOCK: 실제 API 대신 mock 데이터 사용
         const targetId = subCategoryId || categoryId;
-        const res = await axios.get(`/api/public/content/category/${targetId}`, {
+        const res = await axiosInstance.get(`/api/search/categories/${targetId}`, {
           params: {
             page: currentPage,
             size: 12,
@@ -157,7 +157,7 @@ const CategoryPage = () => {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 flex flex-col justify-start min-h-[800px] w-200">
+      <main className="flex-1 flex flex-col justify-start min-h-[1800px] w-[1000]">
         <h2 className="text-2xl sm:text-3xl font-bold mb-6 tracking-tight">
           {mainCategoryName}
           {subCategoryName ? ` > ${subCategoryName}` : ""} 관련 서비스
@@ -183,8 +183,9 @@ const CategoryPage = () => {
               services.map((service) => (
                 <div key={service.contentId} className="group bg-white rounded-2xl transition-all duration-300 p-4 cursor-pointer h-auto flex flex-col gap-1">
                   {/* 썸네일 */}
-                  <div className="overflow-hidden rounded-xl aspect-[4/3] bg-gray-100 mb-2">
-                    <img src={service.contentUrl || "/default-image.jpg"} alt={service.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <div className="relative overflow-hidden rounded-xl aspect-[4/3] bg-gray-100 mb-2">
+                    <img src={service.contentThumbnailUrl || "/default-image.jpg"} alt={service.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <span className="absolute bottom-2 left-2 bg-white bg-opacity-80 text-xs text-gray-700 px-2 py-1 rounded-md">{service.categoryName}</span>
                   </div>
                   {/* 제목 */}
                   <h3 className="text-base font-bold text-gray-900 leading-tight text-ellipsis overflow-hidden">{service.title}</h3>

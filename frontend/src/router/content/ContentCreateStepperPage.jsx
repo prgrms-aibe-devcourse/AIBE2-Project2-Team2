@@ -156,13 +156,13 @@ const ContentCreateStepperPage = () => {
   const handleSubmit = async () => {
     //폼 데이터 검사
     if (!form.title || !form.categoryId || !form.budget || !form.description) {
-      alert("모든 필드를 채워주세요.");
+      toast.error("모든 필수 정보를 입력해주세요.");
       return;
     }
 
     // 이미지와 썸네일 필수 검사
     if (!form.thumbnail || !form.images || form.images.length === 0) {
-      alert("썸네일 이미지와 상세 이미지를 모두 등록해야 제출할 수 있습니다.");
+      toast.error("이미지를 모두 등록해주세요.");
       return;
     }
     setLoading(true);

@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface ContentRepository extends JpaRepository<Content, Long> {
+public interface ContentRepository extends JpaRepository<Content, Long>, ContentRepositoryCustom {
     List<Content> findByStatus(Status status);
 
     @Query("SELECT c FROM Content c " +
