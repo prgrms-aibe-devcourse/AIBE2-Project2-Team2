@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "../../lib/axios";
 import axiosInstance from "../../lib/axios";
+import ImageModal from "../../components/modal/ImageModal";
+import ShareModal from "../../components/modal/ShareModal";
 
-import { Star, ExternalLink, Users, GraduationCap, Calendar, Globe, Facebook, Instagram, Twitter, Plus } from "lucide-react";
+import { Star, ExternalLink, Users, GraduationCap, Calendar, Globe, Facebook, Instagram, Twitter, Plus, Share2 } from "lucide-react";
 
 // 리뷰 응답 예시
 // {
@@ -15,7 +16,6 @@ import { Star, ExternalLink, Users, GraduationCap, Calendar, Globe, Facebook, In
 const TABS = [
   { key: "desc", label: "서비스 설명" },
   { key: "price", label: "가격 정보" },
-  { key: "faq", label: "자주 묻는 질문" },
   { key: "expert", label: "전문가 정보" },
   { key: "review", label: "리뷰" },
 ];
@@ -23,15 +23,112 @@ const TABS = [
 function ContentDetailPage() {
   const { id } = useParams();
   const [content, setContent] = useState(null);
-  const [selectedTab, setSelectedTab] = useState("portfolio");
+  const [selectedTab, setSelectedTab] = useState("desc");
   const [loading, setLoading] = useState(true);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviews, setReviews] = useState([]);
-  const [totalRating, setTotalRating] = useState(null);
-  const [totalReviewCount, setTotalReviewCount] = useState(null);
   const [expertProfile, setExpertProfile] = useState(null);
   const [expertLoading, setExpertLoading] = useState(false);
+  const [selectedOptions, setSelectedOptions] = useState({}); // 선택된 옵션들을 관리
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const navigate = useNavigate();
+  const [otherContents, setOtherContents] = useState([]);
+
+  // ✅ Content!! 에서 채팅방 생성하는 함수
+  const handleCreateChatRoom = async (targetEmail) => {
+    try {
+      const res = await axiosInstance.post("/api/chat/rooms/find-or-create", {
+        targetEmail: targetEmail,
+      });
+
+      const room = res.data; // ChatRoomDto
+      navigate(`/chat/${room.roomId}`); // ✅ 채팅방으로 이동
+    } catch (err) {
+      console.error("❌ 채팅방 생성 실패:", err);
+      alert("채팅방 생성 실패");
+    }
+  };
+
+  // 이미지 클릭 핸들러
+  const handleImageClick = (index) => {
+    setCurrentImageIndex(index);
+    setImageModalOpen(true);
+  };
+
+  // 옵션 선택 핸들러
+  const handleOptionChange = (questionId, optionId, isMultipleChoice) => {
+    setSelectedOptions(prev => {
+      const newSelected = { ...prev };
+      
+      if (isMultipleChoice) {
+        // 체크박스: 복수 선택 가능
+        if (!newSelected[questionId]) {
+          newSelected[questionId] = [];
+        }
+        const currentOptions = newSelected[questionId];
+        
+        if (currentOptions.includes(optionId)) {
+          // 이미 선택된 옵션 제거
+          newSelected[questionId] = currentOptions.filter(id => id !== optionId);
+        } else {
+          // 새로운 옵션 추가
+          newSelected[questionId] = [...currentOptions, optionId];
+        }
+      } else {
+        // 라디오: 단일 선택
+        newSelected[questionId] = [optionId];
+      }
+      
+      console.log('선택된 옵션들:', newSelected);
+      return newSelected;
+    });
+  };
+
+  // 총 가격 계산 함수
+  const calculateTotalPrice = () => {
+    if (!content) return 0;
+    
+    let total = content.budget || 0;
+    
+    // 선택된 옵션들의 추가 비용 계산
+    Object.values(selectedOptions).forEach(optionIds => {
+      optionIds.forEach(optionId => {
+        content.questions?.forEach(question => {
+          const option = question.options.find(opt => opt.optionId === optionId);
+          if (option) {
+            total += option.additionalPrice || 0;
+          }
+        });
+      });
+    });
+    
+    console.log('총 가격 계산:', { total, selectedOptions, contentBudget: content.budget });
+    return total;
+  };
+
+  // 추가 비용 계산 함수
+  const calculateAdditionalPrice = () => {
+    if (!content) return 0;
+    
+    let additionalTotal = 0;
+    
+    // 선택된 옵션들의 추가 비용만 계산
+    Object.values(selectedOptions).forEach(optionIds => {
+      optionIds.forEach(optionId => {
+        content.questions?.forEach(question => {
+          const option = question.options.find(opt => opt.optionId === optionId);
+          if (option) {
+            additionalTotal += option.additionalPrice || 0;
+          }
+        });
+      });
+    });
+    
+    console.log('추가 비용 계산:', { additionalTotal, selectedOptions });
+    return additionalTotal;
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -56,12 +153,8 @@ function ContentDetailPage() {
       const res = await axiosInstance.get(`/api/reviews/${id}`);
       const data = res.data;
       setReviews(data.reviews?.content || []);
-      setTotalRating(data.totalRating);
-      setTotalReviewCount(data.totalReviewCount);
     } catch (err) {
       setReviews([]);
-      setTotalRating(null);
-      setTotalReviewCount(null);
       console.error("리뷰 요청 에러:", err);
     }
     setReviewLoading(false);
@@ -77,19 +170,28 @@ function ContentDetailPage() {
     // eslint-disable-next-line
   }, [selectedTab]);
 
-  // 전문가 프로필 요청
-  const handleExpertProfileRequest = async () => {
-    if (!content || !content.expertId) return;
+  // 전문가 프로필 미리 불러오기 (content.expertId가 바뀔 때마다)
+  useEffect(() => {
+    if (!content?.expertId) return;
     setExpertLoading(true);
-    try {
-      const res = await axiosInstance.get(`/api/expert/profile/${content.expertId}`);
-      setExpertProfile(res.data);
-    } catch (err) {
-      setExpertProfile(null);
-      console.error("전문가 프로필 요청 에러:", err);
+    axiosInstance.get(`/api/expert/profile/${content.expertId}`)
+      .then(res => setExpertProfile(res.data))
+      .catch(() => setExpertProfile(null))
+      .finally(() => setExpertLoading(false));
+  }, [content?.expertId]);
+
+  // 전문가 정보 탭 클릭 시 별도 fetch 없이 expertProfile만 사용하도록 handleExpertProfileRequest 함수 내 내용 제거
+  const handleExpertProfileRequest = async () => {};
+
+  useEffect(() => {
+    if (content?.expertId) {
+      axiosInstance.get(`/api/content/expert/${content.expertId}`)
+        .then(res => {
+          // 현재 contentId는 제외
+          setOtherContents(res.data.filter(c => c.contentId !== content.contentId));
+        });
     }
-    setExpertLoading(false);
-  };
+  }, [content?.expertId, content?.contentId]);
 
   if (loading || !content) {
     return <div className="flex justify-center items-center h-96">로딩 중...</div>;
@@ -99,35 +201,58 @@ function ContentDetailPage() {
     <div className="w-full flex flex-col items-center mb-8">
       {/* 상단: 카테고리, 제목, 찜/공유/스크랩, 썸네일 */}
       <div className="w-full max-w-6xl">
-        <div className="text-sm text-gray-400 mb-2">디자인 &gt; 로고 디자인</div>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="bg-black text-white text-xs px-2 py-1 rounded">prime</span>
-          <span className="text-3xl font-bold">{content.title}</span>
-          <span className="ml-2 text-yellow-500 font-bold">★ 4.9</span>
-          <span className="text-gray-400">(1446)</span>
-          <span className="ml-2 text-gray-400">♡ 2,062</span>
-          <span className="ml-2 text-gray-400 cursor-pointer">공유</span>
+        <div className="text-sm text-gray-400 mb-2">
+          {content.categoryName ? content.categoryName : "카테고리"}
         </div>
-        <div className="flex gap-4 mt-2">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-3xl font-bold">{content.title}</span>        
+          <span
+            className="ml-2 text-gray-400 cursor-pointer hover:text-gray-600 transition-colors flex items-center"
+            onClick={() => setShareModalOpen(true)}
+            title="공유하기"
+          >
+            <Share2 className="w-5 h-5" />
+          </span>
+        </div>
+        <div className="w-full flex gap-4 mt-2">
           {/* 전문가 정보/문의 버튼 */}
-          <div className="flex items-center gap-2 bg-white rounded-lg px-4 py-2 shadow">
-            <img src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png" alt="프로필" className="w-10 h-10 rounded-full border" />
+          <div className="flex-1 flex items-center gap-2 bg-white rounded-lg px-4 py-2 shadow">
+            <img src={content.expertProfileImageUrl || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"} alt="프로필" className="w-10 h-10 rounded-full" />
             <div>
-              <div className="font-semibold">브랜딩보울</div>
-              <div className="text-xs text-gray-400">연락 가능 시간: 10시~23시 | 평균 응답 시간: 10분 이내 | 세금계산서 발행 가능</div>
+              <div className="font-semibold">{content.expertNickname || "전문가"}</div>
+              <div className="text-xs text-gray-400">
+                {expertProfile ? (
+                  <>
+                    {expertProfile.introduction || "-"}
+                    {" | 총 경력 : "}
+                    {expertProfile.totalCareerYears ? `${expertProfile.totalCareerYears}년` : "-"}
+                    {" | 기술 스택 : "}
+                    {expertProfile.skills && expertProfile.skills.length > 0
+                      ? expertProfile.skills.map(s => `${s.name}${s.category ? `(${s.category})` : ''}`).join(", ")
+                      : "-"}
+                  </>
+                ) : (
+                  <span className="text-gray-300">전문가 정보 불러오는 중...</span>
+                )}
+              </div>
             </div>
-            <button className="ml-4 bg-gray-100 px-4 py-2 rounded font-semibold">문의하기</button>
+            <button 
+              className="ml-4 bg-gray-100 px-4 py-2 rounded font-semibold hover:bg-gray-200 transition-colors cursor-pointer"
+              onClick={() => handleCreateChatRoom(content.expertEmail)}
+            >
+              문의하기
+            </button>
           </div>
           {/* 썸네일 */}
           <div className="w-80 h-48 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">{content.contentUrl ? <img src={content.contentUrl} alt="대표 이미지" className="object-cover w-full h-full" /> : <span className="text-gray-400">썸네일 없음</span>}</div>
         </div>
-        {/* 프라임/혜택 안내 */}
+        {/* 안내 사항 */}
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-6 flex items-center gap-4">
-          <div className="bg-black text-white text-xs px-2 py-1 rounded">prime</div>
+          <div className="bg-black text-white text-xs px-2 py-1 rounded">안내 사항</div>
           <div className="text-sm">
-            이 서비스는 크몽이 엄선한 상위 2% 전문가가 제공합니다.
+            가격 및 기타 문의 사항이 있으신 경우 상단 혹은 우측 전문가에게 문의하기 버튼을 통해 문의해주세요.
             <br />
-            <span className="text-blue-600 font-semibold">프리미엄의 고객 후기가 검증된 퀄리티</span> | <span className="text-blue-600 font-semibold">경력 이상의 인사이트를 담은 서비스</span> | <span className="text-blue-600 font-semibold">다양한 업종에 맞춘 맞춤 전문성</span>
+            <span className="text-blue-600 font-semibold">고객 후기가 검증된 퀄리티</span> | <span className="text-blue-600 font-semibold">경력 이상의 인사이트를 담은 서비스</span> | <span className="text-blue-600 font-semibold">다양한 업종에 맞춘 맞춤 전문성</span>
           </div>
         </div>
       </div>
@@ -147,38 +272,49 @@ function ContentDetailPage() {
           <div className="mt-4">
             {selectedTab === "desc" && (
               <div>
-                <h2 className="text-lg font-bold mb-2">서비스 설명</h2>
+
+                {/* Content 이미지들 */}
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold mb-2">서비스 이미지</h3>
+                  {content.imageUrls && content.imageUrls.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {content.imageUrls.map((imageUrl, index) => (
+                        <div key={index} className="relative group cursor-pointer" onClick={() => handleImageClick(index)}>
+                          <img 
+                            src={imageUrl} 
+                            alt={`서비스 이미지 ${index + 1}`} 
+                            className="w-full h-48 object-cover rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-400 text-center py-8 bg-gray-50 rounded-lg">
+                      이미지가 없습니다.
+                    </div>
+                  )}
+                </div>
+                <h2 className="text-lg font-bold mb-2">서비스 설명</h2>          
                 <div className="whitespace-pre-line text-gray-800 bg-gray-50 p-4 rounded mb-4">{content.description}</div>
-                <div className="mt-4 text-center text-lg font-bold">
-                  <span className="text-blue-700">브랜딩보울</span>은 어떻게 <span className="text-blue-700">고객만족도 100%</span>를 유지할까요?
-                  <br />
-                  맘에 들지 않으면 <span className="text-blue-700">전액 환불</span> 해드리기 때문입니다.
-                  <br />
-                  미친 자신감을 가진 이유, <span className="text-blue-700">3분</span>이면 확인 가능합니다.
-                </div>
-                <div className="mt-4 text-center font-bold">
-                  네이밍부터 로고까지 한번에!!!
-                  <br />
-                  상담만 하셔도,
-                  <br />
-                  "로고 기획 함께 고민 해드립니다"
-                </div>
-                <div className="mt-4 text-center font-bold">
-                  2025.07.15 ~ 2025.07.31
-                  <br />
-                  30% 할인 이벤트 진행중
-                </div>
-                <div className="mt-4 text-center">
-                  <span className="line-through text-gray-400 mr-2">디럭스 220,000원</span>
-                  <span className="font-bold text-blue-700">179,000원</span>
-                  <br />
-                  <span className="line-through text-gray-400 mr-2">프리미엄 320,000원</span>
-                  <span className="font-bold text-blue-700">260,000원</span>
-                </div>
-                <div className="mt-4 text-center text-xs text-blue-600 underline cursor-pointer">
-                  상담하기
-                  <br />
-                  http://kmong.com/inbox/브랜딩보울
+                <div className="mt-8">
+                  <h3 className="font-bold mb-2">이 전문가의 다른 서비스 보기</h3>
+                  <div className="flex gap-4 flex-wrap">
+                    {otherContents.length === 0 ? (
+                      <div className="text-gray-400">다른 서비스가 없습니다.</div>
+                    ) : (
+                      otherContents.map(c => (
+                        <div key={c.contentId} className="p-4 cursor-pointer hover:bg-gray-50 w-64"
+                             onClick={() => navigate(`/content/${c.contentId}`)}>
+                          {c.contentUrl && (
+                            <img src={c.contentUrl} alt="썸네일" className="w-full h-32 object-cover rounded mb-2" />
+                          )}
+                          <div className="font-semibold truncate mb-1 text-base">{c.title}</div>
+                          <div className="text-sm text-blue-600 font-bold mb-1">{c.budget?.toLocaleString()}원~</div>                        
+                          <div className="text-xs text-gray-400">{c.categoryName}</div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -186,7 +322,87 @@ function ContentDetailPage() {
             {selectedTab === "price" && (
               <div>
                 <h2 className="text-lg font-bold mb-2">가격 정보</h2>
-                <div className="bg-gray-50 p-4 rounded">상세 가격 정보가 여기에 표시됩니다.</div>
+                
+                {/* 기본 가격 정보 */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">기본 서비스</h3>
+                  </div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-gray-700">{content.title}</h2>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {content.budget?.toLocaleString()}원
+                    </div>
+                  </div>
+                  <div className="text-gray-600 mb-4">
+                    <p className="text-sm">VAT 포함 가격</p>
+                  </div>
+                </div>
+
+                {/* 질문 및 옵션들 */}
+                {content.questions && content.questions.length > 0 && (
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4">추가 옵션</h3>
+                    {content.questions.map((question, questionIndex) => (
+                      <div key={question.questionId} className="bg-white border border-gray-200 rounded-lg p-6">
+                        <div className="mb-4">
+                          <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                            {question.questionText}
+                          </h4>
+                          {question.isMultipleChoice && (
+                            <p className="text-sm text-gray-500 mb-3">복수 선택 가능</p>
+                          )}
+                        </div>
+                        
+                                                                          <div className="space-y-3">
+                           {question.options.map((option) => (
+                             <div key={option.optionId} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                               <div className="flex items-center">
+                                 <input 
+                                   type={question.isMultipleChoice ? "checkbox" : "radio"} 
+                                   name={`question-${questionIndex}`}
+                                   id={`option-${option.optionId}`}
+                                   className="mr-3"
+                                   checked={selectedOptions[question.questionId]?.includes(option.optionId) || false}
+                                   onChange={() => handleOptionChange(question.questionId, option.optionId, question.isMultipleChoice)}
+                                 />
+                                 <label htmlFor={`option-${option.optionId}`} className="text-gray-700 cursor-pointer">
+                                   {option.optionText}
+                                 </label>
+                               </div>
+                               <div className="text-right">
+                                 <div className="text-lg font-semibold text-blue-600">
+                                   +{option.additionalPrice.toLocaleString()}원
+                                 </div>
+                                 <div className="text-sm text-gray-500">추가 비용</div>
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                                 {/* 총 가격 계산 안내 */}
+                 <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                   <div className="flex items-center justify-between">
+                     <div>
+                       <h4 className="font-semibold text-blue-800 mb-1">총 예상 비용</h4>
+                       <p className="text-sm text-blue-600">
+                         기본 가격 + 선택한 옵션들의 추가 비용
+                       </p>
+                     </div>
+                     <div className="text-right">
+                       <div className="text-2xl font-bold text-blue-800">
+                         {calculateTotalPrice().toLocaleString()}원
+                       </div>
+                       <div className="text-sm text-blue-600">
+                         {content.budget?.toLocaleString()}원 (기본) + {calculateAdditionalPrice().toLocaleString()}원 (추가)
+                       </div>
+                     </div>
+                   </div>
+                 </div>
               </div>
             )}
             {selectedTab === "faq" && (
@@ -429,26 +645,31 @@ function ContentDetailPage() {
         <aside className="w-full max-w-xs flex-shrink-0 bg-white rounded-lg shadow p-6 mt-2">
           {/* 가격 정보 */}
           <div className="mb-4">
-            <div className="flex gap-2 border-b mb-2">
-              <span className="font-semibold text-gray-400">STANDARD</span>
-              <span className="font-semibold text-black border-b-2 border-black">DELUXE</span>
-              <span className="font-semibold text-gray-400">PREMIUM</span>
+            <div className="flex gap-2 border-b mb-2">        
+              <span className="font-semibold text-black">가격 정보</span>  
             </div>
             <div className="text-2xl font-bold mb-1">
               {content.budget?.toLocaleString()}원 <span className="text-xs text-gray-400">(VAT 포함)</span>
             </div>
-            <div className="text-gray-500 mb-2">로고, 시그니처 + 명함 디자인, 슬로건</div>
+            <div className="text-gray-500 mb-2">{content.title}</div>
             <ul className="text-sm text-gray-700 mb-2 list-disc ml-4">
-              <li>시그니처(국/영문, 무제한수정)</li>
-              <li>명함디자인</li>
-              <li>+슬로건</li>
-              <li>+추가옵션</li>
-              <li>원본(모두제공), 저작/재산권 이전</li>
+              {content.questions && content.questions.length > 0 ? (
+                content.questions.map((question, index) => (
+                  <li key={index}>{question.questionText}</li>
+                ))
+              ) : (
+                <li>서비스 상세 정보가 없습니다.</li>
+              )}
             </ul>
             <div className="text-xs text-gray-400 mb-2">관련파일 제공, 고해상도 파일 제공, 응용 디자인, 사이즈 이외 가능</div>
           </div>
-          <button className="w-full bg-gray-100 py-2 rounded font-semibold mb-2">전문가에게 문의하기</button>
-          <button className="w-full bg-yellow-400 py-2 rounded font-bold" onClick={() => navigate(`/content/${id}/payment`)}>
+          <button 
+            className="w-full bg-gray-100 py-2 rounded font-semibold mb-2 hover:bg-gray-200 transition-colors cursor-pointer"
+            onClick={() => handleCreateChatRoom(content.expertEmail)}
+          >
+            전문가에게 문의하기
+          </button>
+          <button className="w-full bg-yellow-400 py-2 rounded font-bold cursor-pointer hover:bg-yellow-500 transition-colors" onClick={() => navigate(`/content/${id}/payment`)}>
             결제하기
           </button>
           <div className="text-xs text-gray-400 mt-4">
@@ -459,6 +680,22 @@ function ContentDetailPage() {
           </div>
         </aside>
       </div>
+
+      {/* 이미지 모달 */}
+      <ImageModal
+        isOpen={imageModalOpen}
+        onClose={() => setImageModalOpen(false)}
+        images={content?.imageUrls || []}
+        currentIndex={currentImageIndex}
+        onImageChange={setCurrentImageIndex}
+      />
+
+      {/* 공유 모달 */}
+      <ShareModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        content={content}
+      />
     </div>
   );
 }
