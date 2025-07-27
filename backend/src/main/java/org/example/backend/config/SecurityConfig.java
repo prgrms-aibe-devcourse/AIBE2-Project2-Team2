@@ -1,5 +1,6 @@
 package org.example.backend.config;
 
+import org.springframework.http.HttpMethod;
 import lombok.RequiredArgsConstructor;
 import org.example.backend.jwt.JwtFilter;
 import org.example.backend.jwt.JwtLoginFilter;
@@ -78,8 +79,11 @@ public class SecurityConfig {
                         "/api/auth/kakao/callback",
                         "/error",
                         "/api/reports",
-                        "/api/categories/**"
+                        "/api/categories/**",
+                        "/api/search/**",
+                        "/api/expert/profile/**"
                 ).permitAll()
+                .mvcMatchers(HttpMethod.GET, "/api/content/**").permitAll()
                 .antMatchers("/admin/**").hasRole("ADMIN")
                 .antMatchers("/api/matching-histories/user").hasAnyRole("USER", "EXPERT")
                 .antMatchers("/api/matching-histories/expert").hasAnyRole("EXPERT")

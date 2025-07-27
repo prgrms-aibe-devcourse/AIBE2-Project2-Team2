@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useModal } from "../hook/useModal.js";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useUserInfoStore } from "../store/userInfo.js";
 import axiosInstance from "../lib/axios.js";
 
@@ -43,7 +43,6 @@ export default function Header() {
   };
 
   const isCategoryPage = location.pathname.startsWith("/category/");
-
   return (
     <header className="bg-white fixed top-0 left-0 right-0 z-50 shadow-sm">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
@@ -67,17 +66,19 @@ export default function Header() {
               </button>
             </form>
             <div className="w-1/3 flex justify-end items-center gap-4">
-              <nav aria-label="Global" className="hidden md:block">
-                <ul className="flex items-center gap-3 text-sm">
-                  {menuList.map((menu) => (
-                    <li key={menu.name}>
-                      <Link className="font-semibold px-4 py-2 rounded transition text-[#3f9389] hover:bg-[#e6f4f2] hover:text-[#2b6e63]" to={menu.path}>
-                        {menu.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
+              {userInfo && (
+                <nav aria-label="Global" className="hidden md:block">
+                  <ul className="flex items-center gap-3 text-sm">
+                    {menuList.map((menu) => (
+                      <li key={menu.name}>
+                        <Link className="font-semibold px-4 py-2 rounded transition text-[#3f9389] hover:bg-[#e6f4f2] hover:text-[#2b6e63]" to={menu.path}>
+                          {menu.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              )}
               {/*유저 정보가 있으면 로그인 버튼 대신 프로필 출력 */}
               {!userInfo?.nickname ? (
                 <div className="flex items-center gap-4">
@@ -108,17 +109,19 @@ export default function Header() {
               {/* <span className="text-2xl font-bold">고수의 민족</span> */}
             </Link>
             <div className="flex items-center gap-4">
-              <nav aria-label="Global" className="hidden md:block">
-                <ul className="flex items-center gap-3 text-sm">
-                  {menuList.map((menu) => (
-                    <li key={menu.name}>
-                      <Link className="font-semibold px-4 py-2 rounded transition text-[#3f9389] hover:bg-[#e6f4f2] hover:text-[#2b6e63]" to={menu.path}>
-                        {menu.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
+              {userInfo && (
+                <nav aria-label="Global" className="hidden md:block">
+                  <ul className="flex items-center gap-3 text-sm">
+                    {menuList.map((menu) => (
+                      <li key={menu.name}>
+                        <Link className="font-semibold px-4 py-2 rounded transition text-[#3f9389] hover:bg-[#e6f4f2] hover:text-[#2b6e63]" to={menu.path}>
+                          {menu.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              )}
               {/*유저 정보가 있으면 로그인 버튼 대신 프로필 출력 */}
               {!userInfo?.nickname ? (
                 <div className="flex items-center gap-4">
