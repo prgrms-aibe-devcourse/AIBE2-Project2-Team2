@@ -13,6 +13,8 @@ import org.example.backend.exception.customException.ContentNotFoundException;
 import org.example.backend.exception.customException.NoContentPermissionException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,6 +34,11 @@ public class ContentService {
         if(!isOwner && !isAdmin){
             throw new NoContentPermissionException("권한이 없습니다.");
         }
+    }
+
+    public Page<ContentResponseDto> getContentsByCategoryId(Long categoryId, Pageable pageable) {
+        return contentRepository.findByCategory_CategoryIdAndStatus(categoryId, Status.ACTIVE, pageable)
+                .map(ContentResponseDto::from);
     }
 
     // 컨텐츠 등록
@@ -79,6 +86,17 @@ public class ContentService {
                 .orElseThrow(() -> new ContentNotFoundException("컨텐츠를 찾을 수 없습니다."));
         return toResponseDto(content);
     }
+
+
+    // 카테고리 ID로 콘텐츠 목록 조회
+    @Transactional(readOnly = true)
+    public List<ContentResponseDto> getContentsByCategoryId(Long categoryId) {
+        List<Content> contents = contentRepository.findByCategory_CategoryIdAndStatus(categoryId, Status.ACTIVE);
+        return contents.stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
 
     // 컨텐츠 수정
     public ContentResponseDto updateContent(Long id, ContentRequestDto requestDto, Member member) {

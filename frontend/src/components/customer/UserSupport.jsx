@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import axios from "../../api/axiosInstance";
 
 const CATEGORIES = ["욕설", "사기", "허위광고", "기타"];
 

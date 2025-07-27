@@ -7,8 +7,8 @@ export const useUserInfoStore = create((set) => ({
 }));
 // Example userInfo object:
 // {
-//   nickname: "홍길동",
-//   profileImageUrl: "https://cdn.example.com/profile.jpg",
-//   email: "hong@example.com",
-//   joinType: "KAKAO"
+//  "nickname": "홍길동",
+//    "email": "example123@naver.com",
+//    "role": "USER",
+//    "profileImageUrl": "https://example.com/profile.jpg"
 // }
