@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../../lib/axios.js";
 
 const CATEGORIES = ["욕설", "사기", "허위광고", "기타"];
 
@@ -34,7 +34,7 @@ const UserSupport = () => {
         try {
             setLoading(true);
 
-            await axios.post("/reports", {
+            await axiosInstance.post("/api/reports", {
                 reportedNickname,
                 reason: finalReason,
             });
@@ -65,7 +65,7 @@ const UserSupport = () => {
     // 내 신고 내역 조회
     const fetchMyReports = async () => {
         try {
-            const response = await axios.get("/reports/my");
+            const response = await axiosInstance.get("/api/reports/my");
             setMyReports(response.data);
         } catch (err) {
             console.error(err);
