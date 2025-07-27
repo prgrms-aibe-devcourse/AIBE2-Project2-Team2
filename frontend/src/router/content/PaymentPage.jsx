@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from '../../lib/axios';
+import { useUserInfoStore } from '../../store/userInfo';
 
 function PaymentPage() {
   const { id } = useParams();
@@ -10,6 +11,7 @@ function PaymentPage() {
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
   const [payResult, setPayResult] = useState(null); // 결제 결과 안내
+  const userInfo = useUserInfoStore(state => state.userInfo);
 
   useEffect(() => {
     if (!id) return;
@@ -79,23 +81,40 @@ function PaymentPage() {
     setPaying(true);
     setPayResult(null);
     try {
-      // 1. 매칭 생성 (실제 엔티티 구조에 맞게)
-      const matchingRes = await axios.post('/api/matching', {
-        contentId: id,
-        userId: 'user', // 실제 로그인 유저 ID로 대체
-        status: 'WAITING_PAYMENT', // 예시값, 실제 Enum에 맞게
-        startDate: new Date().toISOString().slice(0, 10),
-        endDate: null
-      });
+      // 1. 매칭 생성 (팀원이 만든 API 사용)
+      const matchingRequestDto = {
+        memberId: userInfo?.memberId, // 실제 로그인 유저 ID 사용
+        contentId: parseInt(id),
+        items: selectedOptionIds.map(optionId => {
+          // 선택된 옵션 정보를 찾아서 items 배열로 변환
+          let optionInfo = null;
+          content.questions.forEach(q => {
+            q.options.forEach(opt => {
+              if (opt.optionId === optionId) {
+                optionInfo = {
+                  name: opt.optionText,
+                  price: opt.additionalPrice || 0
+                };
+              }
+            });
+          });
+          return optionInfo;
+        }).filter(item => item !== null)
+      };
+
+      // 기본 항목도 추가 (콘텐츠 기본 예산)
+      if (content.budget > 0) {
+        matchingRequestDto.items.unshift({
+          name: content.title,
+          price: content.budget
+        });
+      }
+
+      const matchingRes = await axios.post('/api/matchings', matchingRequestDto);
       const matchingId = matchingRes.data.matchingId;
       if (!matchingId) throw new Error('매칭 생성 실패');
 
-      // 2. 견적 저장
-      await axios.post(`/api/matching/${matchingId}/estimate`, {
-        selectedOptionIds: selectedOptionIds
-      });
-
-      // 3. 카카오페이 결제 준비 API 호출
+      // 2. 카카오페이 결제 준비 API 호출
       const readyRes = await axios.post(`/api/payment/kakao/ready`, null, {
         params: {
           matchingId: matchingId,
@@ -117,7 +136,7 @@ function PaymentPage() {
       }
     } catch (err) {
       setPayResult({ success: false, error: err });
-      alert('결제 저장 또는 카카오페이 준비에 실패했습니다.\n' + (err?.response?.data?.message || err.message));
+      alert('매칭 생성 또는 카카오페이 준비에 실패했습니다.\n' + (err?.response?.data?.message || err.message));
       setPaying(false);
     }
   };
@@ -137,32 +156,31 @@ function PaymentPage() {
               <img src={content.contentUrl} alt="썸네일" className="w-28 h-28 object-cover rounded-lg border" />
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="bg-black text-white text-xs px-2 py-1 rounded">prime</span>
+              
                   <span className="font-bold text-lg">{content.title}</span>
                 </div>
-                <div className="text-xs text-gray-400">DJ줄리</div>
+                <div className="text-xs text-gray-400">{content.expertNickname || '-'}</div>
               </div>
             </div>
             <div className="border-b my-4" />
             {/* 기본항목 */}
             <div className="mb-6">
-              <div className="font-bold mb-2">기본항목</div>
+              <div className="font-bold mb-4 text-2xl">기본항목</div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="font-semibold">상업적용도 녹음</span>
-                <span className="text-xs text-gray-400 ml-4">작업일 <b>6일</b></span>
+                <span className="font-semibold text-2xl">{content.title}</span>            
                 <span className="font-bold ml-4">{(content.budget || 0).toLocaleString()}원</span>
               </div>
             </div>
             {/* 옵션항목 */}
             <div className="mb-6">
-              <div className="font-bold mb-2">옵션항목</div>
+              <div className="font-bold mb-4 text-2xl">옵션항목</div>
               {content.questions && content.questions.length > 0 ? (
                 <ul className="space-y-2">
                   {content.questions.map((q, qIdx) => (
                     <li key={qIdx} className="mb-2">
-                      <div className="font-medium text-sm mb-1">{q.questionText}</div>
+                      <div className="font-bold text-xl mb-2">{q.questionText}</div>
                       {q.options && q.options.length > 0 && (
-                        <ul className="ml-2 text-xs text-gray-600">
+                        <ul className="ml-2 text-lg text-gray-600">
                           {q.options.map((opt, oIdx) => {
                             const key = `${qIdx}-${oIdx}`;
                             const isMulti = !!(q.multipleChoice ?? q.isMultipleChoice ?? q.is_multiple_choice);
@@ -183,16 +201,16 @@ function PaymentPage() {
                               <li key={oIdx} className="flex items-center gap-2 mb-1">
                                 <input
                                   type="checkbox"
+                                  id={`option-${qIdx}-${oIdx}`}
                                   checked={checked}
                                   disabled={disabled}
                                   onChange={() => handleOptionSelect(qIdx, oIdx, q)}
                                   className="accent-yellow-400"
                                 />
-                                <span>{opt.optionText}</span>
-                                {opt.additionalPrice > 0 && (
-                                  <span className="text-blue-500 font-semibold ml-2">{opt.additionalPrice.toLocaleString()}원</span>
-                                )}
-                                <span className="text-xs text-gray-400 ml-2">작업일 +1일</span>
+                                <label htmlFor={`option-${qIdx}-${oIdx}`} className="text-lg cursor-pointer select-none">
+                                  {opt.optionText}
+                                </label>
+                                <span className="text-blue-500 font-semibold ml-2">+{opt.additionalPrice.toLocaleString()}원</span>
                               </li>
                             );
                           })}
