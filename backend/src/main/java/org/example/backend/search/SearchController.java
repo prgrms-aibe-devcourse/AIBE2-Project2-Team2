@@ -33,4 +33,26 @@ public class SearchController {
         log.info("카테고리 검색 완료 - 결과 수: {}", result.getTotalElements());
         return ResponseEntity.ok(result);
     }
+
+    /**
+     * 키워드로 컨텐츠 검색
+     * @param keyword 검색 키워드
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지 크기
+     * @return 검색된 컨텐츠 목록
+     */
+    @GetMapping("/keyword")
+    public ResponseEntity<Page<SearchContentResponse>> searchByKeyword(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        log.info("키워드 검색 요청 - 키워드: '{}', 페이지: {}, 사이즈: {}", keyword, page, size);
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updateTime"));
+        Page<SearchContentResponse> result = searchService.searchByKeyword(keyword, pageable);
+
+        log.info("키워드 검색 응답 - 전체: {}, 현재 페이지: {}", result.getTotalElements(), result.getContent().size());
+        return ResponseEntity.ok(result);
+    }
 }
