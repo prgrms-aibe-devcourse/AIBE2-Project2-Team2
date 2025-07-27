@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -27,7 +26,6 @@ import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
-@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
@@ -79,7 +77,6 @@ public class SecurityConfig {
                         "/swagger-ui.html",
                         "/api/auth/kakao/callback",
                         "/error",
-                        "/api/reports"
                         "/api/categories/**"
                 ).permitAll()
                 .antMatchers("/admin/**").hasRole("ADMIN")
@@ -105,10 +102,7 @@ public class SecurityConfig {
                 "http://localhost:3000",  // ✅ React 개발 테스트 - 김기현
                 "http://localhost:8080",  // Swagger UI origin
                 "http://localhost:5173",  // Vite 개발 서버 등
-                "https://localhost:5173",
-                "http://localhost:5174",  // Vite 개발 서버 등
-                "https://localhost:5174"
-
+                "https://localhost:5173"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH"));
         config.setAllowedHeaders(List.of("*"));

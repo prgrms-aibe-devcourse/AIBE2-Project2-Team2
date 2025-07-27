@@ -38,6 +38,7 @@ export default function Header() {
           <div className="flex-1 md:flex md:items-center md:gap-12">
             <Link className="block text-teal-600" to="/">
               <img className="w-12 h-12" src="/logo.png" alt="고수의 민족" />
+              {/* <span className="text-2xl font-bold">고수의 민족</span> */}
             </Link>
           </div>
 
