@@ -4,6 +4,8 @@ import axiosInstance from "../../lib/axios";
 import ImageModal from "../../components/modal/ImageModal";
 import ShareModal from "../../components/modal/ShareModal";
 
+import { useUserInfoStore } from "../../store/userInfo";
+import toast from "react-hot-toast";
 import { Star, ExternalLink, Users, GraduationCap, Calendar, Globe, Facebook, Instagram, Twitter, Plus, Share2 } from "lucide-react";
 
 // 리뷰 응답 예시
@@ -35,6 +37,8 @@ function ContentDetailPage() {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const navigate = useNavigate();
   const [otherContents, setOtherContents] = useState([]);
+
+  const { userInfo } = useUserInfoStore();
 
   // ✅ Content!! 에서 채팅방 생성하는 함수
   const handleCreateChatRoom = async (targetEmail) => {
@@ -663,13 +667,26 @@ function ContentDetailPage() {
             </ul>
             <div className="text-xs text-gray-400 mb-2">관련파일 제공, 고해상도 파일 제공, 응용 디자인, 사이즈 이외 가능</div>
           </div>
-          <button 
-            className="w-full bg-gray-100 py-2 rounded font-semibold mb-2 hover:bg-gray-200 transition-colors cursor-pointer"
-            onClick={() => handleCreateChatRoom(content.expertEmail)}
-          >
+          <button
+            onClick={() => {
+              if (!userInfo) {
+                toast.error("로그인이 필요합니다.");
+                return;
+              }
+              // navigate(`/content/${id}/inquiry`);
+            }}
+            className="w-full bg-gray-100 py-2 rounded font-semibold mb-2">
             전문가에게 문의하기
           </button>
-          <button className="w-full bg-yellow-400 py-2 rounded font-bold cursor-pointer hover:bg-yellow-500 transition-colors" onClick={() => navigate(`/content/${id}/payment`)}>
+          <button
+            className="w-full bg-yellow-400 py-2 rounded font-bold"
+            onClick={() => {
+              if (!userInfo) {
+                toast.error("로그인이 필요합니다.");
+                return;
+              }
+              navigate(`/content/${id}/payment`);
+            }}>
             결제하기
           </button>
           <div className="text-xs text-gray-400 mt-4">

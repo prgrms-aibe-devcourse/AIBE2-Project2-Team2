@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.backend.exception.customException.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -182,6 +183,41 @@ public class GlobalExceptionHandler {
                 null
         );
     }
+
+    // 권한이 없는 사용자가 접근했을 때 핸들링
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.FORBIDDEN,
+                "ACCESS_DENIED",
+                "접근 권한이 없습니다.",
+                null
+        );
+    }
+
+    @ExceptionHandler(ReportNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleReportNotFound(ReportNotFoundException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.NOT_FOUND,
+                "REPORT_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+    }
+
+    @ExceptionHandler(InvalidReportStatusException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidStatus(InvalidReportStatusException ex, HttpServletRequest request) {
+        return buildErrorResponse(
+                request,
+                HttpStatus.BAD_REQUEST,
+                "INVALID_REPORT_STATUS",
+                ex.getMessage(),
+                null
+        );
+    }
+
     // 전문가 권한이 없을 때 핸들링
     @ExceptionHandler(NotExpertException.class)
     public ResponseEntity<Map<String, Object>> handleNotExpert(NotExpertException ex, HttpServletRequest request) {

@@ -1,4 +1,3 @@
-import React from "react";
 import { Check } from "lucide-react";
 
 const StepperSidebar = ({ steps, currentStep, completedSteps, onStepClick }) => {
@@ -37,7 +36,7 @@ const StepperSidebar = ({ steps, currentStep, completedSteps, onStepClick }) => 
         })}
       </div>
 
-      <div className="mt-8 p-4 bg-white rounded-xl border border-slate-200">
+      {/* <div className="mt-8 p-4 bg-white rounded-xl border border-slate-200">
         <div className="flex items-center gap-3 mb-3">
           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
           <span className="text-sm font-semibold text-slate-700">진행 상황</span>
@@ -48,7 +47,7 @@ const StepperSidebar = ({ steps, currentStep, completedSteps, onStepClick }) => 
         <p className="text-xs text-slate-500">
           {completedSteps.length}/{steps.length} 단계 완료
         </p>
-      </div>
+      </div> */}
     </div>
   );
 };

@@ -17,7 +17,7 @@ import CategoryPage from "./pages/CategoryPage.jsx";
 import MainPage from "./pages/MainPage.jsx";
 import ContentCreateStepperPage from "./router/content/create/ContentCreateStepperPage.jsx";
 import ReviewWrite from "./pages/review/ReviewWrite.jsx";
-
+import CustomToast from "./lib/CustomToast.jsx";
 //api/me
 // {
 //   "nickname": "홍길동",
@@ -69,6 +69,7 @@ function App() {
         </Routes>
       </div>
       <Modal />
+      <CustomToast />
     </>
   );
 }

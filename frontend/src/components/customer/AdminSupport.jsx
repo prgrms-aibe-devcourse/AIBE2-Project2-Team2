@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import ReportDetailModal from "../modal/ReportDetailModal";
-import axios from "axios";
+import axiosInstance from "../../lib/axios.js";
 
 const AdminSupport = () => {
     const [reports, setReports] = useState([]);
@@ -13,7 +13,7 @@ const AdminSupport = () => {
     // 전체 신고 목록 조회 (필터 포함)
     const fetchReports = async (status = "") => {
         try {
-            const res = await axios.get("/reports", {
+            const res = await axiosInstance.get("/api/reports", {
                 params: status ? { status } : {},
             });
             setReports(res.data);
@@ -32,7 +32,7 @@ const AdminSupport = () => {
     // 특정 신고 클릭 시 상세 조회 후 모달 오픈
     const handleReportClick = async (id) => {
         try {
-            const res = await axios.get(`/reports/${id}`);
+            const res = await axiosInstance.get(`/api/reports/${id}`);
             setSelectedReport(res.data);
             setUpdatedStatus(res.data.status);
             setResolverComment(res.data.resolverComment || "");
@@ -52,7 +52,7 @@ const AdminSupport = () => {
     // 상태 및 처리 의견 저장 요청
     const handleSubmitUpdate = async () => {
         try {
-            await axios.patch(`/reports/${selectedReport.id}`, {
+            await axiosInstance.patch(`/api/reports/${selectedReport.id}`, {
                 status: updatedStatus,
                 resolverComment,
             });
@@ -69,7 +69,7 @@ const AdminSupport = () => {
         e.stopPropagation();
         if (!window.confirm("정말 이 신고를 삭제하시겠습니까?")) return;
         try {
-            await axios.delete(`/reports/${id}`);
+            await axiosInstance.delete(`/api/reports/${id}`);
             alert("신고가 삭제되었습니다.");
             fetchReports(statusFilter);
         } catch (err) {
