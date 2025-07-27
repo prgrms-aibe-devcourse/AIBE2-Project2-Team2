@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/content")
@@ -98,6 +99,13 @@ public class ContentController {
     public ResponseEntity<ContentDetailResponseDto> getContent(@PathVariable Long id, Principal principal) {
         Content content = contentService.getContentEntity(id);
         return ResponseEntity.ok(contentService.toDetailResponseDto(content));
+    }
+
+    @Operation(summary = "특정 전문가의 콘텐츠 목록 조회", description = "특정 전문가가 작성한 모든 콘텐츠(서비스) 목록을 조회합니다.")
+    @GetMapping("/expert/{expertId}")
+    public ResponseEntity<List<ContentResponseDto>> getContentsByExpert(@PathVariable Long expertId) {
+        List<ContentResponseDto> contents = contentService.getContentsByExpert(expertId);
+        return ResponseEntity.ok(contents);
     }
 
 
@@ -222,7 +230,7 @@ public class ContentController {
     public ResponseEntity<Void> updateContentImages(
             @PathVariable Long contentId,
             @io.swagger.v3.oas.annotations.Parameter(description = "유지할 기존 이미지 ID 목록", example = "[1,2]")
-            @RequestParam("remainingImageIds") List<Long> remainingImageIds,
+            @RequestParam(value = "remainingImageIds", required = false) List<Long> remainingImageIds,
             @io.swagger.v3.oas.annotations.Parameter(description = "추가할 새 이미지 파일 목록")
             @RequestPart(value = "images", required = false) List<MultipartFile> images,
             @io.swagger.v3.oas.annotations.Parameter(description = "썸네일 이미지 파일 (새 이미지로 변경 시)", required = false)
@@ -230,7 +238,9 @@ public class ContentController {
             @io.swagger.v3.oas.annotations.Parameter(description = "썸네일로 지정할 기존 이미지 ID (기존 이미지 중 변경 시)", required = false)
             @RequestParam(value = "thumbnailRemainImageId", required = false) Long thumbnailRemainImageId
     ) {
-        contentImageService.updateContentImages(contentId, remainingImageIds, images, thumbnailImage, thumbnailRemainImageId);
+        // remainingImageIds가 null이면 빈 리스트로 설정
+        List<Long> safeRemainingImageIds = remainingImageIds != null ? remainingImageIds : new ArrayList<>();
+        contentImageService.updateContentImages(contentId, safeRemainingImageIds, images, thumbnailImage, thumbnailRemainImageId);
         return ResponseEntity.noContent().build();
     }
 

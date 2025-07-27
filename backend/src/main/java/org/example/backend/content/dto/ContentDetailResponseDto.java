@@ -13,10 +13,15 @@ public class ContentDetailResponseDto {
     private String description;
     private Long budget;
     private Long categoryId;
+    private String categoryName; // 카테고리 이름 추가
     private Long expertId;
+    private String expertEmail; // 전문가 이메일 추가
+    private String expertNickname; // 전문가 닉네임 추가
+    private String expertProfileImageUrl; // 전문가 프로필 이미지 URL 추가
     //private Long reviewId;
     private List<QuestionDto> questions;
     private String contentUrl; // 대표 이미지 URL
+    private List<String> imageUrls; // 모든 이미지 URL 리스트 추가
     private List<SimplePortfolioDto> portfolios;
 
     @Getter

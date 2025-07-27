@@ -19,4 +19,5 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
             "WHERE c.contentId = :contentId AND m.role = :role")
     Optional<Content> findByIdWithExpertProfile(@Param("contentId") Long contentId, @Param("role") Role role);
 
+    List<Content> findByMember_MemberIdAndStatus(Long memberId, Status status);
 }

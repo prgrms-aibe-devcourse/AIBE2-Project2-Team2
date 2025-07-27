@@ -50,12 +50,11 @@ public class ContentImageService {
 
     // 여러 장의 이미지와 썸네일을 한 번에 업로드 및 저장
     public void uploadContentImagesBatch(Long contentId, List<MultipartFile> images, MultipartFile thumbnailImage) {
-        int totalImages = (images == null ? 0 : images.size()) + (thumbnailImage == null ? 0 : 1);
         if (thumbnailImage == null) {
             throw new IllegalArgumentException("썸네일 이미지를 반드시 전송해야 합니다.");
         }
-        if (totalImages < 1 || totalImages > 5) {
-            throw new IllegalArgumentException("이미지는 최소 1개 이상, 최대 5개까지 업로드할 수 있습니다.");
+        if (images != null && images.size() > 5) {
+            throw new IllegalArgumentException("상세 이미지는 최대 5개까지 업로드할 수 있습니다.");
         }
         Content content = contentRepository.findById(contentId)
                 .orElseThrow(() -> new IllegalArgumentException("Content not found"));
@@ -97,6 +96,11 @@ public class ContentImageService {
         // 1. 기존 이미지 조회
         List<ContentImage> existingImages = contentImageRepository.findAllById(remainingImageIds);
         List<ContentImage> allImages = contentImageRepository.findAllByContent(content);
+
+        // 새 이미지 개수 검증
+        if (newImages != null && newImages.size() > 5) {
+            throw new IllegalArgumentException("상세 이미지는 최대 5개까지 업로드할 수 있습니다.");
+        }
 
         // 2. 삭제할 이미지 처리
         for (ContentImage img : allImages) {

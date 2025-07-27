@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Service
@@ -100,6 +101,28 @@ public class ContentService {
                 category
         );
 
+        // 기존 questions 삭제 (개별적으로 삭제)
+        List<Question> existingQuestions = new ArrayList<>(content.getQuestions());
+        for (Question question : existingQuestions) {
+            content.getQuestions().remove(question);
+        }
+
+        // 새로운 questions 추가
+        List<Question> questions = requestDto.getQuestions().stream()
+                .map(qDto -> {
+                    Question question = new Question(content, qDto.getQuestionText(), qDto.isMultipleChoice());
+                    List<QuestionOption> options = qDto.getOptions().stream()
+                            .map(oDto -> new QuestionOption(oDto.getOptionText(), oDto.getAdditionalPrice()))
+                            .collect(Collectors.toList());
+                    options.forEach(question::addOption);
+                    return question;
+                }).collect(Collectors.toList());
+
+        // 새로운 questions를 content에 추가
+        for (Question question : questions) {
+            content.getQuestions().add(question);
+        }
+
         Content updatedContent = contentRepository.save(content);
         return toResponseDto(updatedContent);
     }
@@ -124,10 +147,28 @@ public class ContentService {
                 .orElseThrow(() -> new ContentNotFoundException("컨텐츠를 찾을 수 없습니다."));
     }
 
+    // 카테고리 전체 경로를 가져오는 메서드
+    private String getCategoryFullPath(Category category) {
+        if (category == null) return "";
+        
+        StringBuilder path = new StringBuilder(category.getName());
+        Category current = category.getParent();
+        
+        while (current != null) {
+            path.insert(0, current.getName() + " > ");
+            current = current.getParent();
+        }
+        
+        return path.toString();
+    }
+
     // 엔티티 → DTO 변환 (컨트롤러에서 사용 가능하도록 public)
     public ContentResponseDto toResponseDto(Content content) {
         List<String> imageUrls = content.getImages() != null
-                ? content.getImages().stream().map(ContentImage::getImageUrl).collect(Collectors.toList())
+                ? content.getImages().stream()
+                    .sorted((img1, img2) -> Byte.compare(img1.getOrderIndex(), img2.getOrderIndex()))
+                    .map(ContentImage::getImageUrl)
+                    .collect(Collectors.toList())
                 : List.of();
 
         // 대표 이미지(썸네일) URL 추출
@@ -142,7 +183,7 @@ public class ContentService {
 
         Category category = content.getCategory();  // null 방지
         Long categoryId = category != null ? category.getCategoryId() : null;
-        String categoryName = category != null ? category.getName() : null;
+        String categoryName = category != null ? getCategoryFullPath(category) : null;
 
         return ContentResponseDto.builder()
                 .contentId(content.getContentId())
@@ -181,6 +222,14 @@ public class ContentService {
                 })
                 .collect(Collectors.toList());
 
+        // 모든 이미지 URL 추출 (orderIndex 순서로 정렬하여 썸네일이 먼저 나오도록)
+        List<String> imageUrls = content.getImages() != null
+                ? content.getImages().stream()
+                    .sorted((img1, img2) -> Byte.compare(img1.getOrderIndex(), img2.getOrderIndex()))
+                    .map(ContentImage::getImageUrl)
+                    .collect(Collectors.toList())
+                : List.of();
+
         // 대표 이미지(썸네일) URL 추출
         String contentUrl = null;
         if (content.getImages() != null && !content.getImages().isEmpty()) {
@@ -193,7 +242,11 @@ public class ContentService {
 
         Category category = content.getCategory();
         Long categoryId = category != null ? category.getCategoryId() : null;
+        String categoryName = category != null ? getCategoryFullPath(category) : null;
         Long expertId = content.getMember() != null ? content.getMember().getMemberId() : null;
+        String expertEmail = content.getMember() != null ? content.getMember().getEmail() : null;
+        String expertNickname = content.getMember() != null ? content.getMember().getNickname() : null;
+        String expertProfileImageUrl = content.getMember() != null ? content.getMember().getProfileImageUrl() : null;
 
         // 포트폴리오 썸네일/제목 리스트 생성
         List<ContentDetailResponseDto.SimplePortfolioDto> portfolioDtos = null;
@@ -223,11 +276,24 @@ public class ContentService {
                 .description(content.getDescription())
                 .budget(content.getBudget())
                 .categoryId(categoryId)
+                .categoryName(categoryName)
                 .expertId(expertId)
+                .expertEmail(expertEmail)
+                .expertNickname(expertNickname)
+                .expertProfileImageUrl(expertProfileImageUrl)
                 .questions(questionDtos)
                 .contentUrl(contentUrl)
+                .imageUrls(imageUrls)
                 .portfolios(portfolioDtos)
                 .build();
     }
 
+    // 전문가의 다른 콘텐츠 목록 조회
+    @Transactional(readOnly = true)
+    public List<ContentResponseDto> getContentsByExpert(Long expertId) {
+        return contentRepository.findByMember_MemberIdAndStatus(expertId, Status.ACTIVE)
+                .stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
+    }
 }
