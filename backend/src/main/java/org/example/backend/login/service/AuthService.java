@@ -170,4 +170,26 @@ public class AuthService {
         dto.setProfileImageUrl(member.getProfileImageUrl());
         dto.setEmail(member.getEmail());
     }
+
+    public void issueNewTokenAndSetCookie(Member member, HttpServletResponse response) {
+        String email = member.getEmail();
+
+        // ✅ 1. 기존 토큰 블랙리스트 처리
+        tokenBlacklistService.blacklistAllActiveTokens(email);
+
+        // ✅ 2. 새 토큰 발급
+        TokenInfo tokenInfo = jwtUtil.createToken(email, member.getRole().name());
+
+        // ✅ 3. Redis에 jti 저장
+        redisService.storeActiveToken(tokenInfo.getJti(), email, tokenInfo.getExpirationMs());
+
+        // ✅ 4. 쿠키로 내려주기
+        Cookie cookie = new Cookie("token", tokenInfo.getToken());
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false); // 운영에서는 true
+        cookie.setPath("/");
+        cookie.setMaxAge((int) (tokenInfo.getExpirationMs() / 1000));
+
+        response.addCookie(cookie);
+    }
 }

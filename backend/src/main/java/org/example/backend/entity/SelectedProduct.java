@@ -1,14 +1,20 @@
 package org.example.backend.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 
 @Entity
 @Table(name = "selected_product")
 @Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor // 추가
+@Builder // 추가
 public class SelectedProduct {
 
     @Id

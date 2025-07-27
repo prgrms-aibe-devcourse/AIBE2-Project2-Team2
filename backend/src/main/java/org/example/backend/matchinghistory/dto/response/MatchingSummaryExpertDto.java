@@ -19,4 +19,6 @@ public class MatchingSummaryExpertDto extends  MatchingSummaryBaseDto {
     // 전문가 정보
     private String expertName;
     private String expertPhone;
+
+    private boolean reviewed;
 }

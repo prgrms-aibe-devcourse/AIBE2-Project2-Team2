@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "../../api/axiosInstance";
 import ReportDetailModal from "../modal/ReportDetailModal";
+import axios from "axios";
 
 const AdminSupport = () => {
     const [reports, setReports] = useState([]);

@@ -11,16 +11,19 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.backend.entity.Member;
 import org.example.backend.expert.dto.request.ExpertRequestDto;
 import org.example.backend.expert.dto.response.ExpertProfileDto;
 import org.example.backend.expert.dto.response.ExpertSignupMetaDto;
 import org.example.backend.expert.dto.response.PortfolioDetailResponseDto;
+import org.example.backend.login.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.security.Principal;
 import java.util.List;
@@ -32,6 +35,7 @@ import java.util.List;
 @Tag(name = "Expert", description = "전문가 관련 API")
 public class ExpertController {
     private final ExpertService expertService;
+    private final AuthService authService;
 
     /**
      * 일반유저에서 전문가로 전환하는 API
@@ -75,11 +79,18 @@ public class ExpertController {
     @PostMapping("/upgrade")
     public ResponseEntity<?> upgradeExpert(
             @Valid @RequestBody ExpertRequestDto expertRequestDto,
-            Principal principal
-    ){
+            Principal principal,
+            HttpServletResponse response // ✅ 쿠키 설정을 위해 추가
+    ) {
         String email = principal.getName();
         log.info("전문가 전환 요청: {}", expertRequestDto);
-        expertService.upgradeToExpert(email, expertRequestDto);
+
+        // 전문가 전환 및 변경된 member 리턴
+        Member member = expertService.upgradeToExpert(email, expertRequestDto);
+
+        // 기존 토큰 블랙리스트 처리 + 새 토큰 발급 및 쿠키 설정
+        authService.issueNewTokenAndSetCookie(member, response);
+
         return ResponseEntity.noContent().build();
     }
 
@@ -150,7 +161,7 @@ public class ExpertController {
     /**
      * 전문가 프로필 조회 API
      * 전문가의 프로필 정보를 조회합니다.
-     * GET /api/expert/profile
+     * GET /api/expert/my-profile
      */
     @Operation(
             summary = "전문가 프로필 조회",
@@ -164,27 +175,47 @@ public class ExpertController {
                             mediaType = "application/json",
                             schema = @Schema(implementation = ExpertProfileDto.class),
                             examples = @ExampleObject(value = "{\n" +
+                                    "  \"profileImageUrl\": \"http://profile.image.url\",\n" +
                                     "  \"nickname\": \"tester\",\n" +
                                     "  \"introduction\": \"자기소개\",\n" +
                                     "  \"region\": \"서울\",\n" +
                                     "  \"totalCareerYears\": 5,\n" +
+                                    "  \"education\": \"서울대학교 디자인학과\",\n" +
+                                    "  \"employeeCount\": 10,\n" +
                                     "  \"websiteUrl\": \"https://site.com\",\n" +
                                     "  \"facebookUrl\": \"https://facebook.com\",\n" +
                                     "  \"instagramUrl\": \"https://instagram.com\",\n" +
                                     "  \"xUrl\": \"https://x.com\",\n" +
                                     "  \"reviewCount\": 10,\n" +
                                     "  \"averageScore\": 4.5,\n" +
-                                    "  \"fields\": [\n" +
-                                    "    { \"specialtyName\": \"디자인\", \"detailFieldName\": \"웹/모바일 디자인\" }\n" +
+                                    "  \"specialties\": [\n" +
+                                    "    {\n" +
+                                    "      \"specialty\": \"디자인\",\n" +
+                                    "      \"detailFields\": [\"웹/모바일 디자인\", \"캐릭터/일러스트\"]\n" +
+                                    "    }\n" +
                                     "  ],\n" +
                                     "  \"skills\": [\n" +
-                                    "    { \"skillCategoryName\": \"IT/프로그래밍\", \"skillName\": \"Java\" }\n" +
+                                    "    {\n" +
+                                    "      \"category\": \"IT/프로그래밍\",\n" +
+                                    "      \"name\": \"Java\"\n" +
+                                    "    }\n" +
+                                    "  ],\n" +
+                                    "  \"careers\": [\"ABC 회사에서 3년 근무\", \"XYZ 디자인 프로젝트 참여\"],\n" +
+                                    "  \"contents\": [\n" +
+                                    "    {\n" +
+                                    "      \"contentId\": 1,\n" +
+                                    "      \"thumbnailUrl\": \"https://thumbnail.url/content1.jpg\",\n" +
+                                    "      \"title\": \"컨텐츠 제목\",\n" +
+                                    "      \"category\": \"디자인\"\n" +
+                                    "    }\n" +
                                     "  ],\n" +
                                     "  \"portfolios\": [\n" +
-                                    "    { \"title\": \"포트폴리오 제목\", \"thumbnailUrl\": \"https://thumbnail.url/portfolio1.jpg\" }\n" +
-                                    "  ],\n" +
-                                    "  \"contents\": [\n" +
-                                    "    { \"title\": \"컨텐츠 제목\", \"thumbnailUrl\": \"https://thumbnail.url/content1.jpg\" }\n" +
+                                    "    {\n" +
+                                    "      \"portfolioId\": 1,\n" +
+                                    "      \"thumbnailUrl\": \"https://thumbnail.url/portfolio1.jpg\",\n" +
+                                    "      \"title\": \"포트폴리오 제목\"\n" +
+                                    "      \"category\": \"디자인\"\n" +
+                                    "    }\n" +
                                     "  ]\n" +
                                     "}")
                     )
@@ -199,13 +230,21 @@ public class ExpertController {
                     )
             )
     })
-    @GetMapping("/profile")
+    @GetMapping("/my-profile")
     public ResponseEntity<?> getExpertProfile(
             Principal principal
     ) {
         String email = principal.getName();
         log.info("전문가 프로필 조회 요청: {}", email);
         ExpertProfileDto profile = expertService.getExpertProfile(email);
+        return ResponseEntity.ok(profile);
+    }
+
+    @GetMapping("/profile/{expertId}")
+    public ResponseEntity<ExpertProfileDto> getExpertProfileById(
+            @PathVariable Long expertId
+    ) {
+        ExpertProfileDto profile = expertService.getExpertProfileById(expertId);
         return ResponseEntity.ok(profile);
     }
 

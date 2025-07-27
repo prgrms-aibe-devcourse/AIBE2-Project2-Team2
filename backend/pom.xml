@@ -120,6 +120,19 @@
             <version>0.12.3</version>
         </dependency>
 
+        <!-- 이메일 발송(Spring Mail) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- Firebase + HttpClient5를 위한 core 라이브러리 -->
+        <dependency>
+            <groupId>org.apache.httpcomponents.core5</groupId>
+            <artifactId>httpcore5</artifactId>
+            <version>5.2.4</version>
+        </dependency>
+
         <!-- JSON -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -152,6 +165,13 @@
             <artifactId>spring-cloud-starter-openfeign</artifactId>
             <version>3.1.8</version>
         </dependency>
+
+        <!-- **chat ** Spring WebSocket + STOMP 지원 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        
 
     </dependencies>
 

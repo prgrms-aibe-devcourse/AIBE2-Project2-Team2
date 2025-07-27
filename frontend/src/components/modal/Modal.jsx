@@ -43,7 +43,7 @@ export const Modal = () => {
           ref={modalRef}
           onClick={handleClickOutside}
           style={{
-            position: "absolute",
+            position: "fixed",
             top: position.top,
             left: position.left,
             zIndex: 10000,

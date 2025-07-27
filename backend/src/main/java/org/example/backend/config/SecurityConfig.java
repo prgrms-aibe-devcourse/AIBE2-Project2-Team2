@@ -70,6 +70,8 @@ public class SecurityConfig {
                 .antMatchers(
                         "/api/auth/login",
                         "/api/auth/signup",
+                        "/api/chat/**",  // ✅ 채팅용 api 추가 - 김기현 -
+                        "/ws/**", // ✅ WebSocket 경로 추가 - 김기현 -
                         "/main/**",
                         "/",
                         "/v3/api-docs/**",
@@ -80,27 +82,26 @@ public class SecurityConfig {
                         "/api/reports"
                 ).permitAll()
                 .antMatchers("/admin/**").hasRole("ADMIN")
-                .antMatchers("/api/matching-histories/user").hasAnyRole("USER")
+                .antMatchers("/api/matching-histories/user").hasAnyRole("USER", "EXPERT")
                 .antMatchers("/api/matching-histories/expert").hasAnyRole("EXPERT")
                 .antMatchers("/api/auth/logout","/api/common/check","/api/me").hasAnyRole("USER", "ADMIN", "EXPERT")
                 .antMatchers("/api/expert/upgrade","/api/expert/meta").hasAnyRole("USER", "EXPERT")
                 .antMatchers("/api/expert/**").hasRole("EXPERT")
+                .antMatchers("/api/matchings/**").hasAnyRole("USER", "EXPERT")
                 .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-
         return http.build();
     }
-
-
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
+                "http://localhost:3000",  // ✅ React 개발 테스트 - 김기현
                 "http://localhost:8080",  // Swagger UI origin
                 "http://localhost:5173",  // Vite 개발 서버 등
                 "https://localhost:5173",

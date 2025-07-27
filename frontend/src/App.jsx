@@ -5,6 +5,18 @@ import { Modal } from "./components/modal/Modal.jsx";
 import { useEffect } from "react";
 import axiosInstance from "./lib/axios.js";
 import { useUserInfoStore } from "./store/userInfo.js";
+import ContentDetailPage from "./router/content/ContentDetailPage";
+import { ContentEditStepperPage } from "./router/content";
+import PaymentPage from "./router/content/PaymentPage";
+import MyPage from "./router/mypage/mypage.jsx";
+import Expert from "./router/expert/expert.jsx";
+import ChatPage from "./router/chat/ChatPage.jsx";
+import MatchingClientDetailPage from "./pages/matching/MatchingClientDetailPage.jsx";
+import CustomerSupport from "./pages/CustomerSupport.jsx";
+import CategoryPage from "./pages/CategoryPage.jsx";
+import MainPage from "./pages/MainPage.jsx";
+import ContentCreateStepperPage from "./router/content/create/ContentCreateStepperPage.jsx";
+import ReviewWrite from "./pages/review/ReviewWrite.jsx";
 
 // 고객센터 신고 관련 Import
 import CustomerSupport from "./pages/CustomerSupport";
@@ -34,6 +46,28 @@ function App() {
   }, []);
 
   return (
+    <>
+      <div className="flex flex-col justify-start items-center">
+        <Header />
+        <div className="h-30"></div>
+        <Routes>
+          <Route path="/" element={<MainPage />} />
+          <Route path="/auth/*" element={<Auth />} />
+          <Route path="/content/create" element={<ContentCreateStepperPage />} />
+          <Route path="/content/:id" element={<ContentDetailPage />} />
+          <Route path="/content/edit/:id" element={<ContentEditStepperPage />} />
+          <Route path="/content/:id/payment" element={<PaymentPage />} />
+          <Route path="/mypage/*" element={<MyPage />} />
+          <Route path="/expert/*" element={<Expert />} />
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/client/matchings/:matchingId" element={<MatchingClientDetailPage />} />
+          <Route path="/customer-support" element={<CustomerSupport />} />
+          <Route path="/category/:categoryName" element={<CategoryPage />} />
+          <Route path="/review/write/:id" element={<ReviewWrite />} />
+        </Routes>
+      </div>
+      <Modal />
+    </>
       <>
         <div className="w-dvw h-dvh flex flex-col justify-start items-center">
           <Header />

@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
+import javax.servlet.ServletException;
 
 @Component
 @RequiredArgsConstructor
@@ -27,7 +28,7 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)
-            throws IOException {
+            throws IOException, ServletException {
 
         try {
             String token = resolveToken(request);

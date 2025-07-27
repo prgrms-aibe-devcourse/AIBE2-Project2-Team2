@@ -54,7 +54,8 @@ public class MyPageController {
                                     "  \"nickname\": \"홍길동\",\n" +
                                     "  \"profileImageUrl\": \"https://cdn.example.com/profile.jpg\",\n" +
                                     "  \"email\": \"hong@example.com\",\n" +
-                                    "  \"joinType\": \"KAKAO\"\n" +
+                                    "  \"joinType\": \"KAKAO\",\n" +
+                                    "  \"phone\": \"010-1234-5678\"\n" +
                                     "}")
                     )
             ),
