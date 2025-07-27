@@ -156,6 +156,12 @@ export default function MatchingHistory() {
           console.log('✅ 결제 승인 완료');
           // URL에서 파라미터 제거
           navigate('/mypage/matching/history', { replace: true });
+          // 성공 메시지 표시
+          alert('결제가 성공적으로 완료되었습니다!');
+          // 매칭 데이터 다시 불러오기
+          setTimeout(() => {
+            fetchMatchings(null, null, false, 0);
+          }, 500); // 0.5초 후 데이터 다시 불러오기
         } catch (error) {
           console.error('❌ 결제 승인 실패:', error);
           alert('결제 승인에 실패했습니다.');
