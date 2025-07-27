@@ -80,6 +80,7 @@ public class SecurityConfig {
                         "/api/auth/kakao/callback",
                         "/error",
                         "/api/reports"
+                        "/api/categories/**"
                 ).permitAll()
                 .antMatchers("/admin/**").hasRole("ADMIN")
                 .antMatchers("/api/matching-histories/user").hasAnyRole("USER", "EXPERT")

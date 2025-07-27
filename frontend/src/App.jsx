@@ -26,6 +26,7 @@ import MainPage from "./pages/MainPage";
 
 // 카테고리별 상품 리스트 페이지 import
 import CategoryPage from "./pages/CategoryPage";
+import CustomToast from "./lib/CustomToast.jsx";
 
 function App() {
   const setUserInfo = useUserInfoStore((state) => state.setUserInfo);
@@ -67,6 +68,7 @@ function App() {
         </Routes>
       </div>
       <Modal />
+      <CustomToast />
     </>
       <>
         <div className="w-dvw h-dvh flex flex-col justify-start items-center">

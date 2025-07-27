@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { InputGroup, ModernInput, ModernSelect, ModernTextarea, AddButton, DeleteButton } from "../FormFields";
 import { Briefcase, User, MapPin, GraduationCap, Users, Globe, Facebook, Instagram, Twitter, Code, Trash2 } from "lucide-react";
 import axiosInstance from "../../../../lib/axios";
+import toast from "react-hot-toast";
 
 export default function EditProfile() {
   const [form, setForm] = useState({
@@ -27,7 +28,7 @@ export default function EditProfile() {
     // 프로필 정보 불러오기
     const fetchProfile = async () => {
       try {
-        const res = await axiosInstance.get("/api/expert/profile");
+        const res = await axiosInstance.get("/api/expert/my-profile");
         // API에서 받아온 데이터로 form 세팅
         const data = res.data;
         setForm({
@@ -45,7 +46,7 @@ export default function EditProfile() {
           careers: data.careers?.length ? data.careers : [""],
         });
       } catch (err) {
-        alert("프로필 정보를 불러오지 못했습니다.");
+        toast.error("프로필 정보를 불러오지 못했습니다.");
       }
     };
     fetchProfile();
@@ -102,7 +103,7 @@ export default function EditProfile() {
         newSkills = prev.skills.filter((_, index) => index !== existingIndex);
       } else {
         if (prev.skills.filter((s) => s.category && s.name).length >= 20) {
-          alert("최대 20개까지만 선택할 수 있습니다.");
+          toast.error("최대 20개까지만 선택할 수 있습니다.");
           return prev;
         }
         newSkills = [...prev.skills, { category: categoryName, name: skillName }];
@@ -138,15 +139,15 @@ export default function EditProfile() {
   // 제출
   const handleSubmit = async () => {
     if (!validateForm()) {
-      alert("필수 입력 항목을 확인해주세요.");
+      toast.error("필수 입력 항목을 확인해주세요.");
       return;
     }
     try {
       await axiosInstance.put("/api/expert/profile", form);
-      alert("프로필이 수정되었습니다!");
+      toast.success("프로필이 수정되었습니다!");
       navigate("/expert/profile");
     } catch (error) {
-      alert("수정에 실패했습니다. 다시 시도해 주세요.");
+      toast.error("수정에 실패했습니다. 다시 시도해 주세요.");
     }
   };
 

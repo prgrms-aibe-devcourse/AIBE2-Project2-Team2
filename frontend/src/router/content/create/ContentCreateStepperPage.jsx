@@ -10,6 +10,7 @@ import DescriptionStep from "./DescriptionStep";
 import ImageStep from "./ImageStep";
 import { validateStep } from "./validation";
 import axiosInstance from "../../../lib/axios";
+import toast from "react-hot-toast";
 
 const steps = ["기본정보", "가격설정", "서비스 설명", "이미지"];
 
@@ -57,12 +58,12 @@ const ContentCreateStepperPage = () => {
 
   const handleSubmit = async () => {
     if (!formProps.form.title || !formProps.form.categoryId || !formProps.form.budget || !formProps.form.description) {
-      alert("모든 필수 정보를 입력해주세요.");
+      toast.error("모든 정보를 입력해주세요.");
       return;
     }
 
     if (!formProps.form.thumbnail || !formProps.form.images || formProps.form.images.length === 0) {
-      alert("대표 이미지와 상세 이미지를 모두 등록해주세요.");
+      toast.error("이미지를 모두 등록해주세요.");
       return;
     }
 
@@ -87,11 +88,11 @@ const ContentCreateStepperPage = () => {
           headers: { "Content-Type": "multipart/form-data" },
         });
       }
+      toast.success("콘텐츠가 등록되었습니다!");
 
-      alert("서비스가 성공적으로 등록되었습니다!");
       navigate(`/content/${contentId}`);
     } catch (err) {
-      alert("등록 중 오류가 발생했습니다: " + (err.response?.data?.message || err.message));
+      toast.error("등록 중 오류가 발생했습니다");
     } finally {
       setLoading(false);
     }
@@ -124,9 +125,9 @@ const ContentCreateStepperPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
+    <div className="">
+      <div className="px-4 py-8">
+        <div className="w-5xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
             <div className="flex">
               <StepperSidebar steps={steps} currentStep={step} completedSteps={completedSteps} onStepClick={goToStep} />

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../lib/axios.js";
+import toast from "react-hot-toast";
 
 export default function SignUp() {
   const [userForm, setUserForm] = useState({
@@ -61,11 +62,11 @@ export default function SignUp() {
     try {
       const response = await axiosInstance.post("/api/auth/signup", sendUserData);
       console.log(response.data);
-      alert("회원가입이 완료되었습니다.");
+      toast.success("회원가입이 완료되었습니다!");
       navigate("/auth/login");
     } catch (error) {
       console.error("회원가입 실패:", error);
-      alert(error.response.data.message || "회원가입에 실패했습니다. 다시 시도해 주세요.");
+      toast.error(error.response.data.message || "회원가입에 실패했습니다.");
     }
   };
 

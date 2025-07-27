@@ -298,7 +298,7 @@ export default function Profile() {
                 </div>
                 <div className="space-y-3">
                   {userInfo.portfolios.length === 0 ? (
-                    <Link to="/expert/portfolio/register" className="bg-white rounded-lg border-2 p-6 flex flex-col items-center justify-center border-dashed border-gray-200 text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-all duration-200 cursor-pointer">
+                    <Link to="/expert/portfolio/create" className="bg-white rounded-lg border-2 p-6 flex flex-col items-center justify-center border-dashed border-gray-200 text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-all duration-200 cursor-pointer">
                       <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                       </svg>

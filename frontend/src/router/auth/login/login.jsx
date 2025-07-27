@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../lib/axios.js";
 import { useUserInfoStore } from "../../../store/userInfo.js";
+import toast from "react-hot-toast";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -75,11 +76,10 @@ export default function Login() {
       setUserInfo(response); // 사용자 정보를 store에 저장
 
       // 로그인 성공 후 리다리렉트 홈으로
-      console.log("로그인 성공:", response);
+      toast.success("로그인 성공!");
       navigate("/");
     } catch (error) {
-      console.error("로그인 오류:", error);
-      alert("로그인에 실패했습니다. 다시 시도해 주세요.");
+      toast.error("로그인에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
     }

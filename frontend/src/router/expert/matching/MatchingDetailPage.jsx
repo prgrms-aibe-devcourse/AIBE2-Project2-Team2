@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../../../lib/axios";
 
@@ -37,7 +38,7 @@ export default function MatchingDetailPage() {
       const res = await axiosInstance.get(`/api/matchings/${matchingId}`);
       setMatching(res.data);
     } catch {
-      alert("매칭 정보를 불러올 수 없습니다.");
+      toast.error("매칭 정보를 불러올 수 없습니다.");
     }
     setLoading(false);
   };
@@ -47,7 +48,7 @@ export default function MatchingDetailPage() {
       const res = await axiosInstance.get("/api/me");
       setMyEmail(res.data.email);
     } catch {
-      alert("로그인이 필요합니다.");
+      toast.error("로그인이 필요합니다.");
     }
   };
 
@@ -61,16 +62,16 @@ export default function MatchingDetailPage() {
     if (!window.confirm("정말 작업을 시작하시겠습니까?")) return;
     try {
       await axiosInstance.patch(`/api/matchings/${matchingId}/start`);
-      alert("작업을 시작했습니다.");
+      toast.success("작업을 시작했습니다.");
       fetchMatching();
     } catch (e) {
-      alert(e?.response?.data?.message || "작업 시작 실패");
+      toast.error(e?.response?.data?.message || "작업 시작 실패");
     }
   };
 
   const handleReject = async () => {
     if (!rejectReason.trim()) {
-      alert("거절 사유를 입력하세요.");
+      toast.error("거절 사유를 입력하세요.");
       return;
     }
     try {
@@ -78,12 +79,12 @@ export default function MatchingDetailPage() {
         status: "REJECTED",
         reason: rejectReason,
       });
-      alert("작업을 거절했습니다.");
+      toast.success("작업을 거절했습니다.");
       setRejectMode(false);
       setRejectReason("");
       navigate(-1);
     } catch (e) {
-      alert(e?.response?.data?.message || "작업 거절 실패");
+      toast.error(e?.response?.data?.message || "작업 거절 실패");
     }
   };
 
@@ -91,10 +92,10 @@ export default function MatchingDetailPage() {
     if (!window.confirm("작업을 완료하시겠습니까?")) return;
     try {
       await axiosInstance.patch(`/api/matchings/${matchingId}/complete`);
-      alert("작업을 완료 처리했습니다.");
+      toast.success("작업을 완료 처리했습니다.");
       fetchMatching();
     } catch (e) {
-      alert(e?.response?.data?.message || "작업 완료 실패");
+      toast.error(e?.response?.data?.message || "작업 완료 실패");
     }
   };
 
