@@ -45,7 +45,7 @@ public class SearchController {
     public ResponseEntity<Page<SearchContentResponse>> searchByKeyword(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size
+            @RequestParam(defaultValue = "12") int size
     ) {
         log.info("키워드 검색 요청 - 키워드: '{}', 페이지: {}, 사이즈: {}", keyword, page, size);
 

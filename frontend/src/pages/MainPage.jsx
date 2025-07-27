@@ -25,7 +25,8 @@ const categories = [
 const MainPage = () => {
   const [expanded, setExpanded] = useState(false);
   const categoryRef = useRef(null);
-  const navigate = useNavigate(); // ✅ 추가
+  const navigate = useNavigate();
+  const [searchKeyword, setSearchKeyword] = useState("");
 
   const defaultCategories = categories.slice(0, 6);
   const extraCategories = categories.slice(6);
@@ -43,21 +44,29 @@ const MainPage = () => {
     navigate(`/category/${id}`);
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchKeyword.trim()) {
+      navigate(`/category/${encodeURIComponent(searchKeyword.trim())}`);
+    }
+  };
   return (
     <div className="min-h-screen px-4 py-40 bg-white text-center">
       <h1 className="text-3xl sm:text-4xl font-bold mb-6 leading-relaxed">
-        으악이 필요한 순간,
-        <br className="hidden sm:block" />딱 맞는 으아악을 찾아보세요
+        전문가가 필요한 순간,
+        <br className="hidden sm:block" />딱 맞는 전문가를 찾아보세요
       </h1>
 
-      <div className="flex justify-center mt-6 gap-3">
-        <input type="text" placeholder="어떤 전문가가 필요하세요?" className="w-full max-w-md border border-gray-300 rounded-full px-6 py-3 shadow-sm focus:outline-none" />
-        <button className="rounded-full bg-teal-600 text-white font-semibold px-6 py-2 shadow hover:bg-teal-700 transition">검색</button>
-      </div>
+      <form className="flex justify-center mt-6 gap-3" onSubmit={handleSearch}>
+        <input type="text" placeholder="어떤 전문가가 필요하세요?" className="w-full max-w-md border border-gray-300 rounded-full px-6 py-3 shadow-sm focus:outline-none" value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} />
+        <button type="submit" className="rounded-full bg-teal-600 text-white font-semibold px-6 py-2 shadow hover:bg-teal-700 transition">
+          검색
+        </button>
+      </form>
 
       <div className="flex flex-wrap justify-center mt-4 gap-2 text-sm">
         {["홈페이지 신규 제작", "홈페이지제작", "홈페이지", "카페24", "워드프레스", "블로그"].map((keyword, i) => (
-          <button key={i} className="px-4 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition">
+          <button key={i} className="px-4 py-1 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition" onClick={() => navigate(`/category/${encodeURIComponent(keyword)}`)}>
             {keyword}
           </button>
         ))}
@@ -66,10 +75,7 @@ const MainPage = () => {
       {/* 기본 카테고리 */}
       <div ref={categoryRef} className="grid grid-cols-3 sm:grid-cols-6 gap-x-4 gap-y-6 mt-10 max-w-5xl mx-auto">
         {defaultCategories.map(({ label, emoji, id }) => (
-          <div
-            key={label}
-            onClick={() => handleCategoryClick(id)} // ✅ 클릭 이벤트 연결
-            className="bg-gray-100 h-[84px] px-3 py-4 rounded shadow-sm hover:bg-gray-200 cursor-pointer flex flex-col items-center justify-center">
+          <div key={label} onClick={() => handleCategoryClick(id)} className="bg-gray-100 h-[84px] px-3 py-4 rounded shadow-sm hover:bg-gray-200 cursor-pointer flex flex-col items-center justify-center">
             <span className="text-xl mb-1">{emoji}</span>
             <span className="text-sm text-center leading-tight break-keep">{label}</span>
           </div>
