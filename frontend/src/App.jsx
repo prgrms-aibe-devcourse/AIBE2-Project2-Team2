@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import axiosInstance from "./lib/axios.js";
 import { useUserInfoStore } from "./store/userInfo.js";
 import ContentDetailPage from "./router/content/ContentDetailPage";
-import { ContentEditStepperPage } from "./router/content";
+import ContentEditStepperPage from "./router/content/edit/ContentEditStepperPage.jsx";
 import PaymentPage from "./router/content/PaymentPage";
 import MyPage from "./router/mypage/mypage.jsx";
 import Expert from "./router/expert/expert.jsx";
