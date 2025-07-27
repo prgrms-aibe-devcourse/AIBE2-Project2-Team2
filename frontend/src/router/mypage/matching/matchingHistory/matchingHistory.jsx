@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import axiosInstance from "../../../../lib/axios.js";
 import { useUserInfoStore } from "../../../../store/userInfo.js";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 const statusFilters = [
   { label: "전체", value: null },
@@ -49,6 +49,7 @@ const getStatusColor = (status) => {
 
 export default function MatchingHistory() {
   const { userInfo } = useUserInfoStore();
+  const location = useLocation();
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [matchings, setMatchings] = useState([]);
   const [pageInfo, setPageInfo] = useState({
@@ -135,6 +136,36 @@ export default function MatchingHistory() {
       console.error("매칭 내역 조회 실패:", error);
     }
   };
+
+  // 결제 승인 처리
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const matchingId = urlParams.get('matchingId');
+    const pgToken = urlParams.get('pg_token');
+    
+    if (matchingId && pgToken) {
+      // 결제 승인 API 호출
+      const approvePayment = async () => {
+        try {
+          await axiosInstance.get('/api/payment/kakao/success', {
+            params: {
+              pg_token: pgToken,
+              matchingId: matchingId
+            }
+          });
+          console.log('✅ 결제 승인 완료');
+          // URL에서 파라미터 제거
+          navigate('/mypage/matching/history', { replace: true });
+        } catch (error) {
+          console.error('❌ 결제 승인 실패:', error);
+          alert('결제 승인에 실패했습니다.');
+          navigate('/mypage/matching/history', { replace: true });
+        }
+      };
+      
+      approvePayment();
+    }
+  }, [location.search, navigate]);
 
   // 첫 진입 시 전체 출력 (쿼리스트링 없이)
   useEffect(() => {
