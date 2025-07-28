@@ -160,6 +160,18 @@ public class MatchingServiceImpl implements MatchingService {
         }
 
         matching.completeWork();
+
+        // ✅ 이메일 전송 추가
+        Member client = matching.getMember();
+        String clientEmail = client.getEmail();
+        mailService.sendSimpleMail(
+                clientEmail,
+                "작업 완료 알림",
+                String.format("전문가 '%s'님이 작업을 완료했습니다. 확인해 주세요.",
+                        matching.getContent().getMember().getNickname()
+                )
+        );
+
         return buildMatchingResponse(matching, matching.getEstimateRecord());
     }
 
@@ -194,6 +206,18 @@ public class MatchingServiceImpl implements MatchingService {
         switch (paymentStatus) {
             case PAID:
                 matching.accept();
+
+                // ✅ 결제 완료 시 전문가에게 이메일 알림
+                Member expert = matching.getContent().getMember();
+                String expertEmail = expert.getEmail();
+                mailService.sendSimpleMail(
+                        expertEmail,
+                        "[결제 완료] 매칭이 수락되었습니다",
+                        String.format("의뢰자 '%s'님이 '%s' 콘텐츠에 대해 결제를 완료했습니다.",
+                                matching.getMember().getNickname(),
+                                matching.getContent().getTitle()
+                        )
+                );
                 break;
             case FAILED:
             case CANCELLED:

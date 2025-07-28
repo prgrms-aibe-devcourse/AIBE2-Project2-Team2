@@ -61,7 +61,7 @@ function App() {
           <Route path="/content/:id/payment" element={<PaymentPage />} />
           <Route path="/mypage/*" element={<MyPage />} />
           <Route path="/expert/*" element={<Expert />} />
-          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/chat/:roomId?" element={<ChatPage />} />
           <Route path="/client/matchings/:matchingId" element={<MatchingClientDetailPage />} />
           <Route path="/customer-support" element={<CustomerSupport />} />
           <Route path="/category/:categoryName" element={<CategoryPage />} />
