@@ -23,6 +23,7 @@ public class ContentDetailResponseDto {
     private String contentUrl; // 대표 이미지 URL
     private List<String> imageUrls; // 모든 이미지 URL 리스트 추가
     private List<SimplePortfolioDto> portfolios;
+    private String status; // 콘텐츠 상태 추가
 
     @Getter
     @Builder

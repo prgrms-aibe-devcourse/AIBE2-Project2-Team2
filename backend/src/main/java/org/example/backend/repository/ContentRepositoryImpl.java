@@ -20,6 +20,7 @@ import static org.example.backend.entity.QCategory.category;
 import static org.example.backend.entity.QMember.member;
 import static org.example.backend.entity.QContentImage.contentImage;
 import static org.example.backend.entity.QExpertProfile.expertProfile;
+import org.example.backend.constant.Status;
 
 @Slf4j
 @Repository
@@ -60,7 +61,8 @@ public class ContentRepositoryImpl implements ContentRepositoryCustom {
                 .join(content.category, category)
                 .join(content.member, member)
                 .leftJoin(member.expertProfile, expertProfile)
-                .where(content.category.categoryId.in(categoryIds))
+                .where(content.category.categoryId.in(categoryIds)
+                        .and(content.status.eq(Status.ACTIVE)))
                 .orderBy(content.updateTime.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize());
@@ -71,7 +73,8 @@ public class ContentRepositoryImpl implements ContentRepositoryCustom {
         Long totalCount = queryFactory
                 .select(content.count())
                 .from(content)
-                .where(content.category.categoryId.in(categoryIds))
+                .where(content.category.categoryId.in(categoryIds)
+                        .and(content.status.eq(Status.ACTIVE)))
                 .fetchOne();
 
         long total = totalCount != null ? totalCount : 0L;
@@ -135,8 +138,9 @@ public class ContentRepositoryImpl implements ContentRepositoryCustom {
                 .join(content.category, category)
                 .join(content.member, member)
                 .leftJoin(member.expertProfile, expertProfile)
-                .where(content.title.containsIgnoreCase(trimmedKeyword)
+                .where((content.title.containsIgnoreCase(trimmedKeyword)
                         .or(content.description.containsIgnoreCase(trimmedKeyword)))
+                        .and(content.status.eq(Status.ACTIVE)))
                 .orderBy(content.updateTime.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize());
@@ -147,8 +151,9 @@ public class ContentRepositoryImpl implements ContentRepositoryCustom {
         Long totalCount = queryFactory
                 .select(content.count())
                 .from(content)
-                .where(content.title.containsIgnoreCase(trimmedKeyword)
+                .where((content.title.containsIgnoreCase(trimmedKeyword)
                         .or(content.description.containsIgnoreCase(trimmedKeyword)))
+                        .and(content.status.eq(Status.ACTIVE)))
                 .fetchOne();
 
         long total = totalCount != null ? totalCount : 0L;

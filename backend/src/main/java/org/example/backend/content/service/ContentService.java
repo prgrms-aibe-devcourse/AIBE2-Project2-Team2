@@ -285,6 +285,7 @@ public class ContentService {
                 .contentUrl(contentUrl)
                 .imageUrls(imageUrls)
                 .portfolios(portfolioDtos)
+                .status(content.getStatus() != null ? content.getStatus().name() : null)
                 .build();
     }
 
