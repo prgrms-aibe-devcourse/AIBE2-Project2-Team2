@@ -57,6 +57,18 @@ function ContentDetailPage() {
     }
   };
 
+  // 콘텐츠 삭제 함수
+  const handleDeleteContent = async () => {
+    try {
+      await axiosInstance.delete(`/api/content/${id}`);
+      toast.success("서비스가 삭제되었습니다.");
+      navigate("/");
+    } catch (err) {
+      console.error("❌ 서비스 삭제 실패:", err);
+      toast.error("서비스 삭제에 실패했습니다.");
+    }
+  };
+
   // 이미지 클릭 핸들러
   const handleImageClick = (index) => {
     setCurrentImageIndex(index);
@@ -142,14 +154,25 @@ function ContentDetailPage() {
       setLoading(true);
       try {
         const contentRes = await axiosInstance.get(`/api/content/${id}`);
-        setContent(contentRes.data);
+        const contentData = contentRes.data;
+        
+        // 삭제된 콘텐츠인지 확인
+        if (contentData.status === "DELETED") {
+          toast.error("삭제된 서비스입니다.");
+          navigate("/");
+          return;
+        }
+        
+        setContent(contentData);
       } catch (err) {
         console.error("API 요청 에러:", err);
+        toast.error("서비스를 찾을 수 없습니다.");
+        navigate("/");
       }
       setLoading(false);
     }
     fetchData();
-  }, [id]);
+  }, [id, navigate]);
 
   //리뷰 요청
   const handleReviewRequest = async () => {
@@ -669,45 +692,73 @@ function ContentDetailPage() {
             </ul>
             <div className="text-xs text-gray-400 mb-2">관련파일 제공, 고해상도 파일 제공, 응용 디자인, 사이즈 이외 가능</div>
           </div>
-          <button
-            className="w-full bg-gray-100 py-2 rounded font-semibold mb-2 hover:bg-gray-200 transition-colors cursor-pointer"
-            onClick={() => {
-              if (!userInfo) {
-                toast.error("로그인이 필요합니다.");
-                navigate("/auth/login");
-                return;
-              }
-              
-              // 본인이 작성한 콘텐츠인지 확인
-              if (userInfo.email === content.expertEmail) {
-                toast.error("본인이 작성한 서비스입니다.");
-                return;
-              }
-              
-              handleCreateChatRoom(content.expertEmail);            
-            }}
-          >
-            전문가에게 문의하기
-          </button>
-          <button
-            className="w-full bg-yellow-400 py-2 rounded font-bold cursor-pointer hover:bg-yellow-500 transition-colors"
-            onClick={() => {
-              if (!userInfo) {
-                toast.error("로그인이 필요합니다.");
-                navigate("/auth/login");
-                return;
-              }
-              
-              // 본인이 작성한 콘텐츠인지 확인
-              if (userInfo.email === content.expertEmail) {
-                toast.error("본인이 작성한 서비스입니다.");
-                return;
-              }
-              
-              navigate(`/content/${id}/payment`);
-            }}>
-            결제하기
-          </button>
+          {userInfo && userInfo.email === content.expertEmail ? (
+            // 본인이 작성한 콘텐츠인 경우 - 수정/삭제 버튼
+            <>
+              <button
+                className="w-full bg-blue-500 py-2 rounded font-semibold mb-2 hover:bg-blue-600 transition-colors cursor-pointer text-white"
+                onClick={() => {
+                  navigate(`/content/edit/${id}`);
+                }}
+              >
+                수정하기
+              </button>
+              <button
+                className="w-full bg-red-500 py-2 rounded font-semibold mb-2 hover:bg-red-600 transition-colors cursor-pointer text-white"
+                onClick={() => {
+                  if (window.confirm("정말로 이 서비스를 삭제하시겠습니까?")) {
+                    // 삭제 API 호출
+                    handleDeleteContent();
+                  }
+                }}
+              >
+                삭제하기
+              </button>
+            </>
+          ) : (
+            // 다른 사용자가 작성한 콘텐츠인 경우 - 문의/결제 버튼
+            <>
+              <button
+                className="w-full bg-gray-100 py-2 rounded font-semibold mb-2 hover:bg-gray-200 transition-colors cursor-pointer"
+                onClick={() => {
+                  if (!userInfo) {
+                    toast.error("로그인이 필요합니다.");
+                    navigate("/auth/login");
+                    return;
+                  }
+                  
+                  // 본인이 작성한 콘텐츠인지 확인
+                  if (userInfo.email === content.expertEmail) {
+                    toast.error("본인이 작성한 서비스입니다.");
+                    return;
+                  }
+                  
+                  handleCreateChatRoom(content.expertEmail);            
+                }}
+              >
+                전문가에게 문의하기
+              </button>
+              <button
+                className="w-full bg-yellow-400 py-2 rounded font-bold cursor-pointer hover:bg-yellow-500 transition-colors"
+                onClick={() => {
+                  if (!userInfo) {
+                    toast.error("로그인이 필요합니다.");
+                    navigate("/auth/login");
+                    return;
+                  }
+                  
+                  // 본인이 작성한 콘텐츠인지 확인
+                  if (userInfo.email === content.expertEmail) {
+                    toast.error("본인이 작성한 서비스입니다.");
+                    return;
+                  }
+                  
+                  navigate(`/content/${id}/payment`);
+                }}>
+                결제하기
+              </button>
+            </>
+          )}
           <div className="text-xs text-gray-400 mt-4">
             * 서비스 제공 완료 후 전문가에게 전달되니 안전하게 거래하세요.
             <br />

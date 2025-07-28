@@ -35,20 +35,7 @@ const StepperSidebar = ({ steps, currentStep, completedSteps, onStepClick }) => 
             </button>
           );
         })}
-      </div>
-
-      <div className="mt-8 p-4 bg-white rounded-xl border border-slate-200">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-          <span className="text-sm font-semibold text-slate-700">진행 상황</span>
-        </div>
-        <div className="w-full bg-slate-200 rounded-full h-2 mb-2">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300" style={{ width: `${((completedSteps.length + (currentStep > 0 ? 1 : 0)) / steps.length) * 100}%` }}></div>
-        </div>
-        <p className="text-xs text-slate-500">
-          {completedSteps.length}/{steps.length} 단계 완료
-        </p>
-      </div>
+      </div>    
     </div>
   );
 };
