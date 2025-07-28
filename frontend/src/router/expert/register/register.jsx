@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Trash2, User, MapPin, GraduationCap, Users, Globe, Facebook, Instagram, Twitter, Briefcase, Code, AlertCircle, Plus, ChevronDown, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../../lib/axios";
+import toast from "react-hot-toast";
 
 // Form Components
 const InputGroup = ({ label, icon, required, children, error }) => {
