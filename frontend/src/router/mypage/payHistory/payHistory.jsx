@@ -166,7 +166,7 @@ export default function PaymentHistory() {
                                 {/* Content Info */}
                                 <div className="flex-grow">
                                     <h3 className="font-semibold text-lg mb-1">
-                                        【전문가 이름】{payment.contentTitle}
+                                        【{payment.expertName}】{payment.contentTitle}
                                     </h3>
                                     <div className="text-sm text-gray-600 space-y-1">
                                         <p>결제 번호: {payment.paymentId}</p>
