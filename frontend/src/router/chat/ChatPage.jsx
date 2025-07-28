@@ -62,7 +62,7 @@ const ChatPage = () => {
 
   const fetchChatRooms = useCallback(async () => {
     try {
-      const res = await axiosInstance.get("/chat/rooms");
+      const res = await axiosInstance.get("/api/chat/rooms");
       setRooms(res.data);
     } catch (err) {
       console.error("❌ 채팅방 리스트 불러오기 실패:", err);
@@ -72,7 +72,7 @@ const ChatPage = () => {
   const fetchMessages = useCallback(async (roomId) => {
     if (!roomId || roomId === "undefined" || isNaN(Number(roomId))) return;
     try {
-      const res = await axiosInstance.get(`/chat/rooms/${roomId}/messages`);
+      const res = await axiosInstance.get(`/api/chat/rooms/${roomId}/messages`);
       setMessages(res.data);
     } catch (err) {
       console.error("❌ 메시지 불러오기 실패:", err);
