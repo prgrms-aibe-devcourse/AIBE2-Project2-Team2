@@ -706,10 +706,42 @@ function ContentDetailPage() {
               <button
                 className="w-full bg-red-500 py-2 rounded font-semibold mb-2 hover:bg-red-600 transition-colors cursor-pointer text-white"
                 onClick={() => {
-                  if (window.confirm("정말로 이 서비스를 삭제하시겠습니까?")) {
-                    // 삭제 API 호출
-                    handleDeleteContent();
-                  }
+                  toast.custom(
+                    (t) => (
+                      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-sm">
+                        <div className="flex items-center mb-3">
+                          <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-red-600 text-lg">⚠️</span>
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">서비스 삭제</h3>
+                            <p className="text-sm text-gray-600">정말로 이 서비스를 삭제하시겠습니까?</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            className="flex-1 bg-red-500 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-red-600 transition-colors"
+                            onClick={() => {
+                              toast.dismiss(t.id);
+                              handleDeleteContent();
+                            }}
+                          >
+                            삭제
+                          </button>
+                          <button
+                            className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md text-sm font-medium hover:bg-gray-400 transition-colors"
+                            onClick={() => toast.dismiss(t.id)}
+                          >
+                            취소
+                          </button>
+                        </div>
+                      </div>
+                    ),
+                    {
+                      duration: Infinity,
+                      position: "top-center",
+                    }
+                  );
                 }}
               >
                 삭제하기

@@ -5,7 +5,7 @@ const StepperSidebar = ({ steps, currentStep, completedSteps, onStepClick }) => 
   return (
     <div className="w-80 bg-gradient-to-b from-slate-50 to-slate-100 border-r border-slate-200 p-8">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-slate-800 mb-2">서비스 등록</h2>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">서비스 수정</h2>
         <p className="text-slate-600">단계별로 정보를 입력해주세요</p>
       </div>
 
