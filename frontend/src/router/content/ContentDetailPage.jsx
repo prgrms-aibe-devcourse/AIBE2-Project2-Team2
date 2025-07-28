@@ -677,6 +677,13 @@ function ContentDetailPage() {
                 navigate("/auth/login");
                 return;
               }
+              
+              // 본인이 작성한 콘텐츠인지 확인
+              if (userInfo.email === content.expertEmail) {
+                toast.error("본인이 작성한 서비스입니다.");
+                return;
+              }
+              
               handleCreateChatRoom(content.expertEmail);            
             }}
           >
@@ -690,6 +697,13 @@ function ContentDetailPage() {
                 navigate("/auth/login");
                 return;
               }
+              
+              // 본인이 작성한 콘텐츠인지 확인
+              if (userInfo.email === content.expertEmail) {
+                toast.error("본인이 작성한 서비스입니다.");
+                return;
+              }
+              
               navigate(`/content/${id}/payment`);
             }}>
             결제하기
