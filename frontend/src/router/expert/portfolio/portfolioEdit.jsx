@@ -61,7 +61,7 @@ export default function PortfolioEdit() {
         setPortfolioData(data);
 
         // 권한 체크: 현재 로그인한 사용자가 작성자인지 확인
-        if (!userInfo || !data.author || userInfo.id !== data.author.id) {
+        if (data.expertNickname !== userInfo?.nickname) {
           toast.error("본인이 작성한 포트폴리오만 수정 가능합니다.");
           navigate(`/expert/portfolio/${id}`);
           return;
@@ -336,11 +336,6 @@ export default function PortfolioEdit() {
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">포트폴리오 수정</h1>
           <p className="text-gray-600">작품 정보를 수정하세요</p>
-          {portfolioData && (
-            <p className="text-sm text-gray-500 mt-2">
-              작성자: {portfolioData.author.name} ({portfolioData.author.email})
-            </p>
-          )}
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl backdrop-blur-sm border border-white/20 overflow-hidden">

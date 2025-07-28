@@ -16,7 +16,7 @@ export default function Expert() {
         <Route path="/profile/edit" element={<EditProfile />} />
         <Route path="/portfolio/:id" element={<Portfolio />} />
         <Route path="/portfolio/create" element={<PortfolioCreate />} />
-        <Route path="/portfolio/edit" element={<PortfolioEdit />} />
+        <Route path="/portfolio/edit/:id" element={<PortfolioEdit />} />
         <Route path="/matchings/:matchingId" element={<MatchingDetailPage />} />
       </Routes>
     </>

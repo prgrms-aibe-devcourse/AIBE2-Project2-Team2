@@ -5,7 +5,6 @@ import { Client } from "@stomp/stompjs";
 import "../../style/ChatPage.css";
 
 import axiosInstance from "../../lib/axios.js";
-import { useUserInfoStore } from "../../store/userInfo.js";
 
 /*
 
@@ -37,8 +36,24 @@ const ChatPage = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [myEmail, setMyEmail] = useState(null);
 
-  const { userInfo } = useUserInfoStore();
+  const [userInfo, setUserInfo] = useState(null);
+  const [isUserLoading, setIsUserLoading] = useState(true);
+
   const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    axiosInstance
+        .get("/api/me")
+        .then((res) => {
+          setUserInfo(res.data);
+          setMyEmail(res.data.email);
+        })
+        .catch((err) => {
+          console.error("사용자 정보 불러오기 실패:", err);
+          toast.error("사용자 정보를 불러오지 못했습니다.");
+        })
+        .finally(() => setIsUserLoading(false));
+  }, []);
 
   // ✅ 스크롤 최신 메시지로 이동
   const scrollToBottom = () => {
@@ -51,15 +66,6 @@ const ChatPage = () => {
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    // ✅ 사용자 이메일 가져오기
-    if (userInfo && userInfo.email) {
-      setMyEmail(userInfo.email);
-    } else {
-      console.error("❌ 사용자 정보가 없습니다.");
-    }
-  }, [userInfo]);
-
   const fetchChatRooms = useCallback(async () => {
     try {
       const res = await axiosInstance.get("/api/chat/rooms");
@@ -68,6 +74,12 @@ const ChatPage = () => {
       console.error("❌ 채팅방 리스트 불러오기 실패:", err);
     }
   }, []);
+
+  useEffect(() => {
+    if (!isUserLoading && userInfo?.email) {
+      fetchChatRooms();
+    }
+  }, [isUserLoading, userInfo, fetchChatRooms]);
 
   const fetchMessages = useCallback(async (roomId) => {
     if (!roomId || roomId === "undefined" || isNaN(Number(roomId))) return;
@@ -80,31 +92,31 @@ const ChatPage = () => {
   }, []);
 
   const connectWebSocket = useCallback(
-    (roomId) => {
-      if (!roomId || roomId === "undefined" || isNaN(Number(roomId))) return;
+      (roomId) => {
+        if (!roomId || roomId === "undefined" || isNaN(Number(roomId))) return;
 
-      if (stompClient) stompClient.deactivate();
+        if (stompClient) stompClient.deactivate();
 
-      const client = new Client({
-        brokerURL: "ws://localhost:8080/ws/chat",
-        connectHeaders: {
-          Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
-        },
-        reconnectDelay: 5000,
-        onConnect: () => {
-          setIsConnected(true);
+        const client = new Client({
+          brokerURL: "ws://localhost:8080/ws/chat",
+          connectHeaders: {
+            Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
+          },
+          reconnectDelay: 5000,
+          onConnect: () => {
+            setIsConnected(true);
 
-          client.subscribe(`/sub/chatroom/${roomId}`, (msg) => {
-            const newMessage = JSON.parse(msg.body);
-            setMessages((prev) => [...prev, newMessage]);
-          });
-        },
-      });
+            client.subscribe(`/sub/chatroom/${roomId}`, (msg) => {
+              const newMessage = JSON.parse(msg.body);
+              setMessages((prev) => [...prev, newMessage]);
+            });
+          },
+        });
 
-      client.activate();
-      setStompClient(client);
-    },
-    [stompClient]
+        client.activate();
+        setStompClient(client);
+      },
+      [stompClient]
   );
 
   const sendMessage = () => {
@@ -129,10 +141,6 @@ const ChatPage = () => {
   };
 
   useEffect(() => {
-    fetchChatRooms();
-  }, [fetchChatRooms]);
-
-  useEffect(() => {
     if (initialRoomId && initialRoomId !== "undefined" && !isNaN(Number(initialRoomId))) {
       handleSelectRoom(initialRoomId);
     }
@@ -145,7 +153,7 @@ const ChatPage = () => {
     };
   }, [stompClient]);
 
-  if (!myEmail) return <div>Loading user info...</div>;
+  if (isUserLoading) return <div>Loading user info...</div>;
 
   // Helper function to group messages by sender and time slot
   const groupMessages = (msgs) => {
@@ -180,88 +188,88 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="container mb-8">
-      {/* ✅ 좌측: 채팅방 리스트 */}
-      <div className="sidebar">
-        <h2 className="sidebarTitle">내 채팅방</h2>
-        <ul className="roomList">
-          {rooms.map((room) => (
-            <li key={room.roomId} className={`roomItem${room.roomId === currentRoom ? " activeRoom" : ""}`} onClick={() => handleSelectRoom(room.roomId)}>
-              <img src={room.opponentProfileImage || "/default-profile.png"} alt="상대 프로필" className="roomAvatar" />
-              <div style={{ flex: 1 }}>
-                <div className="roomName">{room.opponentName || `채팅방 #${room.roomId}`}</div>
-                <div className="roomLastMsg">{room.lastMessage || "최근 메시지 없음"}</div>
-              </div>
-              {room.unreadCount > 0 && <span className="unreadBadge">{room.unreadCount}</span>}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* ✅ 우측: 채팅 메시지 영역 */}
-      <div className="chatSection">
-        {currentRoom ? (
-          <>
-            <div className="chatHeader">{rooms.find((r) => r.roomId === currentRoom)?.opponentName || `채팅방 #${currentRoom}`}</div>
-            <div className="messagesContainer">
-              {groupMessages(messages).map((group, idx) => {
-                const isMine = group.senderEmail === myEmail;
-                const opponent = rooms.find((r) => r.roomId === currentRoom);
-                return (
-                  <div
-                    key={idx}
-                    className="messageGroup"
-                    style={{
-                      alignItems: isMine ? "flex-end" : "flex-start",
-                      justifyContent: isMine ? "flex-end" : "flex-start",
-                    }}>
-                    {!isMine && <img src={opponent?.opponentProfileImage || "/default-profile.png"} alt="상대 프로필" className="msgAvatar" />}
-                    <div
-                      style={{
-                        maxWidth: "70%",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: isMine ? "flex-end" : "flex-start",
-                      }}>
-                      {group.messages.map((m, i) => {
-                        const isLast = i === group.messages.length - 1;
-                        const time = new Date(m.sendAt).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        });
-                        return (
-                          <div key={m.chatId} style={{ marginBottom: "4px" }}>
-                            <div
-                              className="messageBubble"
-                              style={{
-                                background: isMine ? "#ffeb33" : "#fff",
-                                borderTopRightRadius: isMine ? "4px" : "16px",
-                                borderTopLeftRadius: isMine ? "16px" : "4px",
-                              }}>
-                              {m.message}
-                            </div>
-                            {isLast && <div className="messageTime">{time}</div>}
-                          </div>
-                        );
-                      })}
-                    </div>
+      <div className="container mb-8">
+        {/* ✅ 좌측: 채팅방 리스트 */}
+        <div className="sidebar">
+          <h2 className="sidebarTitle">내 채팅방</h2>
+          <ul className="roomList">
+            {rooms.map((room) => (
+                <li key={room.roomId} className={`roomItem${room.roomId === currentRoom ? " activeRoom" : ""}`} onClick={() => handleSelectRoom(room.roomId)}>
+                  <img src={room.opponentProfileImage || "/default-profile.png"} alt="상대 프로필" className="roomAvatar" />
+                  <div style={{ flex: 1 }}>
+                    <div className="roomName">{room.opponentName || `채팅방 #${room.roomId}`}</div>
+                    <div className="roomLastMsg">{room.lastMessage || "최근 메시지 없음"}</div>
                   </div>
-                );
-              })}
-              <div ref={messagesEndRef} />
-            </div>
-            <div className="inputContainer">
-              <input type="text" placeholder="메시지를 입력하세요..." value={inputMessage} onChange={(e) => setInputMessage(e.target.value)} onKeyDown={handleKeyDown} className="inputField" />
-              <button onClick={sendMessage} className="sendButton">
-                ✈️
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="emptyChat">채팅방을 선택하세요.</div>
-        )}
+                  {room.unreadCount > 0 && <span className="unreadBadge">{room.unreadCount}</span>}
+                </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* ✅ 우측: 채팅 메시지 영역 */}
+        <div className="chatSection">
+          {currentRoom ? (
+              <>
+                <div className="chatHeader">{rooms.find((r) => r.roomId === currentRoom)?.opponentName || `채팅방 #${currentRoom}`}</div>
+                <div className="messagesContainer">
+                  {groupMessages(messages).map((group, idx) => {
+                    const isMine = group.senderEmail === myEmail;
+                    const opponent = rooms.find((r) => r.roomId === currentRoom);
+                    return (
+                        <div
+                            key={idx}
+                            className="messageGroup"
+                            style={{
+                              alignItems: isMine ? "flex-end" : "flex-start",
+                              justifyContent: isMine ? "flex-end" : "flex-start",
+                            }}>
+                          {!isMine && <img src={opponent?.opponentProfileImage || "/default-profile.png"} alt="상대 프로필" className="msgAvatar" />}
+                          <div
+                              style={{
+                                maxWidth: "70%",
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: isMine ? "flex-end" : "flex-start",
+                              }}>
+                            {group.messages.map((m, i) => {
+                              const isLast = i === group.messages.length - 1;
+                              const time = new Date(m.sendAt).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              });
+                              return (
+                                  <div key={m.chatId} style={{ marginBottom: "4px" }}>
+                                    <div
+                                        className="messageBubble"
+                                        style={{
+                                          background: isMine ? "#ffeb33" : "#fff",
+                                          borderTopRightRadius: isMine ? "4px" : "16px",
+                                          borderTopLeftRadius: isMine ? "16px" : "4px",
+                                        }}>
+                                      {m.message}
+                                    </div>
+                                    {isLast && <div className="messageTime">{time}</div>}
+                                  </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </div>
+                <div className="inputContainer">
+                  <input type="text" placeholder="메시지를 입력하세요..." value={inputMessage} onChange={(e) => setInputMessage(e.target.value)} onKeyDown={handleKeyDown} className="inputField" />
+                  <button onClick={sendMessage} className="sendButton">
+                    ✈️
+                  </button>
+                </div>
+              </>
+          ) : (
+              <div className="emptyChat">채팅방을 선택하세요.</div>
+          )}
+        </div>
       </div>
-    </div>
   );
 };
 

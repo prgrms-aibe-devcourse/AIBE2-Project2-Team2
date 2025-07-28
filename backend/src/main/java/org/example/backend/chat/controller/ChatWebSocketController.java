@@ -24,21 +24,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChatWebSocketController {
 
-    private final ChatRoomService chatRoomService;
     private final ChatMessageService chatMessageService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final MemberRepository memberRepository;
-
-    /**
-     * ✅ (임시) 모든 멤버 반환 API
-     */
-    @GetMapping("/api/chat/members")
-    public List<MemberDto> getAllMembers() {
-        return memberRepository.findAll()
-                .stream()
-                .map(MemberDto::from)
-                .collect(Collectors.toList());
-    }
 
     /**
      * ✅ 메시지 발송 (WebSocket)
