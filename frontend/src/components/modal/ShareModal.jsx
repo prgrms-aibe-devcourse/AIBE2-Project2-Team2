@@ -53,7 +53,6 @@ const ShareModal = ({ isOpen, onClose, content }) => {
 
   return (
     <div className="fixed inset-0 bg-black/10 flex items-center justify-center z-50">
-
       <div className="bg-white rounded-lg p-6 w-96 max-w-md">
         {/* 헤더 */}
         <div className="flex items-center justify-between mb-6">

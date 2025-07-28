@@ -40,6 +40,8 @@ function ContentDetailPage() {
 
   const { userInfo } = useUserInfoStore();
 
+
+
   // ✅ Content!! 에서 채팅방 생성하는 함수
   const handleCreateChatRoom = async (targetEmail) => {
     try {
@@ -672,8 +674,16 @@ function ContentDetailPage() {
             onClick={() => {
               if (!userInfo) {
                 toast.error("로그인이 필요합니다.");
+                navigate("/auth/login");
                 return;
               }
+              
+              // 본인이 작성한 콘텐츠인지 확인
+              if (userInfo.email === content.expertEmail) {
+                toast.error("본인이 작성한 서비스입니다.");
+                return;
+              }
+              
               handleCreateChatRoom(content.expertEmail);            
             }}
           >
@@ -684,8 +694,16 @@ function ContentDetailPage() {
             onClick={() => {
               if (!userInfo) {
                 toast.error("로그인이 필요합니다.");
+                navigate("/auth/login");
                 return;
               }
+              
+              // 본인이 작성한 콘텐츠인지 확인
+              if (userInfo.email === content.expertEmail) {
+                toast.error("본인이 작성한 서비스입니다.");
+                return;
+              }
+              
               navigate(`/content/${id}/payment`);
             }}>
             결제하기
