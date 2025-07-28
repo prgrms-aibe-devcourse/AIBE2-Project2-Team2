@@ -77,6 +77,11 @@ public class ChatRoomService {
                     .orElse(null);
             String lastMessageText = lastMessage != null ? lastMessage.getMessage() : null;
 
+            // 상대방 프로필 이미지 가져오기
+            Member opponent = memberRepository.findByNickname(opponentName)
+                    .orElseThrow(() -> new IllegalArgumentException("상대방을 찾을 수 없습니다."));
+            String opponentProfileImage = opponent.getProfileImageUrl();
+
             // 읽지 않은 메시지 개수
             ChatRoomMember crmMe =  chatRoomMemberRepository.findByChatRoomAndMember(room, me)
                     .orElse(null);
@@ -86,6 +91,7 @@ public class ChatRoomService {
             return new ChatRoomListDto(
                     room.getChatroomId(),
                     opponentName,
+                    opponentProfileImage,
                     lastMessageText
             );
         }).collect(Collectors.toList());

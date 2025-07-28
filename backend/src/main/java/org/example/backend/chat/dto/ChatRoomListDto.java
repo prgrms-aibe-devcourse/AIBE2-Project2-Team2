@@ -10,5 +10,6 @@ import lombok.Setter;
 public class ChatRoomListDto {
     private Long roomId;
     private String opponentName;
+    private String opponentProfileImage;
     private String lastMessage;
 }
