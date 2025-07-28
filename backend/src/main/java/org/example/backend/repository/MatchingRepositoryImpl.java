@@ -89,6 +89,7 @@ public class MatchingRepositoryImpl implements MatchingRepositoryCustom {
                         matching.status,
                         matching.startDate,
                         matching.endDate,
+                        matching.regTime,
                         estimateRecord.totalPrice,
                         selectedProduct.name,
                         selectedProduct.price
@@ -134,6 +135,7 @@ public class MatchingRepositoryImpl implements MatchingRepositoryCustom {
                         .matchingStatus(t.get(matching.status))
                         .workStartDate(t.get(matching.startDate))
                         .workEndDate(t.get(matching.endDate))
+                        .regTime(t.get(matching.regTime))
                         .totalPrice(totalPriceLong != null ? totalPriceLong.intValue() : null)
                         .selectedItems(new ArrayList<>())
                         .build();
@@ -194,6 +196,7 @@ public class MatchingRepositoryImpl implements MatchingRepositoryCustom {
                         matching.status,
                         matching.startDate,
                         matching.endDate,
+                        matching.regTime,
                         estimateRecord.totalPrice,
                         selectedProduct.name,
                         selectedProduct.price,
@@ -243,6 +246,7 @@ public class MatchingRepositoryImpl implements MatchingRepositoryCustom {
                         .matchingStatus(t.get(matching.status))
                         .workStartDate(t.get(matching.startDate))
                         .workEndDate(t.get(matching.endDate))
+                        .regTime(t.get(matching.regTime))
                         .totalPrice(totalPriceLong != null ? totalPriceLong.intValue() : null)
                         .reviewed(hasReview != null && hasReview) // 리뷰 존재 여부 설정
                         .selectedItems(new ArrayList<>())

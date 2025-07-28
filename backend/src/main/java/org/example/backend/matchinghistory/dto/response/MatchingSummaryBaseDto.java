@@ -8,6 +8,7 @@ import lombok.experimental.SuperBuilder;
 import org.example.backend.constant.MatchingStatus;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -26,6 +27,8 @@ public class MatchingSummaryBaseDto {
     private MatchingStatus matchingStatus;
     private LocalDate workStartDate;
     private LocalDate workEndDate;
+
+    private LocalDateTime regTime; // 매칭 등록 시간
 
     // 견적서 총 금액
     private Integer totalPrice;
