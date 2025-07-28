@@ -183,7 +183,7 @@ function ProfileModal({ profileMenuList }) {
         <div className="flex items-center justify-between">
           <div className="flex justify-center items-center gap-2">
             <span className="text-base font-bold text-gray-800">{userInfo?.nickname}</span>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded border ` + (userInfo?.role === "EXPERT" ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-green-100 text-green-700 border-green-200")}>{userInfo?.role ? "전문가" : "유저"}</span>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded border ` + (userInfo?.role === "EXPERT" ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-green-100 text-green-700 border-green-200")}>{userInfo?.role === "EXPERT" ? "전문가" : "유저"}</span>
           </div>
           {/* {userInfo?.role === "EXPERT" && (
             <span onClick={handleExpertTransition} className="text-xs text-blue-600 hover:underline cursor-pointer">

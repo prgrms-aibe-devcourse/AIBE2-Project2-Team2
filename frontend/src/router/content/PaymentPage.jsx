@@ -137,7 +137,7 @@ function PaymentPage() {
       }
     } catch (err) {
       setPayResult({ success: false, error: err });
-      alert('매칭 생성 또는 카카오페이 준비에 실패했습니다.\n' + (err?.response?.data?.message || err.message));
+      toast.error('매칭 생성 또는 카카오페이 준비에 실패했습니다.\n' + (err?.response?.data?.message || err.message));
       setPaying(false);
     }
   };
@@ -240,7 +240,7 @@ function PaymentPage() {
               </div>
               <div className="text-xs text-gray-400 mt-2">* VAT 포함</div>
             </div>
-            <button className={`w-full bg-yellow-400 py-3 rounded font-bold text-lg ${paying ? "opacity-60 cursor-not-allowed" : ""}`} onClick={handlePay} disabled={paying}>
+            <button className={`w-full bg-yellow-400 py-3 rounded font-bold cursor-pointer hover:bg-yellow-500 transition-colors ${paying ? "opacity-60 cursor-not-allowed" : ""}`} onClick={handlePay} disabled={paying}>
               {paying ? "결제 중..." : "결제하기"}
             </button>
             {payResult && <div className={`mt-4 text-center text-sm ${payResult.success ? "text-green-600" : "text-red-500"}`}>{payResult.success ? "결제 내역이 저장되었습니다." : "결제 저장 실패"}</div>}

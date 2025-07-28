@@ -108,7 +108,7 @@ export default function MatchingHistory() {
         size: pageInfo.size || 5,
       };
       if (!isFirst) {
-        if ((customStatus ?? selectedStatus) !== null) params.matchingStatus = customStatus ?? selectedStatus;
+        if ((customStatus ?? selectedStatus) !== null) params.matchingStatusStr = customStatus ?? selectedStatus;
         const filters = customFilters ?? searchFilters;
         Object.entries(filters).forEach(([key, value]) => {
           if (value !== "" && value !== null) params[key] = value;
@@ -321,8 +321,12 @@ export default function MatchingHistory() {
                 {/* Date Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold">{matching.workStartDate == null || matching.workEndDate == null ? "날짜 정보 없음" : `${dayjs(matching.workStartDate).format("YYYY.MM.DD")} ~ ${dayjs(matching.workEndDate).format("YYYY.MM.DD")}`}</span>
-                    <span className={`text-sm font-medium ${getStatusColor(matching.matchingStatus)}`}>{getStatusText(matching.matchingStatus)}</span>
+                    <span className="text-lg font-semibold">
+                      {matching.regTime ? dayjs(matching.regTime).format("YYYY.MM.DD HH:mm") : "날짜 정보 없음"}
+                    </span>
+                    <span className={`text-sm font-medium ${getStatusColor(matching.matchingStatus)}`}>
+                      {getStatusText(matching.matchingStatus)}
+                    </span>
                   </div>
                   <span className="text-sm text-gray-500">매칭 ID: {matching.matchingId}</span>
                 </div>
