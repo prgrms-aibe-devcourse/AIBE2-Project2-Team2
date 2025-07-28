@@ -73,7 +73,14 @@ export default function MatchingClientDetailPage() {
         try {
             await axiosInstance.patch(`/api/matchings/${matchingId}/confirm`);
             alert("구매가 확정되었습니다.");
-            fetchMatching();
+
+            // 리뷰 작성 여부 확인
+            const writeReview = window.confirm("리뷰를 작성하시겠습니까?");
+            if (writeReview) {
+                navigate(`/review/write/${matchingId}`);
+            } else {
+                fetchMatching(); // 리뷰 작성하지 않으면 현재 페이지에서 상태만 업데이트
+            }
         } catch (e) {
             alert(e?.response?.data?.message || "구매 확정 실패");
         }
