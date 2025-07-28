@@ -40,6 +40,14 @@ function ContentDetailPage() {
 
   const { userInfo } = useUserInfoStore();
 
+  // 로그인 체크 - 컴포넌트 마운트 시
+  useEffect(() => {
+    if (!userInfo) {
+      toast.error("로그인이 필요합니다.");
+      navigate("/auth/login");
+    }
+  }, [userInfo, navigate]);
+
   // ✅ Content!! 에서 채팅방 생성하는 함수
   const handleCreateChatRoom = async (targetEmail) => {
     try {
@@ -672,6 +680,7 @@ function ContentDetailPage() {
             onClick={() => {
               if (!userInfo) {
                 toast.error("로그인이 필요합니다.");
+                navigate("/auth/login");
                 return;
               }
               handleCreateChatRoom(content.expertEmail);            
@@ -684,6 +693,7 @@ function ContentDetailPage() {
             onClick={() => {
               if (!userInfo) {
                 toast.error("로그인이 필요합니다.");
+                navigate("/auth/login");
                 return;
               }
               navigate(`/content/${id}/payment`);
