@@ -212,8 +212,6 @@ const CategoryPage = () => {
                   <div className="text-xs text-gray-500">
                     {service.expertName} {/* 회사명 등 추가 정보 */}
                   </div>
-                  {/* 부가정보(예: 세금계산서 등) */}
-                  <div className="text-xs text-blue-600">세금계산서</div>
                 </Link>
               ))
             )}
