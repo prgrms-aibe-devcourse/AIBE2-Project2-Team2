@@ -7,10 +7,10 @@
 
 #### 팀원
 
-| 문선우 | 김민규 | 이동현 | 김기현 | 임하빈 |
-|:------:|:------:|:------:|:------:|:------:|
-| <img src="https://avatars.githubusercontent.com/msw-Hub" width="100"/> | <img src="https://avatars.githubusercontent.com/Gyuuuuuuu" width="100"/> | <img src="https://avatars.githubusercontent.com/haehdgus" width="100"/> | <img src="https://avatars.githubusercontent.com/FIFLove" width="100"/> | <img src="https://avatars.githubusercontent.com/heavenzhr16" width="100"/> |
-| [@msw-Hub](https://github.com/msw-Hub) | [@Gyuuuuuuu](https://github.com/Gyuuuuuuu) | [@haehdgus](https://github.com/haehdgus) | [@FIFLove](https://github.com/FIFLove) | [@heavenzhr16](https://github.com/heavenzhr16) |
+| 문선우 | 김민규 | 이동현 | 김기현 | 임하빈 | 이예담 |
+|:------:|:------:|:------:|:------:|:------:|:------:|
+| <img src="https://avatars.githubusercontent.com/msw-Hub" width="100"/> | <img src="https://avatars.githubusercontent.com/Gyuuuuuuu" width="100"/> | <img src="https://avatars.githubusercontent.com/haehdgus" width="100"/> | <img src="https://avatars.githubusercontent.com/FIFLove" width="100"/> | <img src="https://avatars.githubusercontent.com/heavenzhr16" width="100"/> | <img src="https://avatars.githubusercontent.com/rmsmf0" width="100"/> |
+| [@msw-Hub](https://github.com/msw-Hub) | [@Gyuuuuuuu](https://github.com/Gyuuuuuuu) | [@haehdgus](https://github.com/haehdgus) | [@FIFLove](https://github.com/FIFLove) | [@heavenzhr16](https://github.com/heavenzhr16) | [@rmsmf0](https://github.com/rmsmf0) |
 
 ---
 
@@ -103,7 +103,7 @@ frontend/
 
 ### 백엔드 설정
 - 애플리케이션 프로퍼티 예시(`backend/src/main/resources/application.properties`)
-  - DB: `jdbc:mysql://localhost:3311/team2` (user: `root`, password: `team2`)
+  - DB: `jdbc:mysql://localhost:3311/team2`
   - Redis: `localhost:6380`
   - JWT: `jwt.secret`
   - Kakao OAuth: `oauth.kakao.client-id`, `oauth.kakao.redirect-uri`
